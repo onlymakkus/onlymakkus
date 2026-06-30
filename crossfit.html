@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CrossFit — onlymakkus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08)}
+    html{scroll-behavior:smooth}
+    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;overflow-x:hidden;cursor:none}
+    .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
+    .cursor.big{width:36px;height:36px}
+
+    /* LOGIN */
+    .login-overlay{position:fixed;inset:0;z-index:9999;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity .5s,visibility .5s;cursor:auto}
+    .login-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+    .login-logo{font-family:'Bebas Neue';font-size:2.4rem;letter-spacing:.05em}
+    .login-logo span{color:var(--orange)}
+    .login-sub{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted)}
+    .login-form{display:flex;flex-direction:column;gap:10px;width:280px;padding:0 20px}
+    .login-input{background:var(--card);border:1px solid var(--border);color:var(--cream);font-family:'DM Mono';font-size:.85rem;padding:13px 16px;outline:none;width:100%;cursor:text;transition:border-color .2s}
+    .login-input:focus{border-color:var(--orange)}
+    .login-input::placeholder{color:#444}
+    .login-btn{padding:13px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.7rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:background .2s}
+    .login-btn:hover{background:#ff6b3d}
+    .login-error{font-size:.62rem;color:#ff4444;text-align:center;min-height:16px}
+
+    .page-content{opacity:1}
+    .page-content.visible{opacity:1}
+
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;mix-blend-mode:difference}
+    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--cream);text-decoration:none}
+    .nav-right{display:flex;gap:20px;align-items:center}
+    .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--cream);text-decoration:none;opacity:.5;transition:opacity .2s;cursor:pointer;background:none;border:none}
+    .nav-link:hover{opacity:1}
+
+    /* HERO */
+    .hero{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 40px 60px;text-align:center;position:relative;overflow:hidden}
+    .hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#0a0a08 40%,#1a0c06 100%)}
+    .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,78,26,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,78,26,.04) 1px,transparent 1px);background-size:60px 60px}
+    .hero-tag{font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:var(--orange);margin-bottom:16px;position:relative}
+    .hero-title{font-family:'Bebas Neue';font-size:clamp(4rem,15vw,10rem);line-height:.9;position:relative}
+    .hero-title span{color:var(--orange)}
+    .hero-sub{margin-top:18px;font-size:.78rem;color:var(--muted);max-width:440px;line-height:1.8;position:relative}
+
+    .marquee-wrap{overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:14px 0;background:var(--card)}
+    .marquee-track{display:flex;gap:60px;animation:marquee 22s linear infinite;white-space:nowrap}
+    .marquee-item{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
+    .dot{color:var(--orange);margin-right:10px}
+
+    .section{padding:80px 40px;max-width:1100px;margin:0 auto}
+    .section-label{font-size:.6rem;letter-spacing:.35em;text-transform:uppercase;color:var(--orange);margin-bottom:44px;display:flex;align-items:center;justify-content:center;gap:16px}
+    .section-label::before,.section-label::after{content:'';flex:0 0 40px;height:1px;background:var(--border)}
+
+    .hub-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2px}
+    .hub-card{background:var(--card);padding:48px 36px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;transition:background .3s;cursor:none}
+    .hub-card:hover{background:var(--card2)}
+    .hub-card-num{font-family:'Bebas Neue';font-size:5rem;color:rgba(255,255,255,.04);line-height:1;position:absolute;top:16px;right:20px}
+    .hub-card-icon{font-size:2.2rem}
+    .hub-card-title{font-family:'Bebas Neue';font-size:2.6rem;line-height:.95;letter-spacing:.02em}
+    .hub-card-sub{font-family:'Instrument Serif';font-style:italic;font-size:1rem;color:var(--orange)}
+    .hub-card-desc{font-size:.7rem;color:var(--muted);line-height:1.9}
+    .hub-card-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+    .tag{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;border:1px solid rgba(255,255,255,.1);padding:3px 10px;color:var(--muted)}
+    .hub-card-arrow{font-size:1.1rem;color:var(--orange);margin-top:auto;transition:transform .2s}
+    .hub-card:hover .hub-card-arrow{transform:translate(4px,-4px)}
+
+    /* Live mini status */
+    .mini-status{background:var(--card);padding:18px 24px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-bottom:2px}
+    .mini-label{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+    .mini-val{font-family:'Bebas Neue';font-size:1.3rem;color:var(--orange)}
+
+    footer{padding:36px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
+    footer a{color:var(--muted);text-decoration:none}
+
+    @media(max-width:600px){nav{padding:16px 20px}.hero{padding:100px 20px 50px}.section{padding:60px 20px}}
+    @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  </style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+
+<div class="page-content visible" id="pageContent">
+  <nav>
+    <a class="nav-logo" href="index.html">← OM</a>
+    <div class="nav-right">
+      <a class="nav-link" href="uebungen.html">Übungen</a>
+      <a class="nav-link" href="gaming.html">Gaming</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <p class="hero-tag">// schmerz ist optional. aufhören auch.</p>
+    <h1 class="hero-title">CROSS<span>FIT</span></h1>
+    <p class="hero-sub">Challenges, Ranking, Saisonplan — alles an einem Ort. Für die Gruppe die sich freiwillig quält.</p>
+  </section>
+
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span class="marquee-item"><span class="dot">●</span>side plank</span>
+      <span class="marquee-item"><span class="dot">●</span>punkte sammeln</span>
+      <span class="marquee-item"><span class="dot">●</span>kein aufhören</span>
+      <span class="marquee-item"><span class="dot">●</span>dezember boss</span>
+      <span class="marquee-item"><span class="dot">●</span>side plank</span>
+      <span class="marquee-item"><span class="dot">●</span>punkte sammeln</span>
+      <span class="marquee-item"><span class="dot">●</span>kein aufhören</span>
+      <span class="marquee-item"><span class="dot">●</span>dezember boss</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-label">live status</p>
+    <div class="mini-status" id="miniStatus">
+      <div><div class="mini-label">Aktuelle Challenge</div><div class="mini-val" id="ms-challenge">—</div></div>
+      <div><div class="mini-label">Teilnehmer</div><div class="mini-val" id="ms-count">—</div></div>
+      <div><div class="mini-label">Anführer</div><div class="mini-val" id="ms-leader">—</div></div>
+    </div>
+  </div>
+
+  <div class="section" style="padding-top:0;">
+    <p class="section-label">bereiche</p>
+    <div class="hub-cards">
+      <a href="challenge.html" class="hub-card">
+        <div class="hub-card-num">01</div>
+        <div class="hub-card-icon">🔥</div>
+        <div class="hub-card-title">CHALLENGE</div>
+        <div class="hub-card-sub">Aktiver Monat</div>
+        <p class="hub-card-desc">Zeit eintragen, Leaderboard, Tipps für Anfänger bis Profi. Hier passiert die eigentliche Action.</p>
+        <div class="hub-card-tags"><span class="tag">live tracker</span><span class="tag">pin geschützt</span></div>
+        <div class="hub-card-arrow">→</div>
+      </a>
+      <a href="ranking.html" class="hub-card">
+        <div class="hub-card-num">02</div>
+        <div class="hub-card-icon">🏆</div>
+        <div class="hub-card-title">RANKING</div>
+        <div class="hub-card-sub">Saison 2026</div>
+        <p class="hub-card-desc">Punktestand, Hall of Fame der Monatssieger, und das Voting für die Dezember-Bosschallenge.</p>
+        <div class="hub-card-tags"><span class="tag">punkte</span><span class="tag">voting</span></div>
+        <div class="hub-card-arrow">→</div>
+      </a>
+      <a href="kalender.html" class="hub-card">
+        <div class="hub-card-num">03</div>
+        <div class="hub-card-icon">📅</div>
+        <div class="hub-card-title">KALENDER</div>
+        <div class="hub-card-sub">Jahresplan</div>
+        <p class="hub-card-desc">Alle Challenges des Jahres auf einen Blick — was kommt als nächstes, wie schwer wird's.</p>
+        <div class="hub-card-tags"><span class="tag">jahresplan</span><span class="tag">level</span></div>
+        <div class="hub-card-arrow">→</div>
+      </a>
+      <a href="uebungen.html" class="hub-card">
+        <div class="hub-card-num">04</div>
+        <div class="hub-card-icon">📖</div>
+        <div class="hub-card-title">ÜBUNGEN</div>
+        <div class="hub-card-sub">Katalog & Anleitungen</div>
+        <p class="hub-card-desc">Alle Challenge-Übungen erklärt, plus jede Menge Bonus-Material für Anfänger bis Profi.</p>
+        <div class="hub-card-tags"><span class="tag">anleitung</span><span class="tag">skalierbar</span></div>
+        <div class="hub-card-arrow">→</div>
+      </a>
+    </div>
+  </div>
+
+  <footer>
+    <span>© 2026 onlymakkus.de</span>
+    <a href="impressum.html">Impressum</a>
+    <a href="datenschutz.html">Datenschutz</a>
+    <span>made with pain & php</span>
+  </footer>
+</div>
+
+<script>
+  const cursor=document.getElementById('cursor');
+  document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
+  document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
+
+  // ── Mini status (Supabase) ──
+  const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co';
+  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
+  async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
+
+  function slugify(name){return name.toLowerCase().replace(/[^a-z0-9]+/g,'').trim()}
+
+  async function loadMiniStatus(){
+    const now=new Date(),m=now.getMonth()+1,y=now.getFullYear();
+    try{
+      const rows=await sbFetch(`/rest/v1/season_months?season_year=eq.${y}&month=eq.${m}&select=*,exercises(*)`);
+      if(!rows||!rows.length||rows[0].is_december_vote||!rows[0].exercises){
+        document.getElementById('ms-challenge').textContent=rows&&rows[0]&&rows[0].is_december_vote?'Dezember Voting':'—';
+        document.getElementById('ms-count').textContent='—';
+        document.getElementById('ms-leader').textContent='—';
+        return;
+      }
+      const ex=rows[0].exercises;
+      const challengeId=slugify(ex.name);
+      document.getElementById('ms-challenge').textContent=ex.name;
+      const data=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${challengeId}&select=*`);
+      document.getElementById('ms-count').textContent=data?data.length:0;
+      if(data&&data.length){
+        const sorted=[...data].sort((a,b)=>(b.value1+b.value2)-(a.value1+a.value2));
+        document.getElementById('ms-leader').textContent=sorted[0].name;
+      } else document.getElementById('ms-leader').textContent='—';
+    }catch(e){document.getElementById('ms-count').textContent='—'}
+  }
+  loadMiniStatus();
+</script>
+</body>
+</html>

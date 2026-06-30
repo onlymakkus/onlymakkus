@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Challenge — onlymakkus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08);--gold:#FFD700;--silver:#C0C0C0;--bronze:#CD7F32;--green:#22c55e}
+    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;cursor:none;overflow-x:hidden}
+    .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
+    .cursor.big{width:36px;height:36px}
+
+    .login-overlay{position:fixed;inset:0;z-index:9999;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity .5s,visibility .5s;cursor:auto}
+    .login-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+    .login-logo{font-family:'Bebas Neue';font-size:2.4rem}
+    .login-logo span{color:var(--orange)}
+    .login-sub{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted)}
+    .login-form{display:flex;flex-direction:column;gap:10px;width:280px;padding:0 20px}
+    .login-input{background:var(--card);border:1px solid var(--border);color:var(--cream);font-family:'DM Mono';font-size:.85rem;padding:13px 16px;outline:none;width:100%;cursor:text}
+    .login-input:focus{border-color:var(--orange)}
+    .login-btn{padding:13px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.7rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
+    .login-error{font-size:.62rem;color:#ff4444;text-align:center;min-height:16px}
+
+    .page-content{opacity:0;transition:opacity .6s}
+    .page-content.visible{opacity:1}
+
+    nav{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--cream);text-decoration:none}
+    .nav-links{display:flex;gap:20px}
+    .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
+    .nav-link:hover,.nav-link.active{color:var(--cream)}
+
+    main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+    .page-title{font-family:'Bebas Neue';font-size:clamp(2.5rem,8vw,4.5rem);line-height:.95;text-align:center;margin-bottom:8px}
+    .page-title span{color:var(--orange)}
+    .page-sub{text-align:center;font-size:.75rem;color:var(--muted);margin-bottom:40px}
+
+    .ch-tips{display:flex;flex-direction:column;gap:10px;max-width:600px;margin:0 auto 40px}
+    .tip{border-left:3px solid var(--orange);padding:12px 16px;background:var(--card)}
+    .tip-label{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--orange);margin-bottom:4px}
+    .tip-text{font-size:.7rem;color:var(--muted);line-height:1.7}
+
+    .lb-table{display:flex;flex-direction:column;gap:2px;margin-bottom:32px}
+    .lb-row{display:grid;grid-template-columns:44px 1fr 70px 70px 1fr 90px;gap:8px;align-items:center;padding:16px 20px;background:var(--card2)}
+    .lb-row.lb-header{background:transparent;padding:6px 20px}
+    .lb-rank{font-family:'Bebas Neue';font-size:1.2rem}
+    .lb-name{font-size:.82rem}
+    .lb-val{font-size:.72rem;text-align:center;color:var(--muted)}
+    .lb-val.done{color:var(--orange)}
+    .lb-prog{display:flex;align-items:center;gap:8px}
+    .lb-bar{flex:1;height:5px;background:rgba(255,255,255,.07);overflow:hidden}
+    .lb-fill{height:100%;background:linear-gradient(90deg,var(--orange),#ffaa00);transition:width .8s cubic-bezier(.34,1.56,.64,1)}
+    .lb-pct{font-size:.6rem;color:var(--muted);min-width:30px;text-align:right}
+    .lb-status{font-size:.65rem;text-align:center}
+    .lb-head{font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.2);text-align:center}
+    .lb-head:nth-child(2){text-align:left}
+    .lb-empty{padding:40px;text-align:center;font-size:.72rem;color:#444;font-style:italic;background:var(--card2)}
+
+    .pin-info{background:var(--card);border:1px solid var(--border);padding:16px 20px;margin-bottom:24px;display:flex;gap:14px;align-items:flex-start}
+    .pin-info-icon{font-size:1.3rem;flex-shrink:0}
+    .pin-info-title{font-size:.68rem;font-weight:600;color:var(--orange);letter-spacing:.05em;margin-bottom:4px;text-transform:uppercase}
+    .pin-info-text{font-size:.68rem;color:var(--muted);line-height:1.8}
+
+    .entry-form{padding:28px;border:1px solid var(--border);background:var(--card)}
+    .form-title{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--orange);margin-bottom:18px}
+    .form-row{display:grid;grid-template-columns:1fr 90px 90px 90px auto;gap:10px;align-items:end}
+    @media(max-width:700px){.form-row{grid-template-columns:1fr 1fr}}
+    .form-group{display:flex;flex-direction:column;gap:5px}
+    .form-label{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+    .form-input{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--cream);font-family:'DM Mono';font-size:.82rem;padding:11px 13px;outline:none;width:100%}
+    .form-input:focus{border-color:var(--orange)}
+    .form-btn{padding:11px 20px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.7rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+    .form-btn:hover{background:#ff6b3d}
+    .form-msg{margin-top:10px;font-size:.65rem;min-height:18px}
+    .form-msg.ok{color:var(--green)}
+    .form-msg.err{color:#ff4444}
+    footer{padding:32px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
+    footer a{color:var(--muted);text-decoration:none}
+    @media(max-width:600px){.lb-row{grid-template-columns:36px 1fr 56px 56px}.lb-prog,.lb-status{display:none}}
+  </style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-logo">ONLY<span>MAKKUS</span></div>
+  <p class="login-sub">// members only</p>
+  <div class="login-form">
+    <input type="password" class="login-input" id="pwInput" placeholder="Gruppenpasswort" autocomplete="off">
+    <button class="login-btn" id="loginBtn">Einloggen →</button>
+    <p class="login-error" id="loginError"></p>
+  </div>
+</div>
+
+<div class="page-content" id="pageContent">
+  <nav>
+    <a class="nav-logo" href="crossfit.html">← Hub</a>
+    <div class="nav-links">
+      <a class="nav-link active" href="challenge.html">Challenge</a>
+      <a class="nav-link" href="ranking.html">Ranking</a>
+      <a class="nav-link" href="kalender.html">Kalender</a>
+    <a class="nav-link" href="uebungen.html">Übungen</a>
+    </div>
+  </nav>
+
+  <main>
+    <h1 class="page-title" id="pageTitle">CHALLENGE</h1>
+    <p class="page-sub" id="pageSub">aktueller monat</p>
+
+    <div class="ch-tips" id="chTips"></div>
+
+    <div class="pin-info">
+      <span class="pin-info-icon">🔐</span>
+      <div>
+        <div class="pin-info-title">Warum ein PIN?</div>
+        <div class="pin-info-text">Damit niemand versehentlich (oder absichtlich 😉) den Eintrag von jemand anderem mit dem gleichen Namen überschreibt. Beim ersten Eintrag legst du eine 4-stellige PIN fest — merk sie dir, du brauchst sie für jeden weiteren Eintrag unter deinem Namen.</div>
+      </div>
+    </div>
+
+    <div class="lb-table" id="lbTable">
+      <div class="lb-row lb-header">
+        <div class="lb-head">#</div>
+        <div class="lb-head" style="text-align:left">Name</div>
+        <div class="lb-head" id="lh1">Wert 1</div>
+        <div class="lb-head" id="lh2">Wert 2</div>
+        <div class="lb-head">Fortschritt</div>
+        <div class="lb-head">Status</div>
+      </div>
+    </div>
+
+    <div class="entry-form">
+      <p class="form-title">// Zeit eintragen</p>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="fName" placeholder="Dein Name"></div>
+        <div class="form-group"><label class="form-label" id="fl1Label">Wert 1</label><input type="number" class="form-input" id="fLeft" placeholder="10" min="0"></div>
+        <div class="form-group" id="fl2Group"><label class="form-label" id="fl2Label">Wert 2</label><input type="number" class="form-input" id="fRight" placeholder="10" min="0"></div>
+        <div class="form-group"><label class="form-label">PIN</label><input type="password" class="form-input" id="fPin" placeholder="••••" maxlength="4" inputmode="numeric" pattern="[0-9]*"></div>
+        <div class="form-group"><label class="form-label">&nbsp;</label><button class="form-btn" id="submitBtn">Eintragen →</button></div>
+      </div>
+      <p class="form-msg" id="formMsg"></p>
+      <p style="margin-top:8px;font-size:.58rem;color:var(--muted)">Neuer Name → PIN wird neu festgelegt. Bestehender Name → richtige PIN nötig.</p>
+    </div>
+  </main>
+
+  <footer>
+    <span>© 2026 onlymakkus.de</span>
+    <a href="impressum.html">Impressum</a>
+    <a href="datenschutz.html">Datenschutz</a>
+  </footer>
+</div>
+
+<script>
+  const cursor=document.getElementById('cursor');
+  document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
+  document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
+
+  const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co';
+  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
+  async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
+
+  const PASSWORD='plank2026';
+  const SESSION_KEY='om_cf_auth';
+  const overlay=document.getElementById('loginOverlay');
+  const content=document.getElementById('pageContent');
+  const pwInput=document.getElementById('pwInput');
+  const loginError=document.getElementById('loginError');
+  function unlock(){overlay.classList.add('hidden');content.classList.add('visible');sessionStorage.setItem(SESSION_KEY,'1');init()}
+  function tryLogin(){if(pwInput.value.trim()===PASSWORD){unlock()}else{loginError.textContent='✕ falsches passwort';pwInput.value=''}}
+  document.getElementById('loginBtn').addEventListener('click',tryLogin);
+  pwInput.addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin()});
+  if(sessionStorage.getItem(SESSION_KEY)==='1')unlock();
+  else { /* still show login */ }
+
+  const medals=['🥇','🥈','🥉'];
+  let ACTIVE=null, GOAL=60;
+
+  function slugify(name){return name.toLowerCase().replace(/[^a-z0-9]+/g,'').trim()}
+
+  async function loadActiveChallenge(){
+    const now=new Date(),m=now.getMonth()+1,y=now.getFullYear();
+    try{
+      const rows=await sbFetch(`/rest/v1/season_months?season_year=eq.${y}&month=eq.${m}&select=*,exercises(*)`);
+      if(!rows||!rows.length){
+        document.getElementById('pageTitle').textContent='KEINE CHALLENGE';
+        document.getElementById('pageSub').textContent='Für diesen Monat ist noch keine Challenge hinterlegt.';
+        return false;
+      }
+      const row=rows[0];
+      if(row.is_december_vote){
+        document.getElementById('pageTitle').innerHTML='DEZEMBER<span> BOSS</span>';
+        document.getElementById('pageSub').textContent='Die Challenge steht noch nicht fest — schau im Ranking-Bereich fürs Voting vorbei!';
+        document.getElementById('entryFormWrap')?.style.setProperty('display','none');
+        return false;
+      }
+      const ex=row.exercises;
+      if(!ex){
+        document.getElementById('pageTitle').textContent='KEINE CHALLENGE';
+        return false;
+      }
+      ACTIVE={
+        id:slugify(ex.name),
+        label:ex.name,
+        goal:row.custom_goal||ex.default_goal,
+        dual:ex.default_dual,
+        unit:ex.default_unit,
+        l1:ex.default_dual?'Links':'Gesamt',
+        l2:ex.default_dual?'Rechts':'',
+        tips:[
+          ex.level_beginner?['🟢 Anfänger',ex.level_beginner]:null,
+          ex.level_intermediate?['🟡 Fortgeschritten',ex.level_intermediate]:null,
+          ex.level_advanced?['🔴 Profi',ex.level_advanced]:null,
+        ].filter(Boolean),
+        videoUrl:ex.video_url
+      };
+      GOAL=ACTIVE.goal;
+      return true;
+    }catch(e){
+      console.error('Load challenge error:',e);
+      document.getElementById('pageTitle').textContent='FEHLER';
+      document.getElementById('pageSub').textContent='Challenge konnte nicht geladen werden.';
+      return false;
+    }
+  }
+
+  async function init(){
+    const ok=await loadActiveChallenge();
+    if(!ok)return;
+    document.getElementById('pageTitle').innerHTML=ACTIVE.label.toUpperCase().split(' ').map((w,i)=>i===0?w:`<span>${w}</span>`).join(' ');
+    document.getElementById('pageSub').textContent=`Ziel: ${GOAL} ${ACTIVE.unit} ${ACTIVE.dual?'pro Seite':'gesamt'}`;
+    document.getElementById('chTips').innerHTML=ACTIVE.tips.map(([label,text])=>`<div class="tip"><div class="tip-label">${label}</div><div class="tip-text">${text}</div></div>`).join('')+(ACTIVE.videoUrl?`<a href="${ACTIVE.videoUrl}" target="_blank" rel="noopener" class="tip" style="display:block;text-decoration:none;border-left-color:#5a9db5;"><div class="tip-label" style="color:#5a9db5;">🎥 Video-Anleitung</div><div class="tip-text">Zur Übungsausführung ansehen →</div></a>`:'');
+    document.getElementById('fl1Label').textContent=ACTIVE.l1+' ('+ACTIVE.unit+')';
+    document.getElementById('lh1').textContent=ACTIVE.l1;
+    if(ACTIVE.dual){
+      document.getElementById('fl2Label').textContent=ACTIVE.l2+' ('+ACTIVE.unit+')';
+      document.getElementById('lh2').textContent=ACTIVE.l2;
+    } else {
+      document.getElementById('fl2Group').style.display='none';
+      document.getElementById('lh2').style.display='none';
+    }
+    renderLeaderboard();
+  }
+
+  async function renderLeaderboard(){
+    const table=document.getElementById('lbTable');
+    while(table.children.length>1)table.removeChild(table.lastChild);
+    const loading=document.createElement('div');loading.className='lb-empty';loading.textContent='Lädt…';table.appendChild(loading);
+
+    let data=[];
+    try{ data=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${ACTIVE.id}&select=*`); }
+    catch(e){loading.textContent='⚠ Fehler beim Laden.';return}
+
+    data.sort((a,b)=>{
+      const aT=a.value1+a.value2,bT=b.value1+b.value2;
+      if(bT!==aT)return bT-aT;
+      return (a.completed_ts||Infinity)-(b.completed_ts||Infinity);
+    });
+
+    while(table.children.length>1)table.removeChild(table.lastChild);
+    if(!data.length){const el=document.createElement('div');el.className='lb-empty';el.textContent='Noch niemand dabei — sei der Erste! 💪';table.appendChild(el);return}
+
+    data.forEach((e,i)=>{
+      const v1done=e.value1>=GOAL;
+      const v2done=ACTIVE.dual?e.value2>=GOAL:true;
+      const both=ACTIVE.dual?v1done&&v2done:v1done;
+      const total=ACTIVE.dual?Math.round(((e.value1+e.value2)/(GOAL*2))*100):Math.round((e.value1/GOAL)*100);
+      const pct=Math.min(100,total);
+      const rc=i===0?'var(--gold)':i===1?'var(--silver)':i===2?'var(--bronze)':'var(--muted)';
+      const v2cell=ACTIVE.dual?`<div class="lb-val ${v2done?'done':''}">${e.value2}${ACTIVE.unit}${v2done?' ✓':''}</div>`:`<div class="lb-val" style="opacity:.2">—</div>`;
+      const row=document.createElement('div');row.className='lb-row';
+      row.innerHTML=`<div class="lb-rank" style="color:${rc}">${medals[i]||'#'+(i+1)}</div><div class="lb-name">${e.name}</div><div class="lb-val ${v1done?'done':''}">${e.value1}${ACTIVE.unit}${v1done?' ✓':''}</div>${v2cell}<div class="lb-prog"><div class="lb-bar"><div class="lb-fill" style="width:${pct}%"></div></div><span class="lb-pct">${pct}%</span></div><div class="lb-status">${both?'🏆 Fertig!':e.value1>0||e.value2>0?'🔥 dabei':'—'}</div>`;
+      table.appendChild(row);
+    });
+  }
+
+  // Simple hash for PIN (not cryptographically secure, just obfuscation)
+  function hashPin(pin){let h=0;for(let i=0;i<pin.length;i++){h=((h<<5)-h+pin.charCodeAt(i))|0}return h.toString()}
+
+  document.getElementById('submitBtn').addEventListener('click',async()=>{
+    if(!ACTIVE){alert('Für diesen Monat ist keine Challenge aktiv.');return}
+    const name=document.getElementById('fName').value.trim();
+    const v1=Math.max(0,parseInt(document.getElementById('fLeft').value)||0);
+    const v2=ACTIVE.dual?Math.max(0,parseInt(document.getElementById('fRight').value)||0):0;
+    const pin=document.getElementById('fPin').value.trim();
+    const msg=document.getElementById('formMsg');
+
+    if(!name){msg.textContent='⚠ Bitte Namen eingeben';msg.className='form-msg err';return}
+    if(!v1&&!v2){msg.textContent='⚠ Mindestens einen Wert eingeben';msg.className='form-msg err';return}
+    if(!/^\d{4}$/.test(pin)){msg.textContent='⚠ PIN muss 4 Ziffern haben';msg.className='form-msg err';return}
+
+    const btn=document.getElementById('submitBtn');
+    btn.textContent='Speichern…';btn.disabled=true;
+
+    try{
+      const existing=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${ACTIVE.id}&name=eq.${encodeURIComponent(name)}&select=*`);
+
+      if(existing&&existing.length>0){
+        const prev=existing[0];
+        // Check PIN if one is set
+        if(prev.pin_hash&&prev.pin_hash!==hashPin(pin)){
+          msg.textContent='❌ Falsche PIN für diesen Namen!';msg.className='form-msg err';
+          btn.textContent='Eintragen →';btn.disabled=false;return;
+        }
+        const wasNotDone=ACTIVE.dual?!(prev.value1>=GOAL&&prev.value2>=GOAL):!(prev.value1>=GOAL);
+        const newV1=Math.min(GOAL,prev.value1+v1);
+        const newV2=ACTIVE.dual?Math.min(GOAL,prev.value2+v2):0;
+        const isDone=ACTIVE.dual?newV1>=GOAL&&newV2>=GOAL:newV1>=GOAL;
+        const patch={value1:newV1,value2:newV2,pin_hash:hashPin(pin)};
+        if(wasNotDone&&isDone)patch.completed_ts=Date.now();
+        await sbFetch(`/rest/v1/challenge_entries?id=eq.${prev.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(patch)});
+        msg.textContent='✓ Aktualisiert!';msg.className='form-msg ok';
+      } else {
+        const newV1=Math.min(GOAL,v1),newV2=ACTIVE.dual?Math.min(GOAL,v2):0;
+        const isDone=ACTIVE.dual?newV1>=GOAL&&newV2>=GOAL:newV1>=GOAL;
+        const entry={challenge:ACTIVE.id,name,value1:newV1,value2:newV2,pin_hash:hashPin(pin)};
+        if(isDone)entry.completed_ts=Date.now();
+        await sbFetch('/rest/v1/challenge_entries',{method:'POST',prefer:'return=minimal',body:JSON.stringify(entry)});
+        msg.textContent='🎉 Eingetragen! PIN gemerkt für nächstes Mal.';msg.className='form-msg ok';
+      }
+      document.getElementById('fName').value='';document.getElementById('fLeft').value='';document.getElementById('fRight').value='';document.getElementById('fPin').value='';
+      await renderLeaderboard();
+    }catch(e){msg.textContent='❌ Fehler: '+e.message;msg.className='form-msg err'}
+    btn.textContent='Eintragen →';btn.disabled=false;
+    setTimeout(()=>msg.textContent='',4000);
+  });
+</script>
+</body>
+</html>

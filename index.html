@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>onlymakkus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black: #0a0a08;
+      --cream: #f2ede4;
+      --orange: #ff4e1a;
+      --muted: #9a9488;
+      --card: #141410;
+      --card2: #1c1c18;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--black); color: var(--cream); font-family: 'DM Mono', monospace; overflow-x: hidden; cursor: none; }
+
+    .cursor { position: fixed; width: 12px; height: 12px; background: var(--orange); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: width 0.2s, height 0.2s; mix-blend-mode: difference; }
+    .cursor.big { width: 40px; height: 40px; }
+
+    /* NAV */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; mix-blend-mode: difference; }
+    .nav-logo { font-family: 'Bebas Neue'; font-size: 1.4rem; letter-spacing: 0.1em; color: var(--cream); text-decoration: none; }
+    .nav-links { display: flex; gap: 24px; }
+    .nav-link { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cream); text-decoration: none; opacity: 0.5; transition: opacity 0.2s; }
+    .nav-link:hover { opacity: 1; }
+
+    /* HERO */
+    .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 120px 40px 80px; position: relative; overflow: hidden; text-align: center; }
+    .hero-noise { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; }
+    .hero-tag { font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--orange); margin-bottom: 24px; opacity: 0; animation: fadeUp 0.6s ease forwards 0.2s; }
+    .hero-title { font-family: 'Bebas Neue'; font-size: clamp(5rem, 18vw, 16rem); line-height: 0.9; letter-spacing: -0.02em; opacity: 0; animation: fadeUp 0.8s ease forwards 0.4s; }
+    .hero-title span { color: var(--orange); }
+    .hero-sub { margin-top: 32px; font-size: 0.8rem; color: var(--muted); max-width: 400px; line-height: 1.8; opacity: 0; animation: fadeUp 0.8s ease forwards 0.7s; text-align: center; }
+    .hero-scroll { position: absolute; bottom: 40px; right: 40px; font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); writing-mode: vertical-rl; opacity: 0; animation: fadeUp 0.8s ease forwards 1s; }
+
+    /* MARQUEE */
+    .marquee-wrap { overflow: hidden; border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 16px 0; background: var(--card); }
+    .marquee-track { display: flex; gap: 60px; animation: marquee 20s linear infinite; white-space: nowrap; }
+    .marquee-item { font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); flex-shrink: 0; }
+    .marquee-item .dot { color: var(--orange); margin-right: 12px; }
+
+    /* SECTIONS */
+    .section { padding: 100px 40px; max-width: 1200px; margin: 0 auto; }
+    .section-label { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--orange); margin-bottom: 48px; display: flex; align-items: center; gap: 16px; justify-content: center; }
+    .section-label::before { content: ''; flex: 0 0 40px; height: 1px; background: rgba(255,255,255,0.08); }
+    .section-label::after { content: ''; flex: 0 0 40px; height: 1px; background: rgba(255,255,255,0.08); }
+
+    /* CARDS */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2px; }
+    .card { background: var(--card); padding: 40px 32px; position: relative; overflow: hidden; transition: background 0.3s; text-align: center; }
+    .card:hover { background: var(--card2); }
+    .card-num { font-family: 'Bebas Neue'; font-size: 4rem; color: rgba(255,255,255,0.05); line-height: 1; margin-bottom: 16px; }
+    .card-title { font-family: 'Instrument Serif'; font-size: 1.4rem; font-style: italic; margin-bottom: 12px; }
+    .card-text { font-size: 0.72rem; line-height: 1.8; color: var(--muted); }
+    .card-tag { display: inline-block; margin-top: 20px; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--orange); border: 1px solid rgba(255,78,26,0.3); padding: 4px 10px; }
+    .card-link { text-decoration: none; color: inherit; display: block; }
+    .card-link .card { cursor: none; }
+    .card-link .card:hover .card-title { color: var(--orange); }
+    .card-arrow { position: absolute; bottom: 28px; right: 28px; font-size: 1.2rem; color: var(--orange); opacity: 0; transition: opacity 0.2s, transform 0.2s; }
+    .card-link:hover .card-arrow { opacity: 1; transform: translate(4px, -4px); }
+
+    /* STATEMENT */
+    .statement { padding: 100px 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; align-items: center; }
+    .statement-text { font-family: 'Instrument Serif'; font-size: clamp(1.8rem, 5vw, 4rem); font-style: italic; line-height: 1.3; max-width: 800px; margin: 0 auto; }
+    .statement-text em { color: var(--orange); font-style: normal; font-family: 'Bebas Neue'; font-size: 1.2em; vertical-align: -0.05em; }
+
+    /* CHALLENGE PREVIEW */
+    .challenge-preview { padding: 80px 40px; background: var(--card); }
+    .challenge-inner { max-width: 1200px; margin: 0 auto; }
+    .ch-header { display: flex; flex-direction: column; align-items: center; gap: 24px; margin-bottom: 48px; text-align: center; }
+    @media (max-width: 700px) { .ch-header { grid-template-columns: 1fr; } }
+    .ch-title { font-family: 'Bebas Neue'; font-size: clamp(3rem, 8vw, 6rem); line-height: 0.95; text-align: center; }
+    .ch-title span { color: var(--orange); }
+    .ch-sub { font-size: 0.75rem; color: var(--muted); line-height: 2; margin-bottom: 24px; }
+    .ch-btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: var(--orange); color: var(--black); font-family: 'DM Mono'; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; transition: transform 0.2s, background 0.2s; }
+    .ch-btn:hover { transform: translate(-2px,-2px); background: #ff6b3d; }
+
+    /* MINI TRACKER */
+    .mini-tracker { display: flex; flex-direction: column; gap: 2px; }
+    .mt-row { background: #0f0f0d; padding: 14px 18px; display: grid; grid-template-columns: 36px 1fr 56px 56px 120px; gap: 10px; align-items: center; }
+    .mt-rank { font-family: 'Bebas Neue'; font-size: 1.1rem; color: var(--muted); }
+    .mt-name { font-size: 0.78rem; }
+    .mt-val { font-size: 0.68rem; text-align: center; color: var(--muted); }
+    .mt-val.done { color: var(--orange); }
+    .mt-bar-wrap { height: 4px; background: rgba(255,255,255,0.06); overflow: hidden; }
+    .mt-bar-fill { height: 100%; background: linear-gradient(90deg, var(--orange), #ffaa00); }
+    .mt-empty { padding: 24px; text-align: center; font-size: 0.7rem; color: #444; font-style: italic; }
+    .mt-header { background: transparent; padding: 6px 18px; }
+    .mt-head { font-size: 0.52rem; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.18); text-align: center; }
+    .mt-head:nth-child(2) { text-align: left; }
+
+    /* PAGES SECTION */
+    .pages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2px; }
+    .page-card { background: var(--card); padding: 40px 32px; text-decoration: none; color: inherit; display: block; position: relative; overflow: hidden; transition: background 0.3s; cursor: none; text-align: center; }
+    .page-card:hover { background: var(--card2); }
+    .page-card-label { font-size: 0.58rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--orange); margin-bottom: 12px; }
+    .page-card-title { font-family: 'Bebas Neue'; font-size: 2rem; margin-bottom: 10px; line-height: 1; }
+    .page-card-desc { font-size: 0.7rem; color: var(--muted); line-height: 1.8; }
+    .page-card-lock { position: absolute; top: 28px; right: 28px; font-size: 0.9rem; opacity: 0.4; }
+    .page-card-arrow { position: absolute; bottom: 28px; right: 28px; color: var(--orange); opacity: 0; transition: opacity 0.2s, transform 0.2s; font-size: 1.1rem; }
+    .page-card:hover .page-card-arrow { opacity: 1; transform: translate(3px,-3px); }
+
+    /* FOOTER */
+    footer { padding: 40px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: center; gap: 40px; align-items: center; font-size: 0.62rem; color: var(--muted); letter-spacing: 0.15em; text-align: center; }
+
+    @media (max-width: 600px) {
+      nav { padding: 16px 20px; }
+      .hero { padding: 100px 20px 60px; }
+      .section, .challenge-preview { padding: 60px 20px; }
+      .statement { padding: 60px 20px; }
+      footer { flex-direction: column; gap: 12px; }
+      .mt-row { grid-template-columns: 28px 1fr 50px 50px; }
+      .mt-bar-wrap { display: none; }
+    }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes marquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+  </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+
+<nav>
+  <a class="nav-logo" href="index.html">OM</a>
+  <div class="nav-links">
+    <a class="nav-link" href="#seiten">Seiten</a>
+    <a class="nav-link" href="crossfit.html">CrossFit</a>
+    <a class="nav-link" href="gaming.html">Gaming</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-noise"></div>
+  <p class="hero-tag">// das original seit irgendwann</p>
+  <h1 class="hero-title">ONLY<br><span>Makkus</span></h1>
+  <p class="hero-sub">Kein Influencer. Kein Coach. Kein Guru.<br>Nur Markus — und das reicht vollkommen.</p>
+  <span class="hero-scroll">scroll ↓</span>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item"><span class="dot">●</span>humor ohne agenda</span>
+    <span class="marquee-item"><span class="dot">●</span>crossfit mit schmerzen</span>
+    <span class="marquee-item"><span class="dot">●</span>side planks für immer</span>
+    <span class="marquee-item"><span class="dot">●</span>onlymakkus.de</span>
+    <span class="marquee-item"><span class="dot">●</span>humor ohne agenda</span>
+    <span class="marquee-item"><span class="dot">●</span>crossfit mit schmerzen</span>
+    <span class="marquee-item"><span class="dot">●</span>side planks für immer</span>
+    <span class="marquee-item"><span class="dot">●</span>onlymakkus.de</span>
+    <span class="marquee-item"><span class="dot">●</span>humor ohne agenda</span>
+    <span class="marquee-item"><span class="dot">●</span>crossfit mit schmerzen</span>
+  </div>
+</div>
+
+<!-- ABOUT CARDS -->
+<div class="section">
+  <p class="section-label">was dich erwartet</p>
+  <div class="cards">
+    <div class="card">
+      <div class="card-num">01</div>
+      <div class="card-title">Ehrliche Meinungen</div>
+      <p class="card-text">Keine Sponsoren, keine PR-Strategie, kein Bullshit. Nur das was tatsächlich gedacht wird — auch wenn's wehtut.</p>
+      <span class="card-tag">unzensiert</span>
+    </div>
+    <div class="card">
+      <div class="card-num">02</div>
+      <div class="card-title">CrossFit & Challenges</div>
+      <p class="card-text">Schwitzen, leiden, weitermachen. Und dann noch eine Runde. Weil irgendwer die Gruppe motivieren muss.</p>
+      <span class="card-tag">schmerzhaft</span>
+    </div>
+    <div class="card">
+      <div class="card-num">03</div>
+      <div class="card-title">Fragwürdige Entscheidungen</div>
+      <p class="card-text">60 Minuten Side Plank? Webseite bauen statt schlafen? Manche Ideen klingen nachts besser als sie morgens sind.</p>
+      <span class="card-tag">dokumentiert</span>
+    </div>
+  </div>
+</div>
+
+<!-- STATEMENT -->
+<div class="statement">
+  <p class="statement-text">"Das Internet braucht mehr <em>EHRLICHKEIT</em> und weniger perfekte Feeds. Das hier ist beides nicht — aber zumindest <em>ECHT.</em>"</p>
+</div>
+
+<!-- CHALLENGE PREVIEW -->
+<div class="challenge-preview" id="challenge">
+  <div class="challenge-inner">
+    <p class="section-label">aktive challenge — mai / juni</p>
+    <div class="ch-header">
+      <div>
+        <h2 class="ch-title">SIDE<br><span>PLANK</span><br>2026</h2>
+      </div>
+      <div>
+        <p class="ch-sub">60 Minuten pro Seite — über den ganzen Monat gesammelt. Jeder trägt seine Zeit ein, alle sehen den Stand. Wer zuerst fertig ist gewinnt.</p>
+        <a href="crossfit.html" class="ch-btn">Zur vollständigen Challenge →</a>
+      </div>
+    </div>
+
+    <!-- Mini Leaderboard -->
+    <div class="mini-tracker">
+      <div class="mt-row mt-header">
+        <div class="mt-head">#</div>
+        <div class="mt-head" style="text-align:left;">Name</div>
+        <div class="mt-head">Links</div>
+        <div class="mt-head">Rechts</div>
+        <div class="mt-head">Fortschritt</div>
+      </div>
+      <div id="miniLb"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SEITEN -->
+<div class="section" id="seiten">
+  <p class="section-label">alle seiten</p>
+  <div class="pages-grid">
+
+    <a href="crossfit.html" class="page-card">
+      <div class="page-card-label">// mitglieder bereich</div>
+      <div class="page-card-title">CROSSFIT</div>
+      <p class="page-card-desc">Challenge Tracker, Jahresplan, Saison-Ranking und Dezember-Voting. Passwortgeschützt.</p>
+      <div class="page-card-lock">🔒</div>
+      <div class="page-card-arrow">→</div>
+    </a>
+
+    <a href="lisa-praesentation.html" class="page-card">
+      <div class="page-card-label">// schule · präsentation</div>
+      <div class="page-card-title">LISA<br>LICENTIA</div>
+      <p class="page-card-desc">Präsentation — Vom rechten Poster-Girl zur Aussteigerin. Passwortgeschützt.</p>
+      <div class="page-card-lock">🔒</div>
+      <div class="page-card-arrow">→</div>
+    </a>
+
+    <a href="lisa-schueler.html" class="page-card">
+      <div class="page-card-label">// schule · schülerversion</div>
+      <div class="page-card-title">LISA<br>LICENTIA<br>S.</div>
+      <p class="page-card-desc">Schülerversion der Präsentation. Passwortgeschützt.</p>
+      <div class="page-card-lock">🔒</div>
+      <div class="page-card-arrow">→</div>
+    </a>
+
+  </div>
+
+    <a href="wordle.html" class="page-card">
+      <div class="page-card-label">// täglich neu</div>
+      <div class="page-card-title">WORDLE</div>
+      <p class="page-card-desc">Deutsches Wordle — jeden Tag ein neues Wort. Streak aufbauen, Ergebnis teilen.</p>
+      <div class="page-card-arrow">→</div>
+    </a>
+
+<a href="gaming.html" class="page-card">
+      <div class="page-card-label">// snake · wordle · block blast</div>
+      <div class="page-card-title">GAMING<br>AREA</div>
+      <p class="page-card-desc">Snake, Wordle und Block Blast — alles an einem Ort. Globale Highscores.</p>
+      <div class="page-card-arrow">→</div>
+    </a>
+
+  </div>
+
+</div>
+
+<footer>
+  <span>© 2026 onlymakkus.de</span>
+  <a href="impressum.html" style="color:var(--muted);text-decoration:none;">Impressum</a>
+  <a href="datenschutz.html" style="color:var(--muted);text-decoration:none;">Datenschutz</a>
+  <span>made with pain & php</span>
+</footer>
+
+<script>
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  document.addEventListener('mousemove', e => { cursor.style.left = e.clientX+'px'; cursor.style.top = e.clientY+'px'; });
+  document.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('big'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('big'));
+  });
+
+  // Mini Leaderboard — Supabase
+  const SB_URL = 'https://bsubsesbcxdaqofmkiqg.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
+  const GOAL = 60;
+  const medals = ['🥇','🥈','🥉'];
+
+  async function renderMini() {
+    const lb = document.getElementById('miniLb');
+    lb.innerHTML = '<div class="mt-empty">Lädt…</div>';
+    try {
+      const data = await fetch(SB_URL + '/rest/v1/challenge_entries?challenge=eq.sideplank&select=*', {
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+      }).then(r => r.json());
+
+      data.sort((a,b) => (b.value1+b.value2)-(a.value1+a.value2));
+
+      if(!data.length) {
+        lb.innerHTML = '<div class="mt-empty">Noch keine Einträge — trag dich in der CrossFit-Seite ein!</div>';
+        return;
+      }
+      lb.innerHTML = data.slice(0,5).map((e,i) => {
+        const total = Math.round(((e.value1+e.value2)/(GOAL*2))*100);
+        const pct = Math.min(100, total);
+        const rankColor = i===0?'#FFD700':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--muted)';
+        return `<div class="mt-row">
+          <div class="mt-rank" style="color:${rankColor}">${medals[i]||'#'+(i+1)}</div>
+          <div class="mt-name">${e.name}</div>
+          <div class="mt-val ${e.value1>=GOAL?'done':''}">${e.value1}m${e.value1>=GOAL?' ✓':''}</div>
+          <div class="mt-val ${e.value2>=GOAL?'done':''}">${e.value2}m${e.value2>=GOAL?' ✓':''}</div>
+          <div class="mt-bar-wrap"><div class="mt-bar-fill" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('');
+    } catch(e) {
+      lb.innerHTML = '<div class="mt-empty">Fehler beim Laden.</div>';
+    }
+  }
+  renderMini();
+</script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Übungen — onlymakkus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08)}
+    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;cursor:none;overflow-x:hidden}
+    .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
+    .cursor.big{width:36px;height:36px}
+    nav{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--cream);text-decoration:none}
+    .nav-links{display:flex;gap:20px}
+    .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
+    .nav-link:hover,.nav-link.active{color:var(--cream)}
+
+    main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+    .page-title{font-family:'Bebas Neue';font-size:clamp(2.5rem,8vw,4.5rem);line-height:.95;text-align:center;margin-bottom:8px}
+    .page-title span{color:var(--orange)}
+    .page-sub{text-align:center;font-size:.75rem;color:var(--muted);margin-bottom:48px}
+
+    /* ACTIVE CHALLENGE HERO */
+    .active-hero{background:linear-gradient(135deg,var(--card) 0%,#1a0c06 100%);border:2px solid var(--orange);padding:36px 32px;margin-bottom:48px;position:relative;overflow:hidden}
+    .active-badge{display:inline-block;font-size:.58rem;letter-spacing:.25em;text-transform:uppercase;color:var(--orange);border:1px solid rgba(255,78,26,.4);padding:4px 12px;margin-bottom:16px}
+    .active-title{font-family:'Bebas Neue';font-size:clamp(2.5rem,7vw,4rem);line-height:.95;margin-bottom:8px}
+    .active-goal{font-size:.78rem;color:var(--orange);margin-bottom:16px;font-weight:500}
+    .active-desc{font-size:.78rem;color:var(--muted);line-height:1.9;max-width:600px;margin-bottom:20px}
+    .active-tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+    .active-tip{background:rgba(255,255,255,.03);padding:12px 14px;border-left:2px solid var(--orange)}
+    .active-tip-label{font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--orange);margin-bottom:4px}
+    .active-tip-text{font-size:.66rem;color:var(--muted);line-height:1.6}
+
+    /* SECTION LABEL */
+    .section-label{font-size:.6rem;letter-spacing:.35em;text-transform:uppercase;color:var(--orange);margin-bottom:24px;display:flex;align-items:center;gap:16px}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+    /* FILTER */
+    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+    .filter-btn{padding:8px 16px;background:var(--card);border:1px solid var(--border);color:var(--muted);font-family:'DM Mono';font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+    .filter-btn:hover{border-color:rgba(255,78,26,.4)}
+    .filter-btn.active{background:var(--orange);color:var(--black);border-color:var(--orange)}
+
+    /* EXERCISE LIST */
+    .ex-list{display:flex;flex-direction:column;gap:2px}
+    .ex-item{background:var(--card)}
+    .ex-header{padding:18px 22px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:background .2s}
+    .ex-header:hover{background:var(--card2)}
+    .ex-header-left{display:flex;align-items:center;gap:14px}
+    .ex-icon{font-size:1.4rem}
+    .ex-name{font-family:'Instrument Serif';font-style:italic;font-size:1.1rem}
+    .ex-cat{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);padding:2px 8px;margin-left:10px}
+    .ex-chevron{font-size:.9rem;color:var(--orange);transition:transform .2s}
+    .ex-item.open .ex-chevron{transform:rotate(90deg)}
+    .ex-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+    .ex-item.open .ex-body{max-height:400px}
+    .ex-body-inner{padding:0 22px 22px;border-top:1px solid var(--border)}
+    .ex-desc{font-size:.72rem;color:var(--muted);line-height:1.9;margin:16px 0}
+    .ex-levels{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+    .ex-level{background:rgba(255,255,255,.03);padding:10px 14px;border-left:2px solid var(--orange)}
+    .ex-level-label{font-size:.56rem;letter-spacing:.15em;text-transform:uppercase;color:var(--orange);margin-bottom:3px}
+    .ex-level-text{font-size:.66rem;color:var(--muted);line-height:1.6}
+    .ex-video{display:inline-flex;align-items:center;gap:8px;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--orange);text-decoration:none;border:1px solid rgba(255,78,26,.3);padding:8px 16px;transition:background .2s}
+    .ex-video:hover{background:rgba(255,78,26,.1)}
+    .ex-suitable{display:inline-block;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:#22c55e;border:1px solid rgba(34,197,94,.3);padding:3px 10px;margin-top:14px}
+
+    footer{padding:32px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
+    footer a{color:var(--muted);text-decoration:none}
+    @media(max-width:600px){.ex-cat{display:none}}
+  </style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+
+<nav>
+  <a class="nav-logo" href="crossfit.html">← Hub</a>
+  <div class="nav-links">
+    <a class="nav-link" href="challenge.html">Challenge</a>
+    <a class="nav-link" href="ranking.html">Ranking</a>
+    <a class="nav-link" href="kalender.html">Kalender</a>
+    <a class="nav-link active" href="uebungen.html">Übungen</a>
+  </div>
+</nav>
+
+<main>
+  <h1 class="page-title">ÜBUNGS<span>KATALOG</span></h1>
+  <p class="page-sub">Alle Challenge-Übungen erklärt — plus jede Menge Bonus-Material</p>
+
+  <!-- ACTIVE CHALLENGE -->
+  <div class="active-hero" id="activeHero">
+    <span class="active-badge">🔥 aktuelle challenge</span>
+    <div class="active-title" id="activeTitle">—</div>
+    <div class="active-goal" id="activeGoal">—</div>
+    <p class="active-desc" id="activeDesc">—</p>
+    <div class="active-tips" id="activeTips"></div>
+  </div>
+
+  <!-- FILTERS -->
+  <p class="section-label">filtern</p>
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">Alle</button>
+    <button class="filter-btn" data-filter="challenge">Challenge-Übungen</button>
+    <button class="filter-btn" data-filter="core">Core</button>
+    <button class="filter-btn" data-filter="push">Push</button>
+    <button class="filter-btn" data-filter="legs">Legs</button>
+    <button class="filter-btn" data-filter="cardio">Cardio</button>
+    <button class="filter-btn" data-filter="hold">Halteübungen</button>
+  </div>
+
+  <!-- EXERCISE LIST -->
+  <p class="section-label">alle übungen</p>
+  <div class="ex-list" id="exList"></div>
+</main>
+
+<footer>
+  <span>© 2026 onlymakkus.de</span>
+  <a href="impressum.html">Impressum</a>
+  <a href="datenschutz.html">Datenschutz</a>
+</footer>
+
+<script>
+  const cursor=document.getElementById('cursor');
+  document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
+  document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
+
+  const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co';
+  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
+  async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
+
+  const CAT_LABELS={core:'Core',push:'Push',legs:'Legs',cardio:'Cardio',hold:'Halteübung'};
+  let ALL_EXERCISES=[];
+  let CHALLENGE_EXERCISE_IDS=new Set();
+
+  async function loadActiveChallenge(){
+    const now=new Date(),m=now.getMonth()+1,y=now.getFullYear();
+    try{
+      const rows=await sbFetch(`/rest/v1/season_months?season_year=eq.${y}&month=eq.${m}&select=*,exercises(*)`);
+      if(!rows||!rows.length||rows[0].is_december_vote||!rows[0].exercises){
+        document.getElementById('activeHero').style.display='none';
+        return;
+      }
+      const ex=rows[0].exercises;
+      const goal=rows[0].custom_goal||ex.default_goal;
+      const goalText=ex.default_dual?`${goal} ${ex.default_unit} / Seite`:`${goal} ${ex.default_unit} gesamt`;
+      document.getElementById('activeTitle').textContent=ex.name;
+      document.getElementById('activeGoal').textContent='Ziel: '+goalText;
+      const tips=[
+        ex.level_beginner?['🟢 Anfänger',ex.level_beginner]:null,
+        ex.level_intermediate?['🟡 Fortgeschritten',ex.level_intermediate]:null,
+        ex.level_advanced?['🔴 Profi',ex.level_advanced]:null,
+      ].filter(Boolean);
+      document.getElementById('activeTips').innerHTML=tips.map(([l,t])=>`<div class="active-tip"><div class="active-tip-label">${l}</div><div class="active-tip-text">${t}</div></div>`).join('');
+      if(ex.video_url){
+        document.getElementById('activeDesc').innerHTML=ex.description+`<br><br><a href="${ex.video_url}" target="_blank" rel="noopener" style="color:var(--orange);">🎥 Video-Anleitung ansehen →</a>`;
+      } else {
+        document.getElementById('activeDesc').textContent=ex.description;
+      }
+      CHALLENGE_EXERCISE_IDS.add(ex.id);
+    }catch(e){console.error('Active challenge load error:',e)}
+  }
+
+  async function loadExercises(){
+    try{
+      ALL_EXERCISES=await sbFetch('/rest/v1/exercises?select=*&order=name.asc')||[];
+    }catch(e){
+      document.getElementById('exList').innerHTML='<div style="padding:32px;text-align:center;color:#555;">Fehler beim Laden des Katalogs.</div>';
+    }
+  }
+
+  function renderExercises(filter='all'){
+    const list=document.getElementById('exList');
+    const filtered=ALL_EXERCISES.filter(ex=>{
+      if(filter==='all')return true;
+      if(filter==='challenge')return CHALLENGE_EXERCISE_IDS.has(ex.id);
+      return ex.category===filter;
+    });
+    if(!filtered.length){list.innerHTML='<div style="padding:32px;text-align:center;color:#555;font-style:italic;">Keine Übungen in dieser Kategorie.</div>';return}
+    list.innerHTML=filtered.map((ex,i)=>{
+      const isChallenge=CHALLENGE_EXERCISE_IDS.has(ex.id);
+      const levels=[
+        ex.level_beginner?['🟢 Anfänger',ex.level_beginner]:null,
+        ex.level_intermediate?['🟡 Fortgeschritten',ex.level_intermediate]:null,
+        ex.level_advanced?['🔴 Profi',ex.level_advanced]:null,
+      ].filter(Boolean);
+      return `
+      <div class="ex-item" data-idx="${i}">
+        <div class="ex-header" onclick="toggleEx(this)">
+          <div class="ex-header-left">
+            <span class="ex-icon">${ex.icon||'💪'}</span>
+            <span class="ex-name">${ex.name}</span>
+            <span class="ex-cat">${CAT_LABELS[ex.category]||ex.category}</span>
+          </div>
+          <span class="ex-chevron">▶</span>
+        </div>
+        <div class="ex-body">
+          <div class="ex-body-inner">
+            <p class="ex-desc">${ex.description}</p>
+            <div class="ex-levels">
+              ${levels.map(([l,t])=>`<div class="ex-level"><div class="ex-level-label">${l}</div><div class="ex-level-text">${t}</div></div>`).join('')}
+            </div>
+            ${ex.video_url?`<a href="${ex.video_url}" target="_blank" rel="noopener" class="ex-video">🎥 Video ansehen →</a>`:''}
+            <br>
+            ${isChallenge?'<span class="ex-suitable">✓ Teil einer Challenge</span>':'<span class="ex-suitable" style="color:var(--muted);border-color:var(--border)">Bonus-Übung — eignet sich für Challenges</span>'}
+          </div>
+        </div>
+      </div>
+    `;
+    }).join('');
+  }
+
+  window.toggleEx=(headerEl)=>{
+    const item=headerEl.closest('.ex-item');
+    const wasOpen=item.classList.contains('open');
+    document.querySelectorAll('.ex-item.open').forEach(el=>el.classList.remove('open'));
+    if(!wasOpen)item.classList.add('open');
+  };
+
+  document.querySelectorAll('.filter-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      renderExercises(btn.dataset.filter);
+    });
+  });
+
+  (async function(){
+    await loadActiveChallenge();
+    await loadExercises();
+    renderExercises();
+  })();
+</script>
+</body>
+</html>

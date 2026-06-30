@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalender — onlymakkus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08)}
+    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;cursor:none;overflow-x:hidden}
+    .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
+    .cursor.big{width:36px;height:36px}
+    .login-overlay{position:fixed;inset:0;z-index:9999;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity .5s,visibility .5s;cursor:auto}
+    .login-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+    .login-logo{font-family:'Bebas Neue';font-size:2.4rem}
+    .login-logo span{color:var(--orange)}
+    .login-sub{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted)}
+    .login-form{display:flex;flex-direction:column;gap:10px;width:280px;padding:0 20px}
+    .login-input{background:var(--card);border:1px solid var(--border);color:var(--cream);font-family:'DM Mono';font-size:.85rem;padding:13px 16px;outline:none;width:100%;cursor:text}
+    .login-input:focus{border-color:var(--orange)}
+    .login-btn{padding:13px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.7rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
+    .login-error{font-size:.62rem;color:#ff4444;text-align:center;min-height:16px}
+    .page-content{opacity:1}
+    .page-content.visible{opacity:1}
+    nav{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--cream);text-decoration:none}
+    .nav-links{display:flex;gap:20px}
+    .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
+    .nav-link:hover,.nav-link.active{color:var(--cream)}
+    main{max-width:900px;margin:0 auto;padding:40px 24px 80px}
+    .page-title{font-family:'Bebas Neue';font-size:clamp(2.5rem,8vw,4.5rem);line-height:.95;text-align:center;margin-bottom:8px}
+    .page-title span{color:var(--orange)}
+    .page-sub{text-align:center;font-size:.75rem;color:var(--muted);margin-bottom:48px}
+    .timeline{display:flex;flex-direction:column;gap:2px}
+    .tl-row{display:grid;grid-template-columns:120px 1fr auto;align-items:stretch}
+    .tl-month{background:var(--card);padding:20px 24px;display:flex;flex-direction:column;justify-content:center;border-right:2px solid var(--black)}
+    .tl-month-name{font-family:'Bebas Neue';font-size:1.4rem;line-height:1}
+    .tl-month-sub{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+    .tl-body{background:var(--card);padding:20px 28px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+    .tl-exercise{font-family:'Instrument Serif';font-style:italic;font-size:1.15rem}
+    .tl-goal{font-size:.65rem;color:var(--muted)}
+    .tl-meta{background:var(--card);padding:20px 24px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:8px;border-left:2px solid var(--black)}
+    .tl-level{font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;padding:3px 10px;border:1px solid;white-space:nowrap}
+    .tl-pts{font-size:.6rem;color:var(--muted)}
+    .tl-row.active .tl-month{background:var(--orange)}
+    .tl-row.active .tl-month-name{color:var(--black)}
+    .tl-row.active .tl-month-sub{color:rgba(0,0,0,.5)}
+    .tl-row.active .tl-body,.tl-row.active .tl-meta{background:#1e1e18;border-top:2px solid var(--orange);border-bottom:2px solid var(--orange)}
+    .tl-row.active .tl-exercise{color:var(--orange)}
+    .tl-row.december .tl-month{background:#1a1520;border-right-color:#6b21a8}
+    .tl-row.december .tl-month-name{color:#c084fc}
+    .tl-row.december .tl-body,.tl-row.december .tl-meta{background:#0f0d14}
+    .tl-row.december .tl-exercise{color:#c084fc}
+    .level-easy{color:#22c55e;border-color:#22c55e}
+    .level-medium{color:#facc15;border-color:#facc15}
+    .level-hard{color:var(--orange);border-color:var(--orange)}
+    .level-boss{color:#c084fc;border-color:#c084fc}
+    footer{padding:32px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
+    footer a{color:var(--muted);text-decoration:none}
+    @media(max-width:600px){.tl-row{grid-template-columns:80px 1fr}.tl-meta{display:none}}
+  </style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<div class="page-content visible" id="pageContent">
+  <nav>
+    <a class="nav-logo" href="crossfit.html">← Hub</a>
+    <div class="nav-links">
+      <a class="nav-link" href="challenge.html">Challenge</a>
+      <a class="nav-link" href="ranking.html">Ranking</a>
+      <a class="nav-link active" href="kalender.html">Kalender</a>
+    <a class="nav-link" href="uebungen.html">Übungen</a>
+    </div>
+  </nav>
+  <main>
+    <h1 class="page-title">JAHRES<span>PLAN</span></h1>
+    <p class="page-sub">Saison 2026 — alle Challenges im Überblick</p>
+    <div class="timeline" id="timeline">
+    <div class="timeline" id="timeline">
+      <div class="tl-row"><div class="tl-month"></div><div class="tl-body" style="color:var(--muted);font-size:.7rem;">Lädt Saison…</div><div class="tl-meta"></div></div>
+    </div>
+  </main>
+  <footer>
+    <span>© 2026 onlymakkus.de</span>
+    <a href="impressum.html">Impressum</a>
+    <a href="datenschutz.html">Datenschutz</a>
+  </footer>
+</div>
+<script>
+  const cursor=document.getElementById('cursor');
+  document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
+  document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
+
+  const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co';
+  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
+  async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
+
+  const MONTH_NAMES=['','JAN','FEB','MÄR','APR','MAI','JUN','JUL','AUG','SEP','OKT','NOV','DEZ'];
+  function levelClass(goal,unit){
+    // Heuristic: just cosmetic, based on goal size — could be refined later via DB field
+    if(unit==='Reps')return goal>=400?'level-hard':goal>=250?'level-medium':'level-easy';
+    return goal>=60?'level-medium':'level-easy';
+  }
+
+  async function loadTimeline(){
+    const now=new Date(),currentMonth=now.getMonth()+1,currentYear=now.getFullYear();
+    const wrap=document.getElementById('timeline');
+    try{
+      const months=await sbFetch(`/rest/v1/season_months?season_year=eq.${currentYear}&select=*,exercises(*)&order=month.asc`);
+      if(!months||!months.length){
+        wrap.innerHTML='<div class="tl-row"><div class="tl-month"></div><div class="tl-body" style="color:var(--muted);font-size:.7rem;">Für dieses Jahr ist noch keine Saison angelegt.</div><div class="tl-meta"></div></div>';
+        return;
+      }
+      wrap.innerHTML=months.map(row=>{
+        const isActive=row.month===currentMonth;
+        const isDec=row.is_december_vote;
+        const monthLabel=MONTH_NAMES[row.month];
+        if(isDec){
+          return `<div class="tl-row december ${isActive?'active':''}">
+            <div class="tl-month"><div class="tl-month-name">${monthLabel}</div><div class="tl-month-sub">🗳️ vote</div></div>
+            <div class="tl-body"><div class="tl-exercise">Bonus Challenge — Gruppe voted</div><div class="tl-goal">Die härteste Challenge des Jahres — doppelte Punkte!</div></div>
+            <div class="tl-meta"><span class="tl-level level-boss">Boss</span><span class="tl-pts">bis 20 Pts</span></div>
+          </div>`;
+        }
+        const ex=row.exercises;
+        if(!ex)return '';
+        const goal=row.custom_goal||ex.default_goal;
+        const goalText=ex.default_dual?`${goal} ${ex.default_unit} / Seite sammeln`:`${goal} ${ex.default_unit} gesamt sammeln`;
+        const lvlClass=levelClass(goal,ex.default_unit);
+        const lvlLabel=lvlClass==='level-easy'?'Einstieg':lvlClass==='level-medium'?'Mittel':'Hart';
+        return `<div class="tl-row ${isActive?'active':''}">
+          <div class="tl-month"><div class="tl-month-name">${monthLabel}</div><div class="tl-month-sub">${isActive?'✦ aktiv':''}</div></div>
+          <div class="tl-body"><div class="tl-exercise">${ex.name}</div><div class="tl-goal">${goalText}</div></div>
+          <div class="tl-meta"><span class="tl-level ${lvlClass}">${lvlLabel}</span><span class="tl-pts">bis 10 Pts</span></div>
+        </div>`;
+      }).join('');
+    }catch(e){
+      wrap.innerHTML='<div class="tl-row"><div class="tl-month"></div><div class="tl-body" style="color:var(--muted);font-size:.7rem;">Fehler beim Laden.</div><div class="tl-meta"></div></div>';
+    }
+  }
+  loadTimeline();
+</script>
+</body>
+</html>

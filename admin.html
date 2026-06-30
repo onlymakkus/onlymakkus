@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — onlymakkus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08);--red:#ff4444;--green:#22c55e}
+    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;cursor:default;overflow-x:hidden}
+    .login-overlay{position:fixed;inset:0;z-index:9999;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px}
+    .login-overlay.hidden{display:none}
+    .login-logo{font-family:'Bebas Neue';font-size:2.4rem}
+    .login-logo span{color:var(--orange)}
+    .login-sub{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted)}
+    .login-form{display:flex;flex-direction:column;gap:10px;width:280px;padding:0 20px}
+    .login-input{background:var(--card);border:1px solid var(--border);color:var(--cream);font-family:'DM Mono';font-size:.85rem;padding:13px 16px;outline:none;width:100%}
+    .login-input:focus{border-color:var(--orange)}
+    .login-btn{padding:13px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.7rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
+    .login-error{font-size:.62rem;color:var(--red);text-align:center;min-height:16px}
+    .page-content{display:none}
+    .page-content.visible{display:block}
+    nav{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--orange);text-decoration:none}
+    .nav-badge{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;background:var(--orange);color:var(--black);padding:3px 10px;font-weight:600}
+    main{max-width:1100px;margin:0 auto;padding:32px 24px 80px}
+    .tabs{display:flex;gap:2px;margin-bottom:24px;flex-wrap:wrap}
+    .tab{padding:12px 20px;background:var(--card);border:none;color:var(--muted);font-family:'DM Mono';font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+    .tab.active{background:var(--orange);color:var(--black)}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+    .panel-title{font-family:'Bebas Neue';font-size:1.8rem;margin-bottom:16px;color:var(--cream)}
+    .select-row{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+    .select-row label{font-size:.65rem;color:var(--muted);letter-spacing:.1em}
+    select,input[type=text],input[type=number]{background:var(--card2);border:1px solid var(--border);color:var(--cream);font-family:'DM Mono';font-size:.78rem;padding:9px 12px;outline:none}
+    select:focus,input:focus{border-color:var(--orange)}
+    .btn{padding:9px 18px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s}
+    .btn:hover{background:#ff6b3d}
+    .btn.danger{background:var(--red);color:#fff}
+    .btn.danger:hover{background:#ff6666}
+    .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    table{width:100%;border-collapse:collapse;font-size:.72rem}
+    th{text-align:left;padding:10px 12px;background:var(--card2);color:var(--muted);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+    td{padding:10px 12px;background:var(--card);border-top:2px solid var(--black)}
+    td input{width:70px}
+    .row-actions{display:flex;gap:6px}
+    .msg{font-size:.68rem;padding:10px 14px;margin-bottom:16px;display:none}
+    .msg.show{display:block}
+    .msg.ok{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+    .msg.err{background:rgba(255,68,68,.1);color:var(--red);border:1px solid rgba(255,68,68,.3)}
+    .empty{padding:32px;text-align:center;color:#555;font-style:italic;font-size:.72rem;background:var(--card)}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    @media(max-width:700px){.grid2{grid-template-columns:1fr}table{font-size:.62rem}td,th{padding:7px 8px}}
+  </style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-logo">ADMIN<span>•</span></div>
+  <p class="login-sub">// onlymakkus CrossFit Verwaltung</p>
+  <div class="login-form">
+    <input type="password" class="login-input" id="pwInput" placeholder="Admin-Passwort" autocomplete="off">
+    <button class="login-btn" id="loginBtn">Einloggen →</button>
+    <p class="login-error" id="loginError"></p>
+  </div>
+</div>
+
+<div class="page-content" id="pageContent">
+  <nav>
+    <a class="nav-logo" href="crossfit.html">← OM Admin</a>
+    <span class="nav-badge">🔐 Admin Modus</span>
+  </nav>
+
+  <main>
+    <div class="tabs">
+      <button class="tab active" data-tab="entries">Einträge</button>
+      <button class="tab" data-tab="seasonplan">Saison-Planung</button>
+      <button class="tab" data-tab="exercises">Übungskatalog</button>
+      <button class="tab" data-tab="season">Saison-Punkte</button>
+      <button class="tab" data-tab="hof">Hall of Fame</button>
+      <button class="tab" data-tab="info">Info</button>
+    </div>
+
+    <div class="msg" id="msg"></div>
+
+    <!-- ENTRIES TAB -->
+    <div class="tab-panel active" id="panel-entries">
+      <h2 class="panel-title">Challenge-Einträge bearbeiten</h2>
+      <div class="select-row">
+        <label>Challenge:</label>
+        <select id="challengeSelect"></select>
+        <button class="btn ghost" id="reloadEntries">🔄 Aktualisieren</button>
+      </div>
+      <div id="entriesTableWrap"><div class="empty">Lädt…</div></div>
+    </div>
+
+    <!-- SEASON PLANNING TAB -->
+    <div class="tab-panel" id="panel-seasonplan">
+      <h2 class="panel-title">Saison-Planung</h2>
+      <p style="font-size:.68rem;color:var(--muted);margin-bottom:16px;">Hier legst du fest welche Übung in welchem Monat als Challenge läuft. Wähle das Jahr, dann pro Monat eine Übung aus dem Katalog.</p>
+      <div class="select-row">
+        <label>Saison-Jahr:</label>
+        <select id="seasonYearSelect"></select>
+        <button class="btn ghost" id="reloadSeasonPlan">🔄 Aktualisieren</button>
+      </div>
+      <div id="seasonPlanWrap"><div class="empty">Lädt…</div></div>
+      <div style="margin-top:24px;padding:16px;background:var(--card);border:1px solid var(--border);">
+        <div style="font-size:.65rem;color:var(--muted);margin-bottom:10px;">Neue Saison anlegen:</div>
+        <div class="select-row">
+          <input type="number" id="newSeasonYear" placeholder="Jahr, z.B. 2027" style="width:140px">
+          <button class="btn" id="addSeasonBtn">+ Saison anlegen</button>
+        </div>
+        <p style="font-size:.6rem;color:var(--muted);margin-top:8px;">Legt 12 leere Monate an (Dezember automatisch als Voting-Monat). Übungen danach pro Monat zuweisen.</p>
+      </div>
+    </div>
+
+    <!-- EXERCISES TAB -->
+    <div class="tab-panel" id="panel-exercises">
+      <h2 class="panel-title">Übungskatalog verwalten</h2>
+      <p style="font-size:.68rem;color:var(--muted);margin-bottom:16px;">Übungen bearbeiten, Video-Links hinzufügen, oder neue Übungen für künftige Challenges anlegen.</p>
+      <div id="exercisesTableWrap"><div class="empty">Lädt…</div></div>
+      <div style="margin-top:24px;padding:16px;background:var(--card);border:1px solid var(--border);">
+        <div style="font-size:.65rem;color:var(--muted);margin-bottom:10px;">Neue Übung hinzufügen:</div>
+        <div class="select-row" style="flex-wrap:wrap;">
+          <input type="text" id="newExName" placeholder="Name" style="width:140px">
+          <input type="text" id="newExIcon" placeholder="Icon (Emoji)" style="width:90px">
+          <select id="newExCat">
+            <option value="core">Core</option>
+            <option value="push">Push</option>
+            <option value="legs">Legs</option>
+            <option value="cardio">Cardio</option>
+            <option value="hold">Halteübung</option>
+          </select>
+          <select id="newExUnit">
+            <option value="min">min</option>
+            <option value="Reps">Reps</option>
+          </select>
+          <input type="number" id="newExGoal" placeholder="Standard-Ziel" style="width:110px">
+          <label style="font-size:.65rem;color:var(--muted);display:flex;align-items:center;gap:6px;"><input type="checkbox" id="newExDual"> Links/Rechts</label>
+        </div>
+        <div class="select-row" style="margin-top:8px;">
+          <input type="text" id="newExDesc" placeholder="Beschreibung" style="flex:1;min-width:200px">
+        </div>
+        <div class="select-row" style="margin-top:8px;">
+          <button class="btn" id="addExBtn">+ Übung hinzufügen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEASON TAB -->
+    <div class="tab-panel" id="panel-season">
+      <h2 class="panel-title">Saison-Gesamtranking</h2>
+      <p style="font-size:.68rem;color:var(--muted);margin-bottom:16px;">Punkte und Siege manuell anpassen — z.B. um Fehler bei der automatischen Berechnung zu korrigieren.</p>
+      <div id="seasonTableWrap"><div class="empty">Lädt…</div></div>
+      <div style="margin-top:20px;padding:16px;background:var(--card);border:1px solid var(--border);">
+        <div style="font-size:.65rem;color:var(--muted);margin-bottom:10px;">Neuen Eintrag hinzufügen:</div>
+        <div class="select-row">
+          <input type="text" id="newRankName" placeholder="Name">
+          <input type="number" id="newRankPts" placeholder="Punkte" style="width:90px">
+          <input type="number" id="newRankWins" placeholder="Siege" style="width:80px">
+          <button class="btn" id="addRankBtn">+ Hinzufügen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOF TAB -->
+    <div class="tab-panel" id="panel-hof">
+      <h2 class="panel-title">Hall of Fame — Monatsergebnisse</h2>
+      <p style="font-size:.68rem;color:var(--muted);margin-bottom:16px;">Hier siehst du alle bereits finalisierten Challenges. Löschen setzt den Monat zurück — die automatische Berechnung läuft dann beim nächsten Monatswechsel erneut.</p>
+      <div id="hofTableWrap"><div class="empty">Lädt…</div></div>
+    </div>
+
+    <!-- INFO TAB -->
+    <div class="tab-panel" id="panel-info">
+      <h2 class="panel-title">System-Info</h2>
+      <div class="grid2">
+        <div>
+          <p style="font-size:.7rem;color:var(--muted);line-height:2;">
+            <strong style="color:var(--cream)">Aktuelle Challenge (automatisch):</strong><br>
+            <span id="info-active">—</span><br><br>
+            <strong style="color:var(--cream)">Heutiges Datum:</strong><br>
+            <span id="info-date">—</span><br><br>
+            <strong style="color:var(--cream)">Gruppenpasswort Challenge/Ranking:</strong><br>
+            plank2026 (im Code änderbar)
+          </p>
+        </div>
+        <div>
+          <p style="font-size:.7rem;color:var(--muted);line-height:2;">
+            <strong style="color:var(--cream)">Punktesystem:</strong><br>
+            🥇 10 Pts · 🥈 7 Pts · 🥉 5 Pts · 4. Platz 3 Pts · Teilnahme 1 Pt<br>
+            Dezember: alles ×2<br><br>
+            <strong style="color:var(--cream)">Hinweis:</strong><br>
+            Änderungen hier wirken sich direkt auf die Live-Datenbank aus. Bei Unsicherheit lieber vorsichtig sein — es gibt kein automatisches Backup.
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // ── Auth ──
+  const ADMIN_PASSWORD='makkusboss2026';
+  const overlay=document.getElementById('loginOverlay');
+  const content=document.getElementById('pageContent');
+  const pwInput=document.getElementById('pwInput');
+  const loginError=document.getElementById('loginError');
+  function unlock(){overlay.classList.add('hidden');content.classList.add('visible');initAdmin()}
+  function tryLogin(){if(pwInput.value.trim()===ADMIN_PASSWORD){unlock()}else{loginError.textContent='✕ falsches admin-passwort';pwInput.value=''}}
+  document.getElementById('loginBtn').addEventListener('click',tryLogin);
+  pwInput.addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin()});
+
+  // ── Supabase ──
+  const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co';
+  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
+  async function sbFetch(p,o={}){
+    const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});
+    const t=await r.text();return t?JSON.parse(t):null;
+  }
+
+  function showMsg(text,type='ok'){
+    const m=document.getElementById('msg');
+    m.textContent=text;m.className='msg show '+type;
+    setTimeout(()=>m.classList.remove('show'),3500);
+  }
+
+  // ── Tabs ──
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  function slugify(name){return name.toLowerCase().replace(/[^a-z0-9]+/g,'').trim()}
+
+  function initAdmin(){
+    loadChallengeSelectOptions();
+    loadSeasonYearOptions();
+    loadSeasonRanking();
+    loadHallOfFame();
+    loadExercisesTable();
+    loadInfo();
+  }
+
+  // ── ENTRIES ──
+  async function loadChallengeSelectOptions(){
+    const sel=document.getElementById('challengeSelect');
+    try{
+      const exercises=await sbFetch('/rest/v1/exercises?select=id,name&order=name.asc');
+      sel.innerHTML=(exercises||[]).map(ex=>`<option value="${slugify(ex.name)}">${ex.name}</option>`).join('');
+      loadEntries();
+    }catch(e){sel.innerHTML='<option>Fehler beim Laden</option>'}
+  }
+  document.getElementById('challengeSelect').addEventListener('change',loadEntries);
+  document.getElementById('reloadEntries').addEventListener('click',loadEntries);
+
+  async function loadEntries(){
+    const challenge=document.getElementById('challengeSelect').value;
+    const wrap=document.getElementById('entriesTableWrap');
+    wrap.innerHTML='<div class="empty">Lädt…</div>';
+    try{
+      const data=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${challenge}&select=*&order=value1.desc`);
+      if(!data||!data.length){wrap.innerHTML='<div class="empty">Keine Einträge für diese Challenge.</div>';return}
+      let html='<table><tr><th>Name</th><th>Wert 1</th><th>Wert 2</th><th>PIN gesetzt</th><th>Aktionen</th></tr>';
+      data.forEach(e=>{
+        html+=`<tr data-id="${e.id}">
+          <td>${e.name}</td>
+          <td><input type="number" value="${e.value1}" class="edit-v1"></td>
+          <td><input type="number" value="${e.value2}" class="edit-v2"></td>
+          <td>${e.pin_hash?'✓ ja':'— nein'}</td>
+          <td class="row-actions">
+            <button class="btn" onclick="saveEntry(${e.id})">Speichern</button>
+            ${e.pin_hash?`<button class="btn ghost" onclick="resetPin(${e.id})">PIN reset</button>`:''}
+            <button class="btn danger" onclick="deleteEntry(${e.id})">Löschen</button>
+          </td>
+        </tr>`;
+      });
+      html+='</table>';
+      wrap.innerHTML=html;
+    }catch(e){wrap.innerHTML='<div class="empty">Fehler beim Laden.</div>'}
+  }
+
+  window.saveEntry=async(id)=>{
+    const row=document.querySelector(`tr[data-id="${id}"]`);
+    const v1=parseInt(row.querySelector('.edit-v1').value)||0;
+    const v2=parseInt(row.querySelector('.edit-v2').value)||0;
+    try{
+      await sbFetch(`/rest/v1/challenge_entries?id=eq.${id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({value1:v1,value2:v2})});
+      showMsg('✓ Eintrag aktualisiert','ok');
+      loadEntries();
+    }catch(e){showMsg('❌ Fehler beim Speichern','err')}
+  };
+
+  window.resetPin=async(id)=>{
+    if(!confirm('PIN für diesen Eintrag zurücksetzen? Der nächste Eintrag setzt eine neue PIN.'))return;
+    try{
+      await sbFetch(`/rest/v1/challenge_entries?id=eq.${id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({pin_hash:null})});
+      showMsg('✓ PIN zurückgesetzt','ok');
+      loadEntries();
+    }catch(e){showMsg('❌ Fehler','err')}
+  };
+
+  window.deleteEntry=async(id)=>{
+    if(!confirm('Diesen Eintrag wirklich löschen? Das kann nicht rückgängig gemacht werden.'))return;
+    try{
+      await sbFetch(`/rest/v1/challenge_entries?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
+      showMsg('✓ Eintrag gelöscht','ok');
+      loadEntries();
+    }catch(e){showMsg('❌ Fehler beim Löschen','err')}
+  };
+
+  // ── SEASON PLANNING ──
+  const MONTH_LABELS_ADMIN={1:'Januar',2:'Februar',3:'März',4:'April',5:'Mai',6:'Juni',7:'Juli',8:'August',9:'September',10:'Oktober',11:'November',12:'Dezember'};
+
+  async function loadSeasonYearOptions(){
+    const sel=document.getElementById('seasonYearSelect');
+    try{
+      const seasons=await sbFetch('/rest/v1/seasons?select=year&order=year.desc');
+      if(!seasons||!seasons.length){sel.innerHTML='<option>Keine Saison vorhanden</option>';return}
+      sel.innerHTML=seasons.map(s=>`<option value="${s.year}">${s.year}</option>`).join('');
+      loadSeasonPlan();
+    }catch(e){sel.innerHTML='<option>Fehler</option>'}
+  }
+  document.getElementById('seasonYearSelect').addEventListener('change',loadSeasonPlan);
+  document.getElementById('reloadSeasonPlan').addEventListener('click',loadSeasonPlan);
+
+  async function loadSeasonPlan(){
+    const year=document.getElementById('seasonYearSelect').value;
+    const wrap=document.getElementById('seasonPlanWrap');
+    if(!year){wrap.innerHTML='<div class="empty">Keine Saison ausgewählt.</div>';return}
+    wrap.innerHTML='<div class="empty">Lädt…</div>';
+    try{
+      const [months,exercises]=await Promise.all([
+        sbFetch(`/rest/v1/season_months?season_year=eq.${year}&select=*&order=month.asc`),
+        sbFetch('/rest/v1/exercises?select=id,name&order=name.asc')
+      ]);
+      const exOptions=(exercises||[]).map(ex=>`<option value="${ex.id}">${ex.name}</option>`).join('');
+      let html='<table><tr><th>Monat</th><th>Übung</th><th>Ziel überschreiben</th><th>Aktion</th></tr>';
+      for(let m=1;m<=12;m++){
+        const row=(months||[]).find(r=>r.month===m);
+        const isDec=row?row.is_december_vote:m===12;
+        if(isDec){
+          html+=`<tr data-month="${m}">
+            <td>${MONTH_LABELS_ADMIN[m]}</td>
+            <td colspan="2" style="color:var(--orange);">🎄 Dezember-Voting (keine feste Übung)</td>
+            <td><button class="btn ghost" onclick="toggleDecMonth(${year},${m},false)">Feste Übung stattdessen</button></td>
+          </tr>`;
+        } else {
+          html+=`<tr data-month="${m}">
+            <td>${MONTH_LABELS_ADMIN[m]}</td>
+            <td><select class="month-ex-select">${exOptions}</select></td>
+            <td><input type="number" class="month-goal-input" placeholder="Standard" value="${row&&row.custom_goal?row.custom_goal:''}" style="width:90px"></td>
+            <td class="row-actions">
+              <button class="btn" onclick="saveSeasonMonth(${year},${m})">Speichern</button>
+              ${m===12?`<button class="btn ghost" onclick="toggleDecMonth(${year},${m},true)">Zu Voting machen</button>`:''}
+            </td>
+          </tr>`;
+        }
+      }
+      html+='</table>';
+      wrap.innerHTML=html;
+      // pre-select existing exercise per month
+      (months||[]).forEach(row=>{
+        if(row.is_december_vote)return;
+        const tr=wrap.querySelector(`tr[data-month="${row.month}"]`);
+        if(tr){const sel=tr.querySelector('.month-ex-select');if(sel&&row.exercise_id)sel.value=row.exercise_id}
+      });
+    }catch(e){wrap.innerHTML='<div class="empty">Fehler beim Laden.</div>'}
+  }
+
+  window.saveSeasonMonth=async(year,month)=>{
+    const tr=document.querySelector(`#seasonPlanWrap tr[data-month="${month}"]`);
+    const exerciseId=tr.querySelector('.month-ex-select').value;
+    const goalInput=tr.querySelector('.month-goal-input').value;
+    const customGoal=goalInput?parseInt(goalInput):null;
+    try{
+      const existing=await sbFetch(`/rest/v1/season_months?season_year=eq.${year}&month=eq.${month}&select=id`);
+      const payload={exercise_id:parseInt(exerciseId),is_december_vote:false,custom_goal:customGoal};
+      if(existing&&existing.length>0){
+        await sbFetch(`/rest/v1/season_months?id=eq.${existing[0].id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(payload)});
+      } else {
+        await sbFetch('/rest/v1/season_months',{method:'POST',prefer:'return=minimal',body:JSON.stringify({season_year:year,month,...payload})});
+      }
+      showMsg('✓ Monat gespeichert','ok');
+      loadSeasonPlan();
+    }catch(e){showMsg('❌ Fehler beim Speichern','err')}
+  };
+
+  window.toggleDecMonth=async(year,month,makeVote)=>{
+    try{
+      const existing=await sbFetch(`/rest/v1/season_months?season_year=eq.${year}&month=eq.${month}&select=id`);
+      const payload=makeVote?{is_december_vote:true,exercise_id:null,custom_goal:null}:{is_december_vote:false};
+      if(existing&&existing.length>0){
+        await sbFetch(`/rest/v1/season_months?id=eq.${existing[0].id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(payload)});
+      } else {
+        await sbFetch('/rest/v1/season_months',{method:'POST',prefer:'return=minimal',body:JSON.stringify({season_year:year,month,...payload})});
+      }
+      showMsg('✓ Aktualisiert','ok');
+      loadSeasonPlan();
+    }catch(e){showMsg('❌ Fehler','err')}
+  };
+
+  document.getElementById('addSeasonBtn').addEventListener('click',async()=>{
+    const year=parseInt(document.getElementById('newSeasonYear').value);
+    if(!year||year<2024||year>2100){showMsg('⚠ Gültiges Jahr eingeben','err');return}
+    try{
+      await sbFetch('/rest/v1/seasons',{method:'POST',prefer:'return=minimal',body:JSON.stringify({year,status:'active'})});
+      await sbFetch('/rest/v1/season_months',{method:'POST',prefer:'return=minimal',body:JSON.stringify({season_year:year,month:12,is_december_vote:true})});
+      showMsg('✓ Saison '+year+' angelegt — jetzt Monate zuweisen','ok');
+      document.getElementById('newSeasonYear').value='';
+      loadSeasonYearOptions();
+    }catch(e){showMsg('❌ Fehler — existiert das Jahr schon?','err')}
+  });
+
+  // ── EXERCISE CATALOG ──
+  const CAT_LABELS_ADMIN={core:'Core',push:'Push',legs:'Legs',cardio:'Cardio',hold:'Halteübung'};
+
+  async function loadExercisesTable(){
+    const wrap=document.getElementById('exercisesTableWrap');
+    wrap.innerHTML='<div class="empty">Lädt…</div>';
+    try{
+      const data=await sbFetch('/rest/v1/exercises?select=*&order=name.asc');
+      if(!data||!data.length){wrap.innerHTML='<div class="empty">Noch keine Übungen im Katalog.</div>';return}
+      let html='<table><tr><th>Name</th><th>Kategorie</th><th>Ziel</th><th>Video-Link</th><th>Aktionen</th></tr>';
+      data.forEach(ex=>{
+        html+=`<tr data-id="${ex.id}">
+          <td>${ex.icon||'💪'} ${ex.name}</td>
+          <td>${CAT_LABELS_ADMIN[ex.category]||ex.category}</td>
+          <td>${ex.default_goal} ${ex.default_unit}${ex.default_dual?' /Seite':''}</td>
+          <td><input type="text" class="edit-video" value="${ex.video_url||''}" placeholder="https://..." style="width:160px"></td>
+          <td class="row-actions">
+            <button class="btn" onclick="saveExVideo(${ex.id})">Speichern</button>
+            <button class="btn danger" onclick="deleteExercise(${ex.id})">Löschen</button>
+          </td>
+        </tr>`;
+      });
+      html+='</table>';
+      wrap.innerHTML=html;
+    }catch(e){wrap.innerHTML='<div class="empty">Fehler beim Laden.</div>'}
+  }
+
+  window.saveExVideo=async(id)=>{
+    const tr=document.querySelector(`#exercisesTableWrap tr[data-id="${id}"]`);
+    const videoUrl=tr.querySelector('.edit-video').value.trim();
+    try{
+      await sbFetch(`/rest/v1/exercises?id=eq.${id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({video_url:videoUrl||null})});
+      showMsg('✓ Video-Link gespeichert','ok');
+    }catch(e){showMsg('❌ Fehler','err')}
+  };
+
+  window.deleteExercise=async(id)=>{
+    if(!confirm('Diese Übung wirklich löschen? Falls sie in einer Saison-Planung verwendet wird, kann das Probleme verursachen.'))return;
+    try{
+      await sbFetch(`/rest/v1/exercises?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
+      showMsg('✓ Übung gelöscht','ok');
+      loadExercisesTable();
+    }catch(e){showMsg('❌ Fehler — wird die Übung noch verwendet?','err')}
+  };
+
+  document.getElementById('addExBtn').addEventListener('click',async()=>{
+    const name=document.getElementById('newExName').value.trim();
+    const icon=document.getElementById('newExIcon').value.trim()||'💪';
+    const cat=document.getElementById('newExCat').value;
+    const unit=document.getElementById('newExUnit').value;
+    const goal=parseInt(document.getElementById('newExGoal').value)||60;
+    const dual=document.getElementById('newExDual').checked;
+    const desc=document.getElementById('newExDesc').value.trim();
+    if(!name||!desc){showMsg('⚠ Name und Beschreibung sind Pflicht','err');return}
+    try{
+      await sbFetch('/rest/v1/exercises',{method:'POST',prefer:'return=minimal',body:JSON.stringify({
+        name,icon,category:cat,description:desc,default_goal:goal,default_unit:unit,default_dual:dual
+      })});
+      showMsg('✓ Übung hinzugefügt','ok');
+      document.getElementById('newExName').value='';
+      document.getElementById('newExIcon').value='';
+      document.getElementById('newExGoal').value='';
+      document.getElementById('newExDesc').value='';
+      document.getElementById('newExDual').checked=false;
+      loadExercisesTable();
+    }catch(e){showMsg('❌ Fehler beim Hinzufügen','err')}
+  });
+
+  // ── SEASON RANKING ──
+  async function loadSeasonRanking(){
+    const wrap=document.getElementById('seasonTableWrap');
+    wrap.innerHTML='<div class="empty">Lädt…</div>';
+    try{
+      const data=await sbFetch('/rest/v1/season_ranking?select=*&order=total_points.desc');
+      if(!data||!data.length){wrap.innerHTML='<div class="empty">Noch keine Saison-Punkte vorhanden.</div>';return}
+      let html='<table><tr><th>Name</th><th>Punkte</th><th>Siege</th><th>Aktionen</th></tr>';
+      data.forEach(e=>{
+        html+=`<tr data-id="${e.id}">
+          <td>${e.name}</td>
+          <td><input type="number" value="${e.total_points}" class="edit-pts"></td>
+          <td><input type="number" value="${e.wins}" class="edit-wins"></td>
+          <td class="row-actions">
+            <button class="btn" onclick="saveRank(${e.id})">Speichern</button>
+            <button class="btn danger" onclick="deleteRank(${e.id})">Löschen</button>
+          </td>
+        </tr>`;
+      });
+      html+='</table>';
+      wrap.innerHTML=html;
+    }catch(e){wrap.innerHTML='<div class="empty">Fehler beim Laden.</div>'}
+  }
+
+  window.saveRank=async(id)=>{
+    const row=document.querySelector(`#panel-season tr[data-id="${id}"]`);
+    const pts=parseInt(row.querySelector('.edit-pts').value)||0;
+    const wins=parseInt(row.querySelector('.edit-wins').value)||0;
+    try{
+      await sbFetch(`/rest/v1/season_ranking?id=eq.${id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({total_points:pts,wins,updated_at:new Date().toISOString()})});
+      showMsg('✓ Ranking aktualisiert','ok');
+      loadSeasonRanking();
+    }catch(e){showMsg('❌ Fehler','err')}
+  };
+
+  window.deleteRank=async(id)=>{
+    if(!confirm('Diesen Ranking-Eintrag löschen?'))return;
+    try{
+      await sbFetch(`/rest/v1/season_ranking?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
+      showMsg('✓ Gelöscht','ok');
+      loadSeasonRanking();
+    }catch(e){showMsg('❌ Fehler','err')}
+  };
+
+  document.getElementById('addRankBtn').addEventListener('click',async()=>{
+    const name=document.getElementById('newRankName').value.trim();
+    const pts=parseInt(document.getElementById('newRankPts').value)||0;
+    const wins=parseInt(document.getElementById('newRankWins').value)||0;
+    if(!name){showMsg('⚠ Name eingeben','err');return}
+    try{
+      await sbFetch('/rest/v1/season_ranking',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name,total_points:pts,wins})});
+      showMsg('✓ Hinzugefügt','ok');
+      document.getElementById('newRankName').value='';document.getElementById('newRankPts').value='';document.getElementById('newRankWins').value='';
+      loadSeasonRanking();
+    }catch(e){showMsg('❌ Fehler — existiert der Name schon?','err')}
+  });
+
+  // ── HALL OF FAME ──
+  async function loadHallOfFame(){
+    const wrap=document.getElementById('hofTableWrap');
+    wrap.innerHTML='<div class="empty">Lädt…</div>';
+    try{
+      const data=await sbFetch('/rest/v1/season_results?select=*&order=created_at.desc');
+      if(!data||!data.length){wrap.innerHTML='<div class="empty">Noch keine Monate finalisiert.</div>';return}
+      let html='<table><tr><th>Challenge</th><th>Name</th><th>Platz</th><th>Punkte</th><th>Aktion</th></tr>';
+      data.forEach(e=>{
+        html+=`<tr><td>${e.challenge}</td><td>${e.name}</td><td>#${e.rank}</td><td>${e.points}</td><td><button class="btn danger" onclick="deleteHofEntry(${e.id})">Löschen</button></td></tr>`;
+      });
+      html+='</table>';
+      wrap.innerHTML=html;
+    }catch(e){wrap.innerHTML='<div class="empty">Fehler beim Laden.</div>'}
+  }
+
+  window.deleteHofEntry=async(id)=>{
+    if(!confirm('Diesen Hall-of-Fame Eintrag löschen? Bei kompletter Monats-Löschung wird die automatische Berechnung beim nächsten Mal erneut ausgeführt.'))return;
+    try{
+      await sbFetch(`/rest/v1/season_results?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
+      showMsg('✓ Gelöscht','ok');
+      loadHallOfFame();
+    }catch(e){showMsg('❌ Fehler','err')}
+  };
+
+  // ── INFO ──
+  async function loadInfo(){
+    const now=new Date(),m=now.getMonth()+1,y=now.getFullYear();
+    document.getElementById('info-date').textContent=now.toLocaleDateString('de-DE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    try{
+      const rows=await sbFetch(`/rest/v1/season_months?season_year=eq.${y}&month=eq.${m}&select=*,exercises(*)`);
+      if(rows&&rows.length){
+        if(rows[0].is_december_vote){
+          document.getElementById('info-active').textContent='Dezember Voting (keine feste Übung)';
+        } else if(rows[0].exercises){
+          document.getElementById('info-active').textContent=rows[0].exercises.name+' ('+slugify(rows[0].exercises.name)+')';
+        } else {
+          document.getElementById('info-active').textContent='Keine Übung zugewiesen';
+        }
+      } else {
+        document.getElementById('info-active').textContent='Keine Saison/Monat hinterlegt';
+      }
+    }catch(e){document.getElementById('info-active').textContent='Fehler beim Laden'}
+  }
+</script>
+</body>
+</html>

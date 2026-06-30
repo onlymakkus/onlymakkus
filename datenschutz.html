@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Datenschutz — onlymakkus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--border:rgba(255,255,255,0.08)}
+    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;cursor:none}
+    .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
+    .cursor.big{width:36px;height:36px}
+    nav{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--cream);text-decoration:none}
+    .nav-link{font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
+    .nav-link:hover{color:var(--cream)}
+    main{max-width:700px;margin:0 auto;padding:60px 24px 100px}
+    h1{font-family:'Bebas Neue';font-size:clamp(2.5rem,8vw,4rem);color:var(--orange);margin-bottom:32px;letter-spacing:.02em}
+    h2{font-family:'Bebas Neue';font-size:1.3rem;letter-spacing:.04em;color:var(--cream);margin:36px 0 12px;text-transform:uppercase}
+    h3{font-size:.85rem;color:var(--cream);margin:20px 0 8px;font-weight:500}
+    p,li{font-size:.82rem;line-height:1.9;color:var(--muted)}
+    a{color:var(--orange)}
+    ul{padding-left:20px;margin-bottom:12px}
+    .placeholder{color:var(--orange);background:rgba(255,78,26,.1);padding:1px 6px;border-radius:2px}
+    footer{padding:32px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:40px;font-size:.6rem;color:var(--muted);letter-spacing:.15em}
+  </style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<nav>
+  <a class="nav-logo" href="index.html">← OM</a>
+  <a class="nav-link" href="impressum.html">Impressum</a>
+</nav>
+<main>
+  <h1>Datenschutz</h1>
+
+  <h2>1. Verantwortlicher</h2>
+  <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist:</p>
+  <p>Markus Sicking<br>
+  <span class="placeholder">[Postfach-Anschrift]</span><br>
+  <span class="placeholder">[PLZ Ort]</span><br>
+  E-Mail: <a href="mailto:info@onlymakkus.de">info@onlymakkus.de</a></p>
+
+  <h2>2. Allgemeines zur Datenverarbeitung</h2>
+  <p>Wir verarbeiten personenbezogene Daten unserer Nutzer grundsätzlich nur, soweit dies zur Bereitstellung einer funktionsfähigen Website sowie unserer Inhalte und Leistungen erforderlich ist.</p>
+
+  <h2>3. Hosting</h2>
+  <p>Diese Website wird bei <strong>Strato AG</strong> (Pascalstraße 10, 10587 Berlin) bzw. <strong>Netlify, Inc.</strong> gehostet. Beim Aufruf der Website werden automatisch Informationen in Server-Log-Files gespeichert (z. B. IP-Adresse, Browsertyp, Datum/Uhrzeit des Zugriffs).</p>
+
+  <h2>4. Google Fonts</h2>
+  <p>Diese Website nutzt zur einheitlichen Darstellung von Schriftarten "Google Fonts", bereitgestellt von Google Ireland Limited. Beim Aufruf einer Seite lädt der Browser die benötigten Fonts von Servern Googles, wobei die IP-Adresse des aufrufenden Geräts übermittelt wird. Weitere Informationen: <a href="https://policies.google.com/privacy" target="_blank">policies.google.com/privacy</a></p>
+
+  <h2>5. Supabase (Datenbank)</h2>
+  <p>Für die CrossFit-Challenge und die Gaming-Highscores nutzen wir Supabase (Supabase Inc.) als Datenbank-Dienstleister. Dort werden folgende Daten gespeichert, sofern du sie aktiv einträgst:</p>
+  <ul>
+    <li>Name (frei gewählt, kein Klarname erforderlich)</li>
+    <li>Challenge-Fortschritt bzw. Spiel-Score</li>
+    <li>Zeitpunkt des Eintrags</li>
+  </ul>
+  <p>Diese Daten werden ausschließlich zur Anzeige der Rangliste verwendet und nicht an Dritte weitergegeben. Eine Löschung kann jederzeit per E-Mail an uns angefragt werden.</p>
+
+  <h2>6. Cookies</h2>
+  <p>Diese Website verwendet keine Tracking- oder Analyse-Cookies. Es werden lediglich technisch notwendige Daten im lokalen Speicher deines Browsers (Local Storage) abgelegt, z. B. für Spielstände oder Login-Status. Diese verlassen dein Gerät nicht.</p>
+
+  <h2>7. Deine Rechte</h2>
+  <p>Du hast jederzeit das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung deiner bei uns gespeicherten Daten. Wende dich dazu einfach per E-Mail an uns.</p>
+
+  <h2>8. Beschwerderecht</h2>
+  <p>Du hast das Recht, dich bei einer Datenschutzaufsichtsbehörde über die Verarbeitung deiner personenbezogenen Daten durch uns zu beschweren.</p>
+</main>
+<footer><span>© 2026 onlymakkus.de</span><span>made with pain & php</span></footer>
+<script>
+const c=document.getElementById('cursor');
+document.addEventListener('mousemove',e=>{c.style.left=e.clientX+'px';c.style.top=e.clientY+'px'});
+document.querySelectorAll('a').forEach(el=>{el.addEventListener('mouseenter',()=>c.classList.add('big'));el.addEventListener('mouseleave',()=>c.classList.remove('big'))});
+</script>
+</body>
+</html>

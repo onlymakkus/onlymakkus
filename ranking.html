@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ranking — onlymakkus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08);--gold:#FFD700;--silver:#C0C0C0;--bronze:#CD7F32}
+    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;cursor:none;overflow-x:hidden}
+    .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
+    .cursor.big{width:36px;height:36px}
+    .login-overlay{position:fixed;inset:0;z-index:9999;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity .5s,visibility .5s;cursor:auto}
+    .login-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+    .login-logo{font-family:'Bebas Neue';font-size:2.4rem}
+    .login-logo span{color:var(--orange)}
+    .login-sub{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted)}
+    .login-form{display:flex;flex-direction:column;gap:10px;width:280px;padding:0 20px}
+    .login-input{background:var(--card);border:1px solid var(--border);color:var(--cream);font-family:'DM Mono';font-size:.85rem;padding:13px 16px;outline:none;width:100%;cursor:text}
+    .login-input:focus{border-color:var(--orange)}
+    .login-btn{padding:13px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.7rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
+    .login-error{font-size:.62rem;color:#ff4444;text-align:center;min-height:16px}
+    .page-content{opacity:0;transition:opacity .6s}
+    .page-content.visible{opacity:1}
+    nav{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--cream);text-decoration:none}
+    .nav-links{display:flex;gap:20px}
+    .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
+    .nav-link:hover,.nav-link.active{color:var(--cream)}
+    main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+    .page-title{font-family:'Bebas Neue';font-size:clamp(2.5rem,8vw,4.5rem);line-height:.95;text-align:center;margin-bottom:40px}
+    .page-title span{color:var(--orange)}
+    .points-box{margin-bottom:32px;padding:20px 24px;background:var(--card);display:flex;gap:32px;flex-wrap:wrap;align-items:center;justify-content:center;text-align:center}
+    .pts-label{font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted)}
+    .pts-item{font-size:.72rem}
+    .pts-item strong{color:var(--orange);font-family:'Bebas Neue';font-size:.9rem}
+    .season-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:48px}
+    @media(max-width:700px){.season-grid{grid-template-columns:1fr}}
+    .col-title{font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+    .hof-row{background:var(--card2);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+    .hof-month{font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+    .hof-winner{font-size:.8rem;display:flex;align-items:center;gap:6px}
+    .hof-pts{font-size:.6rem;color:var(--orange)}
+    .hof-empty{font-size:.65rem;color:rgba(255,255,255,.15);font-style:italic}
+    .ov-row{background:var(--card2);padding:14px 18px;display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:center;margin-bottom:2px}
+    .ov-rank{font-family:'Bebas Neue';font-size:1.2rem}
+    .ov-name{font-size:.82rem}
+    .ov-pts{font-family:'Bebas Neue';font-size:1.6rem;color:var(--orange);text-align:right}
+    .ov-pts-label{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);text-align:right}
+    .ov-empty{padding:20px;text-align:center;font-size:.65rem;color:var(--muted);font-style:italic}
+
+    .dec-section{background:#0a0810;border:1px solid rgba(107,33,168,.3);padding:40px 32px}
+    .dec-title{font-family:'Bebas Neue';font-size:clamp(1.8rem,5vw,3rem);color:#c084fc;margin-bottom:12px;text-align:center}
+    .dec-desc{font-size:.7rem;color:var(--muted);line-height:2;margin-bottom:28px;text-align:center;max-width:560px;margin-left:auto;margin-right:auto}
+    .vote-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:2px}
+    .vote-card{background:rgba(107,33,168,.1);border:1px solid rgba(107,33,168,.2);padding:18px;text-align:center}
+    .vote-name{font-size:.85rem;color:#c084fc;margin-bottom:4px}
+    .vote-count{font-size:.58rem;color:var(--muted);letter-spacing:.1em;margin-bottom:10px}
+    .vote-btn{padding:8px 14px;background:transparent;border:1px solid rgba(192,132,252,.4);color:#c084fc;font-family:'DM Mono';font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;width:100%}
+    .vote-btn.voted{background:#6b21a8;border-color:#c084fc;color:#fff}
+    footer{padding:32px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
+    footer a{color:var(--muted);text-decoration:none}
+  </style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-logo">ONLY<span>MAKKUS</span></div>
+  <p class="login-sub">// members only</p>
+  <div class="login-form">
+    <input type="password" class="login-input" id="pwInput" placeholder="Gruppenpasswort" autocomplete="off">
+    <button class="login-btn" id="loginBtn">Einloggen →</button>
+    <p class="login-error" id="loginError"></p>
+  </div>
+</div>
+<div class="page-content" id="pageContent">
+  <nav>
+    <a class="nav-logo" href="crossfit.html">← Hub</a>
+    <div class="nav-links">
+      <a class="nav-link" href="challenge.html">Challenge</a>
+      <a class="nav-link active" href="ranking.html">Ranking</a>
+      <a class="nav-link" href="kalender.html">Kalender</a>
+    <a class="nav-link" href="uebungen.html">Übungen</a>
+    </div>
+  </nav>
+  <main>
+    <h1 class="page-title">SAISON<span> RANKING</span></h1>
+    <div class="points-box">
+      <div class="pts-label">Punkte:</div>
+      <div class="pts-item">🥇 <strong>10</strong> Pts</div>
+      <div class="pts-item">🥈 <strong>7</strong> Pts</div>
+      <div class="pts-item">🥉 <strong>5</strong> Pts</div>
+      <div class="pts-item">4. <strong>3</strong> Pts</div>
+      <div class="pts-item">Teilnahme <strong>1</strong> Pt</div>
+      <div class="pts-item" style="color:#c084fc">🎄 Dez. ×2</div>
+    </div>
+    <div class="season-grid">
+      <div>
+        <div class="col-title">🏅 Hall of Fame — Monatssieger</div>
+        <div id="hofList"></div>
+      </div>
+      <div>
+        <div class="col-title">🏆 Gesamtranking — Punkte</div>
+        <div id="overallList"><div class="ov-empty">Lädt…</div></div>
+      </div>
+    </div>
+    <div class="dec-section">
+      <div class="dec-title">🗳️ Dezember Voting</div>
+      <p class="dec-desc">Welche Challenge soll als finaler Bosskampf zurückkommen — mit doppelten Punkten?</p>
+      <div class="vote-grid" id="voteGrid"></div>
+    </div>
+  </main>
+  <footer>
+    <span>© 2026 onlymakkus.de</span>
+    <a href="impressum.html">Impressum</a>
+    <a href="datenschutz.html">Datenschutz</a>
+  </footer>
+</div>
+<script>
+  const cursor=document.getElementById('cursor');
+  document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
+  document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
+
+  const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
+  async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
+
+  const PASSWORD='plank2026',SESSION_KEY='om_cf_auth';
+  const overlay=document.getElementById('loginOverlay'),content=document.getElementById('pageContent'),pwInput=document.getElementById('pwInput'),loginError=document.getElementById('loginError');
+  function unlock(){overlay.classList.add('hidden');content.classList.add('visible');sessionStorage.setItem(SESSION_KEY,'1');init()}
+  function tryLogin(){if(pwInput.value.trim()===PASSWORD){unlock()}else{loginError.textContent='✕ falsches passwort';pwInput.value=''}}
+  document.getElementById('loginBtn').addEventListener('click',tryLogin);
+  pwInput.addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin()});
+  if(sessionStorage.getItem(SESSION_KEY)==='1')unlock();
+
+  function getActiveId(){
+    const now=new Date(),m=now.getMonth()+1,y=now.getFullYear();
+    if(y===2026){if(m<=6)return'sideplank';if(m===7)return'plank';if(m===8)return'pushups';if(m===9)return'burpees';if(m===10)return'hollow';if(m===11)return'bearplank';if(m===12)return'sideplank'}
+    return'sideplank';
+  }
+
+  async function init(){await checkAndFinalizeChallenge();renderHallOfFame();renderSeasonRanking();renderVoting()}
+
+  const POINTS_MAP=[10,7,5,3,1],DEC_MULTIPLIER=2;
+  function slugify(name){return name.toLowerCase().replace(/[^a-z0-9]+/g,'').trim()}
+  const MONTH_LABELS={1:'Januar',2:'Februar',3:'März',4:'April',5:'Mai',6:'Juni',7:'Juli',8:'August',9:'September',10:'Oktober',11:'November',12:'Dezember'};
+
+  async function checkAndFinalizeChallenge(){
+    const now=new Date(),currentMonth=now.getMonth()+1,currentYear=now.getFullYear(),currentDay=now.getDate();
+    if(currentDay!==1)return;
+    const lastMonth=currentMonth===1?12:currentMonth-1;
+    const lastMonthYear=currentMonth===1?currentYear-1:currentYear;
+    try{
+      const rows=await sbFetch(`/rest/v1/season_months?season_year=eq.${lastMonthYear}&month=eq.${lastMonth}&select=*,exercises(*)`);
+      if(!rows||!rows.length||rows[0].is_december_vote||!rows[0].exercises)return;
+      const ex=rows[0].exercises;
+      const challengeId=slugify(ex.name);
+      const goal=rows[0].custom_goal||ex.default_goal;
+
+      const existing=await sbFetch(`/rest/v1/season_results?challenge=eq.${challengeId}&select=id&limit=1`);
+      if(existing&&existing.length>0)return;
+      const entries=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${challengeId}&select=*`);
+      if(!entries||!entries.length)return;
+      const isDecChallenge=lastMonth===12;
+      entries.sort((a,b)=>{const aT=a.value1+a.value2,bT=b.value1+b.value2;if(bT!==aT)return bT-aT;return(a.completed_ts||Infinity)-(b.completed_ts||Infinity)});
+      for(let i=0;i<entries.length;i++){
+        const e=entries[i];
+        if(!(e.value1>0||e.value2>0))continue;
+        let pts=i<4?POINTS_MAP[i]:POINTS_MAP[4];
+        if(isDecChallenge)pts*=DEC_MULTIPLIER;
+        const rank=i+1;
+        await sbFetch('/rest/v1/season_results',{method:'POST',prefer:'return=minimal',body:JSON.stringify({challenge:challengeId,name:e.name,rank,points:pts})});
+        const exr=await sbFetch(`/rest/v1/season_ranking?name=eq.${encodeURIComponent(e.name)}&select=*`);
+        if(exr&&exr.length>0){
+          const prev=exr[0];
+          await sbFetch(`/rest/v1/season_ranking?id=eq.${prev.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({total_points:prev.total_points+pts,wins:prev.wins+(rank===1?1:0),updated_at:new Date().toISOString()})});
+        } else {
+          await sbFetch('/rest/v1/season_ranking',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name:e.name,total_points:pts,wins:rank===1?1:0})});
+        }
+      }
+    }catch(e){console.error('Finalize error:',e)}
+  }
+
+  async function renderHallOfFame(){
+    const hofList=document.getElementById('hofList');
+    try{
+      const now=new Date(),currentYear=now.getFullYear(),currentMonth=now.getMonth()+1;
+      const months=await sbFetch(`/rest/v1/season_months?season_year=eq.${currentYear}&select=*,exercises(*)&order=month.asc`);
+      if(!months||!months.length){hofList.innerHTML='<div class="hof-empty">Für dieses Jahr ist noch keine Saison angelegt.</div>';return}
+      const results=await sbFetch('/rest/v1/season_results?select=challenge,name,rank,points&order=created_at.asc');
+      hofList.innerHTML=months.map(row=>{
+        const isActive=row.month===currentMonth;
+        const label=MONTH_LABELS[row.month]+(row.is_december_vote?' 🎄':'');
+        if(row.is_december_vote){
+          return `<div class="hof-row" style="border-left:3px solid var(--orange);"><span class="hof-month" style="color:var(--orange);">${label}</span><span class="hof-empty">${isActive?'— Voting läuft':'— noch nicht dran'}</span></div>`;
+        }
+        if(!row.exercises)return `<div class="hof-row"><span class="hof-month">${label}</span><span class="hof-empty">— keine Übung hinterlegt</span></div>`;
+        const challengeId=slugify(row.exercises.name);
+        const winner=results?results.find(r=>r.challenge===challengeId&&r.rank===1):null;
+        return `<div class="hof-row"><span class="hof-month">${label}</span>${winner?`<span class="hof-winner">🏆 ${winner.name} <span class="hof-pts">+${winner.points} Pts</span></span>`:`<span class="hof-empty">${isActive?'— läuft noch':'— noch nicht gestartet'}</span>`}</div>`;
+      }).join('');
+    }catch(e){hofList.innerHTML='<div class="hof-empty">Fehler beim Laden.</div>'}
+  }
+
+  async function renderSeasonRanking(){
+    const overallList=document.getElementById('overallList');
+    try{
+      const data=await sbFetch('/rest/v1/season_ranking?select=*&order=total_points.desc&limit=10');
+      const medals=['🥇','🥈','🥉'];
+      if(!data||!data.length){overallList.innerHTML='<div class="ov-empty">Noch keine Punkte vergeben — erste Challenge läuft!</div>';return}
+      overallList.innerHTML=data.map((e,i)=>`<div class="ov-row"><div class="ov-rank" style="color:${i===0?'var(--gold)':i===1?'var(--silver)':i===2?'var(--bronze)':'var(--muted)'}">${medals[i]||'#'+(i+1)}</div><div class="ov-name">${e.name}</div><div><div class="ov-pts">${e.total_points}</div><div class="ov-pts-label">Punkte · ${e.wins} Siege</div></div></div>`).join('');
+    }catch(e){overallList.innerHTML='<div class="ov-empty">Fehler beim Laden.</div>'}
+  }
+
+  const VOTE_STORE='om_dec_votes',VOTED_KEY='om_dec_voted';
+  const CHALLENGES=['Side Plank','Plank','Push-Ups','Burpees','Hollow Body Hold','Bear Plank Hold'];
+  function getVotes(){try{return JSON.parse(localStorage.getItem(VOTE_STORE)||'{}')}catch(e){return{}}}
+  function renderVoting(){
+    const votes=getVotes(),myVote=localStorage.getItem(VOTED_KEY),grid=document.getElementById('voteGrid');
+    grid.innerHTML='';
+    CHALLENGES.forEach(ch=>{
+      const count=votes[ch]||0,isVoted=myVote===ch;
+      const card=document.createElement('div');card.className='vote-card';
+      card.innerHTML=`<div class="vote-name">${ch}</div><div class="vote-count">${count} Stimme${count!==1?'n':''}</div><button class="vote-btn ${isVoted?'voted':''}" data-ch="${ch}">${isVoted?'✓ Gewählt':'Abstimmen'}</button>`;
+      grid.appendChild(card);
+    });
+    grid.querySelectorAll('.vote-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const ch=btn.dataset.ch,v=getVotes(),prev=localStorage.getItem(VOTED_KEY);
+        if(prev&&v[prev]>0)v[prev]--;
+        v[ch]=(v[ch]||0)+1;
+        localStorage.setItem(VOTE_STORE,JSON.stringify(v));localStorage.setItem(VOTED_KEY,ch);
+        renderVoting();
+      });
+    });
+  }
+</script>
+</body>
+</html>
