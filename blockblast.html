@@ -449,7 +449,8 @@ document.getElementById('go-save').addEventListener('click',async()=>{
   try{
     await sbFetch('/rest/v1/snake_scores',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name:'BB:'+name,score:bbScore})});
     localStorage.setItem('bb_name',name);msg.textContent='✓ Gespeichert!';await loadScores();
-  }catch{msg.textContent='❌ Fehler'}
+    setTimeout(()=>{document.getElementById('goOverlay').classList.remove('show');init()},1200);
+  }catch{msg.textContent='❌ Fehler beim Speichern'}
   document.getElementById('go-save').textContent='Speichern →';
 });
 document.getElementById('go-skip').addEventListener('click',()=>{document.getElementById('goOverlay').classList.remove('show');init()});
