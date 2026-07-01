@@ -19,7 +19,7 @@
     html { scroll-behavior: smooth; }
     body { background: var(--black); color: var(--cream); font-family: 'DM Mono', monospace; overflow-x: hidden; cursor: none; }
 
-    .cursor { position: fixed; width: 12px; height: 12px; background: var(--orange); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: width 0.2s, height 0.2s; mix-blend-mode: difference; }
+    .cursor { position: fixed; width: 12px; height: 12px; background: var(--orange); border-radius: 50%; pointer-events: none; z-index: 999999; transform: translate(-50%,-50%); transition: width 0.2s, height 0.2s; mix-blend-mode: difference; }
     .cursor.big { width: 40px; height: 40px; }
 
     /* NAV */
@@ -45,10 +45,10 @@
     .marquee-item .dot { color: var(--orange); margin-right: 12px; }
 
     /* MATRIX CANVAS */
-  #matrix-canvas { position: absolute; inset: 0; opacity: 0.07; pointer-events: none; z-index: 0; }
+  #matrix-canvas { position: absolute; inset: 0; opacity: 0.18; pointer-events: none; z-index: 0; }
 
   /* EASTER EGG */
-  .egg-overlay { position: fixed; inset: 0; z-index: 99999; background: var(--black); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; opacity: 0; pointer-events: none; transition: opacity .4s; }
+  .egg-overlay { position: fixed; inset: 0; z-index: 99999; background: var(--black); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; opacity: 0; pointer-events: none; transition: opacity .4s; cursor: none; }
   .egg-overlay.show { opacity: 1; pointer-events: all; }
   .egg-title { font-family: 'Bebas Neue'; font-size: clamp(3rem, 10vw, 7rem); color: var(--orange); text-align: center; line-height: 1; }
   .egg-sub { font-size: .82rem; color: var(--muted); text-align: center; line-height: 1.9; max-width: 440px; }
@@ -271,7 +271,7 @@
   }
 
   function drawMatrix() {
-    ctx.fillStyle = 'rgba(10,10,8,0.05)';
+    ctx.fillStyle = 'rgba(10,10,8,0.04)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#ff4e1a';
     ctx.font = '14px "DM Mono", monospace';
