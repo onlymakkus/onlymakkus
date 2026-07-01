@@ -20,6 +20,7 @@
     /* HERO */
     .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 40px 80px;text-align:center;position:relative;overflow:hidden}
     .hero-noise{position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none}
+    #matrix-canvas{position:absolute;inset:0;opacity:0.35;pointer-events:none;z-index:0}
     .hero-tag{font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:var(--orange);margin-bottom:20px;opacity:0;animation:fadeUp .6s ease forwards .2s}
     .hero-title{font-family:'Bebas Neue';font-size:clamp(5rem,18vw,14rem);line-height:.9;letter-spacing:-.02em;opacity:0;animation:fadeUp .8s ease forwards .4s}
     .hero-title span{color:var(--orange)}
@@ -74,6 +75,7 @@
   </div>
 </nav>
 <section class="hero">
+  <canvas id="matrix-canvas"></canvas>
   <div class="hero-noise"></div>
   <p class="hero-tag">// skill issue incoming</p>
   <h1 class="hero-title">GAMING<br><span>Area</span></h1>
@@ -141,6 +143,30 @@
 const cursor=document.getElementById('cursor');
 document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
 document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
+
+  // ── MATRIX BACKGROUND ──
+  const canvas=document.getElementById('matrix-canvas');
+  const ctx=canvas.getContext('2d');
+  const chars='GAMING01SNAKEWORLDBLOCKBLAST10アイウエオカキクケコABCDEFGHIJKLMNOP';
+  let cols,drops;
+  function initMatrix(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;const fs=14;cols=Math.floor(canvas.width/fs);drops=Array(cols).fill(1)}
+  function drawMatrix(){
+    ctx.fillStyle='rgba(10,10,8,0.035)';ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.font='14px "DM Mono",monospace';
+    for(let i=0;i<drops.length;i++){
+      const char=chars[Math.floor(Math.random()*chars.length)];
+      const bright=Math.random();
+      ctx.fillStyle=bright>0.92?'#ff8060':bright>0.7?'#ff4e1a':'#aa2200';
+      ctx.globalAlpha=Math.random()*0.7+0.15;
+      ctx.fillText(char,i*14,drops[i]*14);
+      if(drops[i]*14>canvas.height&&Math.random()>0.97)drops[i]=0;
+      drops[i]++;
+    }
+    ctx.globalAlpha=1;
+  }
+  initMatrix();
+  window.addEventListener('resize',initMatrix);
+  setInterval(drawMatrix,40);
 </script>
 </body>
 </html>
