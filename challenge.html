@@ -306,14 +306,16 @@
         const patch={value1:newV1,value2:newV2,pin_hash:hashPin(pin)};
         if(wasNotDone&&isDone)patch.completed_ts=Date.now();
         await sbFetch(`/rest/v1/challenge_entries?id=eq.${prev.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(patch)});
-        msg.textContent='✓ Aktualisiert!';msg.className='form-msg ok';
+        const reactions=['💪 Aktualisiert! Schmerz ist temporär, Ruhm ist ewig.','🔥 Gespeichert! Das Ranking zittert.','😤 Update durch! Zeig ihnen was du drauf hast.','🏆 Eingetragen! Du bist auf dem richtigen Weg. Wahrscheinlich.','⚡ Gespeichert! Jemand im Ranking wird gerade nervös.'];
+      msg.textContent=reactions[Math.floor(Math.random()*reactions.length)];msg.className='form-msg ok';
       } else {
         const newV1=Math.min(GOAL,v1),newV2=ACTIVE.dual?Math.min(GOAL,v2):0;
         const isDone=ACTIVE.dual?newV1>=GOAL&&newV2>=GOAL:newV1>=GOAL;
         const entry={challenge:ACTIVE.id,name,value1:newV1,value2:newV2,pin_hash:hashPin(pin)};
         if(isDone)entry.completed_ts=Date.now();
         await sbFetch('/rest/v1/challenge_entries',{method:'POST',prefer:'return=minimal',body:JSON.stringify(entry)});
-        msg.textContent='🎉 Eingetragen! PIN gemerkt für nächstes Mal.';msg.className='form-msg ok';
+        const firstReactions=['🎉 Willkommen im Club der Leidenden!','💀 Eingetragen! Es gibt kein Zurück mehr.','🔥 Dabei! Dein PIN ist dein Schicksal.','😈 Erster Eintrag! Der Körper wird sich beschweren.','🏅 Eingetragen! PIN merken — oder leiden.'];
+        msg.textContent=firstReactions[Math.floor(Math.random()*firstReactions.length)];msg.className='form-msg ok';
       }
       document.getElementById('fName').value='';document.getElementById('fLeft').value='';document.getElementById('fRight').value='';document.getElementById('fPin').value='';
       await renderLeaderboard();

@@ -77,7 +77,12 @@
 
     @media(max-width:600px){nav{padding:16px 20px}.hero{padding:100px 20px 50px}.section{padding:60px 20px}}
     @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-  </style>
+  
+    .moto-box{background:var(--card);border-left:3px solid var(--orange);padding:16px 20px;margin:0 0 0;max-width:1100px;margin:0 auto 0;display:flex;gap:14px;align-items:flex-start}
+    .moto-icon{font-size:1.4rem;flex-shrink:0}
+    .moto-text{font-size:.72rem;color:var(--muted);line-height:1.8;font-style:italic}
+    .moto-text strong{color:var(--cream);font-style:normal}
+</style>
 </head>
 <body>
 <div class="cursor" id="cursor"></div>
@@ -112,6 +117,14 @@
     </div>
   </div>
 
+
+<div style="padding:0 40px;max-width:1100px;margin:24px auto 0;">
+  <div class="moto-box">
+    <span class="moto-icon">💀</span>
+    <p class="moto-text" id="motoQuote"></p>
+  </div>
+</div>
+
   <div class="section">
     <p class="section-label">live status</p>
     <div class="mini-status" id="miniStatus">
@@ -120,6 +133,14 @@
       <div><div class="mini-label">Anführer</div><div class="mini-val" id="ms-leader">—</div></div>
     </div>
   </div>
+
+
+<div style="padding:0 40px;max-width:1100px;margin:24px auto 0;">
+  <div class="moto-box">
+    <span class="moto-icon">💀</span>
+    <p class="moto-text" id="motoQuote"></p>
+  </div>
+</div>
 
   <div class="section" style="padding-top:0;">
     <p class="section-label">bereiche</p>
@@ -205,6 +226,26 @@
     }catch(e){document.getElementById('ms-count').textContent='—'}
   }
   loadMiniStatus();
+
+  // ── MOTIVATIONSSPRÜCHE ──
+  const QUOTES=[
+    {icon:'💀',text:'<strong>Heute ist ein guter Tag</strong> um Schmerzen zu ignorieren.'},
+    {icon:'🔥',text:'Du hast keine Ausreden. Nur <strong>schlechte Entscheidungen.</strong>'},
+    {icon:'😤',text:'Dein Körper sagt Nein. <strong>Dein Kopf auch.</strong> Mach es trotzdem.'},
+    {icon:'🏆',text:'Niemand hat je einen <strong>Side Plank bereut.</strong> Lüge. Aber trotzdem.'},
+    {icon:'💪',text:'<strong>Schmerz ist temporär.</strong> Peinlichkeit im Gruppenranking ist für immer.'},
+    {icon:'😅',text:'Irgendwo macht gerade jemand <strong>keine Burpees.</strong> Sei nicht diese Person.'},
+    {icon:'🧠',text:'Der Unterschied zwischen dir und dem Erstplatzierten? <strong>Minuten.</strong> Manchmal viele.'},
+    {icon:'⚡',text:'<strong>Du kannst aufhören.</strong> Die anderen werden es aber sehen.'},
+    {icon:'🎯',text:'60 Minuten Side Plank klingen nach viel. <strong>Weil es viel ist.</strong>'},
+    {icon:'😂',text:'Wer hat sich das eigentlich ausgedacht? <strong>Egal. Weitermachen.</strong>'},
+    {icon:'🦾',text:'Dein Körper kann mehr als dein Gehirn <strong>erlauben will.</strong>'},
+    {icon:'📊',text:'Das Ranking lügt nicht. <strong>Aber es urteilt.</strong>'},
+  ];
+  const q=QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  document.getElementById('motoQuote').innerHTML=q.text;
+  document.getElementById('motoQuote').parentElement.previousElementSibling.textContent=q.icon;
+
 </script>
 </body>
 </html>
