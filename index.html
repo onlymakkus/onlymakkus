@@ -44,7 +44,16 @@
     .marquee-item { font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); flex-shrink: 0; }
     .marquee-item .dot { color: var(--orange); margin-right: 12px; }
 
-    /* SECTIONS */
+    /* MATRIX CANVAS */
+  #matrix-canvas { position: absolute; inset: 0; opacity: 0.07; pointer-events: none; z-index: 0; }
+
+  /* EASTER EGG */
+  .egg-overlay { position: fixed; inset: 0; z-index: 99999; background: var(--black); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; opacity: 0; pointer-events: none; transition: opacity .4s; }
+  .egg-overlay.show { opacity: 1; pointer-events: all; }
+  .egg-title { font-family: 'Bebas Neue'; font-size: clamp(3rem, 10vw, 7rem); color: var(--orange); text-align: center; line-height: 1; }
+  .egg-sub { font-size: .82rem; color: var(--muted); text-align: center; line-height: 1.9; max-width: 440px; }
+  .egg-close { padding: 12px 28px; background: var(--orange); color: var(--black); border: none; font-family: 'DM Mono'; font-size: .7rem; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
+  .egg-konami { font-size: .6rem; letter-spacing: .2em; color: rgba(255,255,255,.15); text-transform: uppercase; }
     .section { padding: 100px 40px; max-width: 1200px; margin: 0 auto; }
     .section-label { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--orange); margin-bottom: 48px; display: flex; align-items: center; gap: 16px; justify-content: center; }
     .section-label::before { content: ''; flex: 0 0 40px; height: 1px; background: rgba(255,255,255,0.08); }
@@ -126,6 +135,15 @@
 
 <div class="cursor" id="cursor"></div>
 
+<!-- EASTER EGG -->
+<div class="egg-overlay" id="eggOverlay">
+  <div class="egg-konami">↑ ↑ ↓ ↓ ← → ← → B A</div>
+  <div class="egg-title">DU HAST<br>ZU VIEL<br>ZEIT 🤝</div>
+  <p class="egg-sub">Ernsthaft. Wer gibt einen Konami-Code auf einer Website über einen Mann namens Markus ein?<br><br>Respekt. Absoluter Respekt.</p>
+  <p class="egg-sub" style="font-size:.7rem;color:var(--orange);">🏆 Achievement unlocked: "Zu viel Freizeit"</p>
+  <button class="egg-close" id="eggClose">Okay ich geh jetzt → </button>
+</div>
+
 <nav>
   <a class="nav-logo" href="index.html">OM</a>
   <div class="nav-links">
@@ -137,6 +155,7 @@
 
 <!-- HERO -->
 <section class="hero">
+  <canvas id="matrix-canvas"></canvas>
   <div class="hero-noise"></div>
   <p class="hero-tag">// das original seit irgendwann</p>
   <h1 class="hero-title">ONLY<br><span>Makkus</span></h1>
@@ -237,43 +256,58 @@
     el.addEventListener('mouseleave', () => cursor.classList.remove('big'));
   });
 
-  // Mini Leaderboard — Supabase
-  const SB_URL = 'https://bsubsesbcxdaqofmkiqg.supabase.co';
-  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
-  const GOAL = 60;
-  const medals = ['🥇','🥈','🥉'];
+  // ── MATRIX BACKGROUND ──────────────────────────────────────────
+  const canvas = document.getElementById('matrix-canvas');
+  const ctx = canvas.getContext('2d');
+  const chars = 'ONLYMAKKUS0110ABCDEFGHIJKLMNOPQRSTUVWXYZ01アイウエオカキクケコサシスセソ';
+  let cols, drops;
 
-  async function renderMini() {
-    const lb = document.getElementById('miniLb');
-    lb.innerHTML = '<div class="mt-empty">Lädt…</div>';
-    try {
-      const data = await fetch(SB_URL + '/rest/v1/challenge_entries?challenge=eq.sideplank&select=*', {
-        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
-      }).then(r => r.json());
-
-      data.sort((a,b) => (b.value1+b.value2)-(a.value1+a.value2));
-
-      if(!data.length) {
-        lb.innerHTML = '<div class="mt-empty">Noch keine Einträge — trag dich in der CrossFit-Seite ein!</div>';
-        return;
-      }
-      lb.innerHTML = data.slice(0,5).map((e,i) => {
-        const total = Math.round(((e.value1+e.value2)/(GOAL*2))*100);
-        const pct = Math.min(100, total);
-        const rankColor = i===0?'#FFD700':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--muted)';
-        return `<div class="mt-row">
-          <div class="mt-rank" style="color:${rankColor}">${medals[i]||'#'+(i+1)}</div>
-          <div class="mt-name">${e.name}</div>
-          <div class="mt-val ${e.value1>=GOAL?'done':''}">${e.value1}m${e.value1>=GOAL?' ✓':''}</div>
-          <div class="mt-val ${e.value2>=GOAL?'done':''}">${e.value2}m${e.value2>=GOAL?' ✓':''}</div>
-          <div class="mt-bar-wrap"><div class="mt-bar-fill" style="width:${pct}%"></div></div>
-        </div>`;
-      }).join('');
-    } catch(e) {
-      lb.innerHTML = '<div class="mt-empty">Fehler beim Laden.</div>';
-    }
+  function initMatrix() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const fontSize = 14;
+    cols = Math.floor(canvas.width / fontSize);
+    drops = Array(cols).fill(1);
   }
-  renderMini();
+
+  function drawMatrix() {
+    ctx.fillStyle = 'rgba(10,10,8,0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ff4e1a';
+    ctx.font = '14px "DM Mono", monospace';
+    for (let i = 0; i < drops.length; i++) {
+      const char = chars[Math.floor(Math.random() * chars.length)];
+      ctx.globalAlpha = Math.random() * 0.5 + 0.1;
+      ctx.fillText(char, i * 14, drops[i] * 14);
+      if (drops[i] * 14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  initMatrix();
+  window.addEventListener('resize', initMatrix);
+  setInterval(drawMatrix, 50);
+
+  // ── KONAMI CODE EASTER EGG ──────────────────────────────────────
+  const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+  let konamiPos = 0;
+
+  document.addEventListener('keydown', e => {
+    if (e.key === KONAMI[konamiPos]) {
+      konamiPos++;
+      if (konamiPos === KONAMI.length) {
+        document.getElementById('eggOverlay').classList.add('show');
+        konamiPos = 0;
+      }
+    } else {
+      konamiPos = e.key === KONAMI[0] ? 1 : 0;
+    }
+  });
+
+  document.getElementById('eggClose').addEventListener('click', () => {
+    document.getElementById('eggOverlay').classList.remove('show');
+  });
 </script>
 </body>
 </html>
