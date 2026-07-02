@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Tetris — onlymakkus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08)}
+    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;min-height:100vh;display:flex;flex-direction:column;cursor:none;overflow-x:hidden;touch-action:none;user-select:none}
+    .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
+    .cursor.big{width:36px;height:36px}
+    nav{padding:18px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--cream);text-decoration:none}
+    .nav-center{font-family:'Bebas Neue';font-size:1.5rem;letter-spacing:.1em}
+    .nav-center span{color:var(--orange)}
+    .nav-links{display:flex;gap:20px}
+    .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
+    .nav-link:hover{color:var(--cream)}
+    main{flex:1;display:flex;flex-direction:column;align-items:center;padding:20px 16px 60px;gap:16px}
+    .game-layout{display:flex;gap:20px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+    .side-panel{display:flex;flex-direction:column;gap:16px;width:100px}
+    .stat-box{background:var(--card);padding:12px;text-align:center}
+    .stat-val{font-family:'Bebas Neue';font-size:1.6rem;color:var(--orange);line-height:1}
+    .stat-label{font-size:.48rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+    .next-box{background:var(--card);padding:12px;text-align:center}
+    .next-label{font-size:.48rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+    #nextCanvas{display:block;margin:0 auto}
+    .canvas-wrap{position:relative}
+    canvas{border:1px solid rgba(255,78,26,.3);display:block}
+    .go-overlay{display:none;position:absolute;inset:0;background:rgba(10,10,8,.92);flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
+    .go-overlay.show{display:flex}
+    .go-title{font-family:'Bebas Neue';font-size:2.6rem;color:var(--orange);line-height:1}
+    .go-sub{font-size:.72rem;color:var(--muted)}
+    .go-input{background:#1c1c18;border:1px solid var(--border);color:var(--cream);font-family:'DM Mono';font-size:.85rem;padding:11px 16px;outline:none;width:190px;text-align:center}
+    .go-input:focus{border-color:var(--orange)}
+    .go-btn{padding:11px 28px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.68rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;cursor:none}
+    .go-btn:hover{background:#ff6b3d}
+    .go-skip{font-size:.6rem;color:var(--muted);background:none;border:none;cursor:none;text-decoration:underline}
+    .go-msg{font-size:.62rem;color:var(--orange);min-height:16px}
+    .hint{font-size:.6rem;color:var(--muted);text-align:center;letter-spacing:.05em;line-height:1.8}
+    .btn-start{padding:12px 30px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.68rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;cursor:none}
+    .btn-start:hover{background:#ff6b3d}
+    .section-label{font-size:.6rem;letter-spacing:.35em;text-transform:uppercase;color:var(--orange);margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:14px;width:100%;max-width:480px}
+    .section-label::before,.section-label::after{content:'';flex:0 0 32px;height:1px;background:var(--border)}
+    .hi-table{width:100%;max-width:480px;display:flex;flex-direction:column;gap:2px}
+    .hi-row{background:var(--card);padding:12px 18px;display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center}
+    .hi-rank{font-family:'Bebas Neue';font-size:1.1rem;color:var(--muted)}
+    .hi-name{font-size:.78rem}
+    .hi-score{font-family:'Bebas Neue';font-size:1.3rem;color:var(--orange)}
+    .hi-empty{padding:24px;text-align:center;font-size:.7rem;color:#444;font-style:italic;background:var(--card);width:100%;max-width:480px}
+
+    /* MOBILE CONTROLS */
+    .mctrl{display:none;gap:8px;margin-top:8px;justify-content:center;flex-wrap:wrap}
+    .mctrl-btn{width:52px;height:52px;background:var(--card);border:1px solid rgba(255,78,26,.3);color:var(--orange);font-size:1.3rem;display:flex;align-items:center;justify-content:center;border-radius:4px}
+    .mctrl-btn:active{background:rgba(255,78,26,.2)}
+    @media(hover:none) and (pointer:coarse){.mctrl{display:flex}.hint{display:none}}
+
+    footer{padding:32px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
+    footer a{color:var(--muted);text-decoration:none}
+    @media(max-width:480px){canvas#c{width:240px!important;height:480px!important}}
+  </style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<nav>
+  <a class="nav-logo" href="index.html">← OM</a>
+  <div class="nav-center">TETRIS <span>2026</span></div>
+  <div class="nav-links">
+    <a class="nav-link" href="gaming.html">Gaming Hub</a>
+    <a class="nav-link" href="snake.html">Snake</a>
+    <a class="nav-link" href="flappy.html">Flappy</a>
+  </div>
+</nav>
+<main>
+  <div class="game-layout">
+    <div class="side-panel">
+      <div class="stat-box"><div class="stat-val" id="score">0</div><div class="stat-label">Punkte</div></div>
+      <div class="stat-box"><div class="stat-val" id="lines">0</div><div class="stat-label">Reihen</div></div>
+      <div class="stat-box"><div class="stat-val" id="level">1</div><div class="stat-label">Level</div></div>
+      <div class="stat-box"><div class="stat-val" id="hi">0</div><div class="stat-label">Rekord</div></div>
+      <div class="next-box">
+        <div class="next-label">Nächstes</div>
+        <canvas id="nextCanvas" width="72" height="72"></canvas>
+      </div>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="c" width="240" height="480"></canvas>
+      <div class="go-overlay" id="go">
+        <div class="go-title">GAME OVER</div>
+        <div class="go-sub" id="go-sub">Score: 0</div>
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+          <div style="font-size:.6rem;color:var(--muted);letter-spacing:.1em">Name für Highscore</div>
+          <input class="go-input" id="go-name" placeholder="Dein Name" maxlength="20">
+          <button class="go-btn" id="go-save">Speichern →</button>
+          <div class="go-msg" id="go-msg"></div>
+          <button class="go-skip" id="go-skip">Überspringen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="hint">←→ Bewegen · ↑ Rotieren · ↓ Soft Drop · Space Hard Drop</p>
+  <div class="mctrl">
+    <div class="mctrl-btn" id="m-left">←</div>
+    <div class="mctrl-btn" id="m-rotate">↻</div>
+    <div class="mctrl-btn" id="m-right">→</div>
+    <div class="mctrl-btn" id="m-down">↓</div>
+    <div class="mctrl-btn" id="m-drop" style="width:112px">⬇ DROP</div>
+  </div>
+  <button class="btn-start" id="btn-start">▶ Starten</button>
+  <div class="section-label">🏆 Top 10 Highscores</div>
+  <div class="hi-table" id="scores"><div class="hi-empty">Lädt…</div></div>
+</main>
+<footer><span>© 2026 onlymakkus.de</span><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a></footer>
+<script>
+const SB='https://bsubsesbcxdaqofmkiqg.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
+async function sbFetch(p,o={}){const r=await fetch(SB+p,{...o,headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
+const cursor=document.getElementById('cursor');
+document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
+document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
+
+async function loadScores(){
+  try{
+    const data=await sbFetch('/rest/v1/snake_scores?name=like.TT:*&select=*&order=score.desc&limit=10');
+    const scores=(data||[]).map(s=>({...s,name:s.name.replace('TT:','')}));
+    const medals=['🥇','🥈','🥉'];
+    const el=document.getElementById('scores');
+    if(!scores.length){el.innerHTML='<div class="hi-empty">Noch keine Scores — sei der Erste! 🧱</div>';return}
+    el.innerHTML=scores.map((s,i)=>`<div class="hi-row"><div class="hi-rank">${medals[i]||'#'+(i+1)}</div><div class="hi-name">${s.name}</div><div class="hi-score">${s.score}</div></div>`).join('');
+  }catch{document.getElementById('scores').innerHTML='<div class="hi-empty">Fehler beim Laden.</div>'}
+}
+loadScores();
+
+// ── TETRIS ENGINE ──
+const COLS=10,ROWS=20,CELL=24;
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+const nextCanvas=document.getElementById('nextCanvas'),nctx=nextCanvas.getContext('2d');
+
+const COLORS={I:'#5a9db5',O:'#b59f3b',T:'#9b59b6',S:'#538d4e',Z:'#ff4e1a',J:'#3a6ea5',L:'#ff8060'};
+const SHAPES={
+  I:[[1,1,1,1]],
+  O:[[1,1],[1,1]],
+  T:[[0,1,0],[1,1,1]],
+  S:[[0,1,1],[1,1,0]],
+  Z:[[1,1,0],[0,1,1]],
+  J:[[1,0,0],[1,1,1]],
+  L:[[0,0,1],[1,1,1]],
+};
+const TYPES=Object.keys(SHAPES);
+
+let board,current,next,score,lines,level,hi=parseInt(localStorage.getItem('tt_hi')||'0'),running,over,dropCounter,dropInterval,lastTime,animFrame;
+document.getElementById('hi').textContent=hi;
+
+function randPiece(){
+  const type=TYPES[Math.floor(Math.random()*TYPES.length)];
+  return {type,shape:SHAPES[type].map(r=>[...r]),x:Math.floor(COLS/2)-1,y:0,color:COLORS[type]};
+}
+
+function init(){
+  board=Array.from({length:ROWS},()=>Array(COLS).fill(null));
+  current=randPiece();next=randPiece();
+  score=0;lines=0;level=1;running=false;over=false;
+  dropCounter=0;dropInterval=800;lastTime=0;
+  document.getElementById('score').textContent=0;
+  document.getElementById('lines').textContent=0;
+  document.getElementById('level').textContent=1;
+  document.getElementById('go').classList.remove('show');
+  drawAll();
+}
+
+function collides(shape,x,y){
+  for(let r=0;r<shape.length;r++)for(let c=0;c<shape[r].length;c++){
+    if(!shape[r][c])continue;
+    const bx=x+c,by=y+r;
+    if(bx<0||bx>=COLS||by>=ROWS)return true;
+    if(by>=0&&board[by][bx])return true;
+  }
+  return false;
+}
+
+function merge(){
+  current.shape.forEach((row,r)=>row.forEach((v,c)=>{
+    if(v){const by=current.y+r,bx=current.x+c;if(by>=0)board[by][bx]=current.color}
+  }));
+}
+
+function rotate(shape){
+  const rows=shape.length,cols=shape[0].length;
+  const res=Array.from({length:cols},()=>Array(rows).fill(0));
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)res[c][rows-1-r]=shape[r][c];
+  return res;
+}
+
+function tryRotate(){
+  const rotated=rotate(current.shape);
+  const kicks=[0,-1,1,-2,2];
+  for(const k of kicks){
+    if(!collides(rotated,current.x+k,current.y)){current.shape=rotated;current.x+=k;return}
+  }
+}
+
+function clearLines(){
+  let cleared=0;
+  for(let r=ROWS-1;r>=0;r--){
+    if(board[r].every(c=>c!==null)){
+      board.splice(r,1);board.unshift(Array(COLS).fill(null));cleared++;r++;
+    }
+  }
+  if(cleared){
+    const pts=[0,100,300,500,800][cleared]*level;
+    score+=pts;lines+=cleared;
+    level=Math.floor(lines/10)+1;
+    dropInterval=Math.max(100,800-((level-1)*70));
+    document.getElementById('score').textContent=score;
+    document.getElementById('lines').textContent=lines;
+    document.getElementById('level').textContent=level;
+    if(score>hi){hi=score;localStorage.setItem('tt_hi',hi);document.getElementById('hi').textContent=hi}
+  }
+}
+
+function pieceDown(){
+  if(!collides(current.shape,current.x,current.y+1)){current.y++}
+  else{
+    merge();clearLines();
+    current=next;next=randPiece();
+    if(collides(current.shape,current.x,current.y)){endGame();return}
+  }
+  dropCounter=0;
+}
+
+function hardDrop(){
+  while(!collides(current.shape,current.x,current.y+1))current.y++;
+  pieceDown();
+}
+
+function moveX(dx){if(!collides(current.shape,current.x+dx,current.y))current.x+=dx}
+
+function drawBoard(){
+  ctx.fillStyle='#0a0a08';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle='rgba(255,255,255,.03)';
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)ctx.strokeRect(c*CELL,r*CELL,CELL,CELL);
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(board[r][c]){ctx.fillStyle=board[r][c];ctx.fillRect(c*CELL+1,r*CELL+1,CELL-2,CELL-2)}
+  }
+}
+
+function drawPiece(){
+  ctx.fillStyle=current.color;
+  current.shape.forEach((row,r)=>row.forEach((v,c)=>{
+    if(v){
+      const px=(current.x+c)*CELL,py=(current.y+r)*CELL;
+      if(py>=0)ctx.fillRect(px+1,py+1,CELL-2,CELL-2);
+    }
+  }));
+}
+
+function drawGhost(){
+  let gy=current.y;
+  while(!collides(current.shape,current.x,gy+1))gy++;
+  ctx.strokeStyle=current.color;ctx.globalAlpha=0.3;
+  current.shape.forEach((row,r)=>row.forEach((v,c)=>{
+    if(v){const px=(current.x+c)*CELL,py=(gy+r)*CELL;ctx.strokeRect(px+2,py+2,CELL-4,CELL-4)}
+  }));
+  ctx.globalAlpha=1;
+}
+
+function drawNext(){
+  nctx.fillStyle='#141410';nctx.fillRect(0,0,72,72);
+  const shape=next.shape,cs=14;
+  const offX=(72-shape[0].length*cs)/2,offY=(72-shape.length*cs)/2;
+  nctx.fillStyle=next.color;
+  shape.forEach((row,r)=>row.forEach((v,c)=>{if(v)nctx.fillRect(offX+c*cs+1,offY+r*cs+1,cs-2,cs-2)}));
+}
+
+function drawAll(){
+  drawBoard();
+  if(running&&!over){drawGhost();drawPiece()}
+  drawNext();
+  if(!running&&!over){
+    ctx.fillStyle='rgba(10,10,8,0.5)';ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#ff4e1a';ctx.font='bold 13px "DM Mono"';ctx.textAlign='center';
+    ctx.fillText('▶ STARTEN',canvas.width/2,canvas.height/2);
+  }
+}
+
+function gameLoop(time=0){
+  if(!running)return;
+  const delta=time-lastTime;lastTime=time;
+  dropCounter+=delta;
+  if(dropCounter>dropInterval)pieceDown();
+  drawAll();
+  animFrame=requestAnimationFrame(gameLoop);
+}
+
+function start(){
+  if(running)return;
+  init();running=true;lastTime=0;
+  animFrame=requestAnimationFrame(gameLoop);
+}
+
+function endGame(){
+  running=false;over=true;
+  cancelAnimationFrame(animFrame);
+  document.getElementById('go-sub').textContent='Score: '+score+' · '+lines+' Reihen';
+  document.getElementById('go-name').value=localStorage.getItem('tt_name')||'';
+  document.getElementById('go-msg').textContent='';
+  document.getElementById('go').classList.add('show');
+}
+
+document.addEventListener('keydown',e=>{
+  if(!running)return;
+  if(e.key==='ArrowLeft'){moveX(-1);e.preventDefault()}
+  else if(e.key==='ArrowRight'){moveX(1);e.preventDefault()}
+  else if(e.key==='ArrowDown'){pieceDown();e.preventDefault()}
+  else if(e.key==='ArrowUp'){tryRotate();e.preventDefault()}
+  else if(e.key===' '){hardDrop();e.preventDefault()}
+  drawAll();
+});
+
+document.getElementById('btn-start').addEventListener('click',start);
+document.getElementById('m-left').addEventListener('click',()=>{if(running){moveX(-1);drawAll()}});
+document.getElementById('m-right').addEventListener('click',()=>{if(running){moveX(1);drawAll()}});
+document.getElementById('m-down').addEventListener('click',()=>{if(running){pieceDown();drawAll()}});
+document.getElementById('m-rotate').addEventListener('click',()=>{if(running){tryRotate();drawAll()}});
+document.getElementById('m-drop').addEventListener('click',()=>{if(running){hardDrop();drawAll()}});
+
+document.getElementById('go-save').addEventListener('click',async()=>{
+  const name=document.getElementById('go-name').value.trim(),msg=document.getElementById('go-msg');
+  if(!name){msg.textContent='⚠ Name eingeben';return}
+  document.getElementById('go-save').textContent='…';
+  try{
+    await sbFetch('/rest/v1/snake_scores',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name:'TT:'+name,score})});
+    localStorage.setItem('tt_name',name);msg.textContent='✓ Gespeichert!';await loadScores();
+    setTimeout(()=>{document.getElementById('go').classList.remove('show');init()},1200);
+  }catch{msg.textContent='❌ Fehler'}
+  document.getElementById('go-save').textContent='Speichern →';
+});
+document.getElementById('go-skip').addEventListener('click',()=>{document.getElementById('go').classList.remove('show');init()});
+
+init();
+</script>
+</body>
+</html>
