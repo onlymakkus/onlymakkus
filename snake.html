@@ -39,6 +39,20 @@
     .hint{font-size:.62rem;color:var(--muted);text-align:center;letter-spacing:.06em;line-height:1.8}
     .btn-start{padding:13px 36px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.72rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;cursor:none;transition:background .2s,transform .2s}
     .btn-start:hover{background:#ff6b3d;transform:translateY(-2px)}
+
+    /* D-PAD (mobile only) */
+    .dpad{display:none;grid-template-columns:56px 56px 56px;grid-template-rows:56px 56px 56px;gap:6px;margin:20px auto 0;width:fit-content}
+    .dpad-btn{background:var(--card);border:1px solid rgba(255,78,26,.3);color:var(--orange);font-size:1.4rem;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:manipulation;border-radius:4px}
+    .dpad-btn:active{background:rgba(255,78,26,.2)}
+    .dpad-up{grid-column:2;grid-row:1}
+    .dpad-left{grid-column:1;grid-row:2}
+    .dpad-pause{grid-column:2;grid-row:2;font-size:1rem}
+    .dpad-right{grid-column:3;grid-row:2}
+    .dpad-down{grid-column:2;grid-row:3}
+    @media(hover:none) and (pointer:coarse){
+      .dpad{display:grid}
+      .hint{display:none}
+    }
     .section-label{font-size:.6rem;letter-spacing:.35em;text-transform:uppercase;color:var(--orange);margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:14px;width:100%}
     .section-label::before,.section-label::after{content:'';flex:0 0 32px;height:1px;background:var(--border)}
     .hi-table{width:100%;max-width:480px;display:flex;flex-direction:column;gap:2px}
@@ -89,6 +103,13 @@
     <p class="hint">↑↓←→ oder WASD · Space = Pause · Swipe auf Mobile</p>
     <br>
     <button class="btn-start" id="btn-start">▶ Starten</button>
+  </div>
+  <div class="dpad">
+    <div class="dpad-btn dpad-up" id="dp-up">↑</div>
+    <div class="dpad-btn dpad-left" id="dp-left">←</div>
+    <div class="dpad-btn dpad-pause" id="dp-pause">⏸</div>
+    <div class="dpad-btn dpad-right" id="dp-right">→</div>
+    <div class="dpad-btn dpad-down" id="dp-down">↓</div>
   </div>
   <div class="section-label">🏆 Top 10 Highscores</div>
   <div class="hi-table" id="scores"><div class="hi-empty">Lädt…</div></div>
@@ -209,6 +230,22 @@ canvas.addEventListener('touchend',e=>{
   ts=null; lastSwipeDir=null;
 },{passive:false});
 document.getElementById('btn-start').addEventListener('click',start);
+
+// ── D-PAD (mobile) ──
+function dpadMove(newDir){
+  if(!running){start();return}
+  if(paused)return;
+  if(newDir.x!==-dir.x||newDir.y!==-dir.y)nd=newDir;
+}
+document.getElementById('dp-up').addEventListener('click',()=>dpadMove({x:0,y:-1}));
+document.getElementById('dp-down').addEventListener('click',()=>dpadMove({x:0,y:1}));
+document.getElementById('dp-left').addEventListener('click',()=>dpadMove({x:-1,y:0}));
+document.getElementById('dp-right').addEventListener('click',()=>dpadMove({x:1,y:0}));
+document.getElementById('dp-pause').addEventListener('click',()=>{
+  if(!running){start();return}
+  paused=!paused;
+  if(paused){clearInterval(loop);draw()}else{loop=setInterval(step,speed())}
+});
 document.getElementById('go-save').addEventListener('click',async()=>{
   const name=document.getElementById('go-name').value.trim(),msg=document.getElementById('go-msg');
   if(!name){msg.textContent='⚠ Name eingeben';return}
