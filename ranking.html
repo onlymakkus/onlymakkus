@@ -92,7 +92,7 @@
       <div class="pts-item">🥈 <strong>7</strong> Pts</div>
       <div class="pts-item">🥉 <strong>5</strong> Pts</div>
       <div class="pts-item">4. <strong>3</strong> Pts</div>
-      <div class="pts-item">Teilnahme <strong>1</strong> Pt</div>
+      <div class="pts-item">Ziel erreicht <strong>3</strong> Pts</div><div class="pts-item">Teilnahme <strong>1</strong> Pt</div><div class="pts-item" style="color:var(--muted)">unter 25% → immer <strong style="color:var(--muted)">1</strong> Pt</div>
       <div class="pts-item" style="color:#c084fc">🎄 Dez. ×2</div>
     </div>
     <div class="season-grid">
@@ -141,7 +141,7 @@
 
   async function init(){await checkAndFinalizeChallenge();renderHallOfFame();renderSeasonRanking();renderVoting()}
 
-  const POINTS_MAP=[10,7,5,3,1],DEC_MULTIPLIER=2;
+  const POINTS_MAP=[10,7,5,3],POINTS_GOAL=3,POINTS_PART=1,DEC_MULTIPLIER=2;
   function slugify(name){return name.toLowerCase().replace(/[^a-z0-9]+/g,'').trim()}
   const MONTH_LABELS={1:'Januar',2:'Februar',3:'März',4:'April',5:'Mai',6:'Juni',7:'Juli',8:'August',9:'September',10:'Oktober',11:'November',12:'Dezember'};
 
@@ -166,7 +166,15 @@
       for(let i=0;i<entries.length;i++){
         const e=entries[i];
         if(!(e.value1>0||e.value2>0))continue;
-        let pts=i<4?POINTS_MAP[i]:POINTS_MAP[4];
+        const totalVal=e.value1+(e.value2||0);
+        const maxVal=(goal||60)*(rows[0].exercises?.default_dual?2:1);
+        const pct=totalVal/maxVal;
+        const goalReached=pct>=1;
+        const aboveThreshold=pct>=0.25;
+        let pts;
+        if(!aboveThreshold){pts=POINTS_PART;}
+        else if(i<POINTS_MAP.length){pts=POINTS_MAP[i];}
+        else{pts=goalReached?POINTS_GOAL:POINTS_PART;}
         if(isDecChallenge)pts*=DEC_MULTIPLIER;
         const rank=i+1;
         await sbFetch('/rest/v1/season_results',{method:'POST',prefer:'return=minimal',body:JSON.stringify({challenge:challengeId,name:e.name,rank,points:pts})});
