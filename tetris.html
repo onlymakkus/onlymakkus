@@ -8,7 +8,7 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08)}
-    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;min-height:100vh;display:flex;flex-direction:column;cursor:none;overflow-x:hidden;touch-action:none;user-select:none}
+    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;min-height:100vh;display:flex;flex-direction:column;cursor:none;overflow-x:hidden;user-select:none}
     .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
     .cursor.big{width:36px;height:36px}
     nav{padding:18px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
@@ -21,6 +21,7 @@
     main{flex:1;display:flex;flex-direction:column;align-items:center;padding:20px 16px 60px;gap:16px}
     .game-layout{display:flex;gap:20px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
     .side-panel{display:flex;flex-direction:column;gap:16px;width:100px}
+    .mobile-stats{display:none}
     .stat-box{background:var(--card);padding:12px;text-align:center}
     .stat-val{font-family:'Bebas Neue';font-size:1.6rem;color:var(--orange);line-height:1}
     .stat-label{font-size:.48rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:3px}
@@ -29,6 +30,7 @@
     #nextCanvas{display:block;margin:0 auto}
     .canvas-wrap{position:relative}
     canvas{border:1px solid rgba(255,78,26,.3);display:block}
+    #c{touch-action:none}
     .go-overlay{display:none;position:absolute;inset:0;background:rgba(10,10,8,.92);flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
     .go-overlay.show{display:flex}
     .go-title{font-family:'Bebas Neue';font-size:2.6rem;color:var(--orange);line-height:1}
@@ -53,9 +55,20 @@
 
     /* MOBILE CONTROLS */
     .mctrl{display:none;gap:8px;margin-top:8px;justify-content:center;flex-wrap:wrap}
-    .mctrl-btn{width:52px;height:52px;background:var(--card);border:1px solid rgba(255,78,26,.3);color:var(--orange);font-size:1.3rem;display:flex;align-items:center;justify-content:center;border-radius:4px}
+    .mctrl-btn{width:52px;height:52px;background:var(--card);border:1px solid rgba(255,78,26,.3);color:var(--orange);font-size:1.3rem;display:flex;align-items:center;justify-content:center;border-radius:4px;touch-action:none}
     .mctrl-btn:active{background:rgba(255,78,26,.2)}
     @media(hover:none) and (pointer:coarse){.mctrl{display:flex}.hint{display:none}}
+    @media(max-width:600px){
+      .game-layout{flex-direction:column;align-items:center;gap:12px}
+      .side-panel{display:none}
+      .mobile-stats{display:flex;gap:8px;width:100%;max-width:280px;justify-content:center;flex-wrap:wrap}
+      .mobile-stat{background:var(--card);padding:8px 10px;text-align:center;flex:1;min-width:56px}
+      .mobile-stat .stat-val{font-size:1.2rem}
+      .mobile-stat .stat-label{font-size:.42rem}
+      .mobile-next{background:var(--card);padding:6px 10px;display:flex;align-items:center;gap:8px;flex:0 0 auto}
+      .mobile-next .next-label{font-size:.42rem;margin:0}
+      .mobile-next canvas{width:36px;height:36px}
+    }
 
     footer{padding:32px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
     footer a{color:var(--muted);text-decoration:none}
@@ -74,6 +87,18 @@
   </div>
 </nav>
 <main>
+  <!-- MOBILE STATS BAR (shown only on small screens) -->
+  <div class="mobile-stats">
+    <div class="mobile-stat"><div class="stat-val" id="score-m">0</div><div class="stat-label">Punkte</div></div>
+    <div class="mobile-stat"><div class="stat-val" id="lines-m">0</div><div class="stat-label">Reihen</div></div>
+    <div class="mobile-stat"><div class="stat-val" id="level-m">1</div><div class="stat-label">Level</div></div>
+    <div class="mobile-stat"><div class="stat-val" id="hi-m">0</div><div class="stat-label">Rekord</div></div>
+    <div class="mobile-next">
+      <div class="next-label">Next</div>
+      <canvas id="nextCanvasMobile" width="36" height="36"></canvas>
+    </div>
+  </div>
+
   <div class="game-layout">
     <div class="side-panel">
       <div class="stat-box"><div class="stat-val" id="score">0</div><div class="stat-label">Punkte</div></div>
@@ -137,6 +162,11 @@ loadScores();
 const COLS=10,ROWS=20,CELL=24;
 const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
 const nextCanvas=document.getElementById('nextCanvas'),nctx=nextCanvas.getContext('2d');
+const nextCanvasMobile=document.getElementById('nextCanvasMobile'),nctxM=nextCanvasMobile.getContext('2d');
+function setStat(id,val){
+  const el=document.getElementById(id);if(el)el.textContent=val;
+  const elM=document.getElementById(id+'-m');if(elM)elM.textContent=val;
+}
 
 const COLORS={I:'#5a9db5',O:'#b59f3b',T:'#9b59b6',S:'#538d4e',Z:'#ff4e1a',J:'#3a6ea5',L:'#ff8060'};
 const SHAPES={
@@ -151,7 +181,7 @@ const SHAPES={
 const TYPES=Object.keys(SHAPES);
 
 let board,current,next,score,lines,level,hi=parseInt(localStorage.getItem('tt_hi')||'0'),running,over,dropCounter,dropInterval,lastTime,animFrame;
-document.getElementById('hi').textContent=hi;
+setStat('hi',hi);
 
 function randPiece(){
   const type=TYPES[Math.floor(Math.random()*TYPES.length)];
@@ -163,9 +193,9 @@ function init(){
   current=randPiece();next=randPiece();
   score=0;lines=0;level=1;running=false;over=false;
   dropCounter=0;dropInterval=800;lastTime=0;
-  document.getElementById('score').textContent=0;
-  document.getElementById('lines').textContent=0;
-  document.getElementById('level').textContent=1;
+  setStat('score',0);
+  setStat('lines',0);
+  setStat('level',1);
   document.getElementById('go').classList.remove('show');
   drawAll();
 }
@@ -213,10 +243,10 @@ function clearLines(){
     score+=pts;lines+=cleared;
     level=Math.floor(lines/10)+1;
     dropInterval=Math.max(100,800-((level-1)*70));
-    document.getElementById('score').textContent=score;
-    document.getElementById('lines').textContent=lines;
-    document.getElementById('level').textContent=level;
-    if(score>hi){hi=score;localStorage.setItem('tt_hi',hi);document.getElementById('hi').textContent=hi}
+    setStat('score',score);
+    setStat('lines',lines);
+    setStat('level',level);
+    if(score>hi){hi=score;localStorage.setItem('tt_hi',hi);setStat('hi',hi)}
   }
 }
 
@@ -272,6 +302,12 @@ function drawNext(){
   const offX=(72-shape[0].length*cs)/2,offY=(72-shape.length*cs)/2;
   nctx.fillStyle=next.color;
   shape.forEach((row,r)=>row.forEach((v,c)=>{if(v)nctx.fillRect(offX+c*cs+1,offY+r*cs+1,cs-2,cs-2)}));
+
+  nctxM.fillStyle='#141410';nctxM.fillRect(0,0,36,36);
+  const csM=7;
+  const offXM=(36-shape[0].length*csM)/2,offYM=(36-shape.length*csM)/2;
+  nctxM.fillStyle=next.color;
+  shape.forEach((row,r)=>row.forEach((v,c)=>{if(v)nctxM.fillRect(offXM+c*csM+0.5,offYM+r*csM+0.5,csM-1,csM-1)}));
 }
 
 function drawAll(){
