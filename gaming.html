@@ -48,6 +48,42 @@
     .tag{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;border:1px solid rgba(255,255,255,.1);padding:3px 10px;color:var(--muted)}
     .game-card-arrow{font-size:1.1rem;color:var(--orange);margin-top:auto;transition:transform .2s}
     .game-card:hover .game-card-arrow{transform:translate(4px,-4px)}
+
+    /* FEATURE CARD (Funke) */
+    .feature-card{display:grid;grid-template-columns:1fr 1fr;gap:0;background:linear-gradient(135deg,var(--card) 0%,#0f1408 100%);border:1px solid rgba(143,219,106,.15);text-decoration:none;color:inherit;overflow:hidden;position:relative;transition:border-color .3s}
+    .feature-card:hover{border-color:rgba(143,219,106,.4)}
+    .feature-visual{background:#0a0c07;display:flex;align-items:center;justify-content:center;padding:40px;position:relative;overflow:hidden;min-height:280px}
+    .feature-visual::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(143,219,106,.04) 0px,rgba(143,219,106,.04) 1px,transparent 1px,transparent 3px)}
+    .feature-glyph{font-family:'Space Mono',monospace;font-size:4.5rem;color:#8fdb6a;text-shadow:0 0 30px rgba(143,219,106,.4);z-index:1}
+    .feature-content{padding:44px 40px;display:flex;flex-direction:column;justify-content:center;gap:14px}
+    .feature-badge{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:#8fdb6a;display:flex;align-items:center;gap:10px}
+    .feature-badge::before{content:'';width:24px;height:1px;background:#8fdb6a}
+    .feature-title{font-family:'Bebas Neue';font-size:3.2rem;line-height:.95;color:var(--cream)}
+    .feature-title span{color:#8fdb6a}
+    .feature-desc{font-size:.75rem;color:var(--muted);line-height:1.9;max-width:380px}
+    .feature-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+    .feature-tag{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;border:1px solid rgba(143,219,106,.25);padding:3px 10px;color:#8fdb6a}
+    .feature-arrow{font-size:1.2rem;color:#8fdb6a;margin-top:8px;transition:transform .2s}
+    .feature-card:hover .feature-arrow{transform:translate(4px,-4px)}
+    @media(max-width:700px){.feature-card{grid-template-columns:1fr}.feature-visual{min-height:180px;padding:24px}.feature-glyph{font-size:3rem}}
+
+    /* COMPACT GRID for remaining games */
+    .compact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2px;margin-top:2px}
+    .compact-card{background:var(--card);padding:28px 24px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:8px;transition:background .25s,transform .25s,box-shadow .25s;cursor:none;position:relative;overflow:hidden}
+    .compact-card:hover{background:var(--card2);transform:translateY(-4px);box-shadow:0 12px 24px rgba(0,0,0,.35)}
+    .compact-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--orange);transform:scaleX(0);transform-origin:left;transition:transform .3s ease}
+    .compact-card:hover::before{transform:scaleX(1)}
+    .compact-icon{font-size:1.8rem;transition:transform .3s ease}
+    .compact-card:hover .compact-icon{transform:scale(1.15) rotate(-4deg)}
+    .compact-title{font-family:'Bebas Neue';font-size:1.8rem;line-height:1;letter-spacing:.02em}
+    .compact-sub{font-size:.65rem;color:var(--orange);letter-spacing:.03em}
+    .compact-desc{font-size:.65rem;color:var(--muted);line-height:1.7;max-height:0;opacity:0;overflow:hidden;transition:max-height .3s ease,opacity .25s ease,margin-top .3s ease}
+    .compact-card:hover .compact-desc{max-height:60px;opacity:1;margin-top:2px}
+    .compact-arrow{font-size:.9rem;color:var(--orange);align-self:flex-end;transition:transform .2s;margin-top:auto}
+    .compact-card:hover .compact-arrow{transform:translate(3px,-3px)}
+    @media(hover:none){
+      .compact-desc{max-height:60px;opacity:1;margin-top:2px}
+    }
     /* DISCORD */
     .discord-section{padding:80px 40px;border-top:1px solid var(--border)}
     .discord-inner{max-width:1100px;margin:0 auto}
@@ -101,52 +137,58 @@
   </div>
 </div>
 <div class="section">
+  <p class="section-label">das highlight</p>
+  <a href="funke.html" class="feature-card">
+    <div class="feature-visual">
+      <div class="feature-glyph">▓▒░</div>
+    </div>
+    <div class="feature-content">
+      <div class="feature-badge">Text-Adventure</div>
+      <div class="feature-title">DER LETZTE<br><span>FUNKE</span></div>
+      <p class="feature-desc">Drei Jahre nach dem großen Absturz. Keine Ausrüstung, kein Tutorial — nur du und das, was du entscheidest. Ein episches Terminal-Adventure mit echten Konsequenzen.</p>
+      <div class="feature-tags"><span class="feature-tag">story</span><span class="feature-tag">entscheidungen</span><span class="feature-tag">mehrere kapitel</span></div>
+      <div class="feature-arrow">→ Jetzt spielen</div>
+    </div>
+  </a>
+</div>
+
+<div class="section" style="padding-top:0;">
   <p class="section-label">die spiele</p>
-  <div class="game-cards">
-    <a href="snake.html" class="game-card">
-      <div class="game-card-num">01</div>
-      <div class="game-card-icon">🐍</div>
-      <div class="game-card-title">SNAKE</div>
-      <div class="game-card-sub">Classic Edition</div>
-      <p class="game-card-desc">Der Klassiker. Nicht gegen die Wand. Nicht in dich selbst. Wird schneller. Du wirst panisch.</p>
-      <div class="game-card-tags"><span class="tag">echtzeit</span><span class="tag">highscore</span><span class="tag">wasd</span></div>
-      <div class="game-card-arrow">→</div>
+  <div class="compact-grid">
+    <a href="snake.html" class="compact-card">
+      <div class="compact-icon">🐍</div>
+      <div class="compact-title">SNAKE</div>
+      <div class="compact-sub">Classic Edition</div>
+      <p class="compact-desc">Nicht gegen die Wand. Nicht in dich selbst.</p>
+      <div class="compact-arrow">→</div>
     </a>
-    <a href="wordle.html" class="game-card">
-      <div class="game-card-num">02</div>
-      <div class="game-card-icon">🟩</div>
-      <div class="game-card-title">WORDLE</div>
-      <div class="game-card-sub">Deutsch · täglich neu</div>
-      <p class="game-card-desc">Errate das deutsche 5-Buchstaben-Wort in 6 Versuchen. Jeden Tag ein neues. Streak aufbauen.</p>
-      <div class="game-card-tags"><span class="tag">täglich</span><span class="tag">streak</span><span class="tag">teilen</span></div>
-      <div class="game-card-arrow">→</div>
+    <a href="wordle.html" class="compact-card">
+      <div class="compact-icon">🟩</div>
+      <div class="compact-title">WORDLE</div>
+      <div class="compact-sub">Täglich neu</div>
+      <p class="compact-desc">5 Buchstaben, 6 Versuche, jeden Tag neu.</p>
+      <div class="compact-arrow">→</div>
     </a>
-    <a href="blockblast.html" class="game-card">
-      <div class="game-card-num">03</div>
-      <div class="game-card-icon">🟧</div>
-      <div class="game-card-title">BLOCK BLAST</div>
-      <div class="game-card-sub">Puzzle Edition</div>
-      <p class="game-card-desc">Blöcke platzieren, Reihen löschen, Combos bauen. Kein Zeitdruck — nur Taktik und Hirnschmalz.</p>
-      <div class="game-card-tags"><span class="tag">puzzle</span><span class="tag">combo</span><span class="tag">highscore</span></div>
-      <div class="game-card-arrow">→</div>
+    <a href="blockblast.html" class="compact-card">
+      <div class="compact-icon">🟧</div>
+      <div class="compact-title">BLOCK BLAST</div>
+      <div class="compact-sub">Puzzle Edition</div>
+      <p class="compact-desc">Blöcke platzieren, Reihen löschen, Combos bauen.</p>
+      <div class="compact-arrow">→</div>
     </a>
-    <a href="flappy.html" class="game-card">
-      <div class="game-card-num">04</div>
-      <div class="game-card-icon">🐦</div>
-      <div class="game-card-title">FLAPPY<br>MAKKUS</div>
-      <div class="game-card-sub">Ein Tap. Viel Frust.</div>
-      <p class="game-card-desc">Durch die Röhren fliegen ohne zu crashen. Klingt einfach. Ist es nicht. Bereite dich auf Rage vor.</p>
-      <div class="game-card-tags"><span class="tag">1-tap</span><span class="tag">brutal</span><span class="tag">highscore</span></div>
-      <div class="game-card-arrow">→</div>
+    <a href="flappy.html" class="compact-card">
+      <div class="compact-icon">🐦</div>
+      <div class="compact-title">FLAPPY MAKKUS</div>
+      <div class="compact-sub">Ein Tap. Viel Frust.</div>
+      <p class="compact-desc">Durch die Röhren fliegen ohne zu crashen.</p>
+      <div class="compact-arrow">→</div>
     </a>
-    <a href="tetris.html" class="game-card">
-      <div class="game-card-num">05</div>
-      <div class="game-card-icon">🧱</div>
-      <div class="game-card-title">TETRIS</div>
-      <div class="game-card-sub">2026 Edition</div>
-      <p class="game-card-desc">Der Klassiker aller Klassiker. Reihen bauen, Reihen löschen, wird schneller, du wirst panisch.</p>
-      <div class="game-card-tags"><span class="tag">klassiker</span><span class="tag">levels</span><span class="tag">highscore</span></div>
-      <div class="game-card-arrow">→</div>
+    <a href="tetris.html" class="compact-card">
+      <div class="compact-icon">🧱</div>
+      <div class="compact-title">TETRIS</div>
+      <div class="compact-sub">2026 Edition</div>
+      <p class="compact-desc">Der Klassiker aller Klassiker.</p>
+      <div class="compact-arrow">→</div>
     </a>
   </div>
 </div>

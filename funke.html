@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Der letzte Funke</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c0f0a; --bg2:#12160f; --panel:#151a11;
+  --phosphor:#8fdb6a; --phosphor-dim:#4a7038; --phosphor-bright:#c4ffab;
+  --amber:#e8a33d; --amber-dim:#8a621f;
+  --danger:#d9564a; --border:#2a3320;
+  --text:#c9d4bc; --text-dim:#5f6d52;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--text); font-family:'Space Mono',monospace;
+  overflow:hidden; cursor:default;
+}
+/* CRT scanline + vignette overlay */
+.crt{position:fixed;inset:0;pointer-events:none;z-index:500;
+  background:
+    repeating-linear-gradient(0deg,rgba(0,0,0,0.15) 0px,rgba(0,0,0,0.15) 1px,transparent 1px,transparent 3px),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%);
+  mix-blend-mode:multiply;
+}
+.flicker{position:fixed;inset:0;pointer-events:none;z-index:499;background:var(--phosphor);opacity:0;animation:flicker 7s infinite}
+@keyframes flicker{0%,96%,100%{opacity:0}97%{opacity:.015}98%{opacity:0}99%{opacity:.02}}
+
+#app{position:relative;height:100vh;display:flex;flex-direction:column}
+
+/* TOP BAR */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+.topbar-title{font-family:'Bebas Neue';letter-spacing:.15em;font-size:1rem;color:var(--phosphor)}
+.topbar-title span{color:var(--amber)}
+.topbar-right{display:flex;gap:14px;align-items:center}
+.tb-btn{background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'Space Mono';font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;cursor:pointer;transition:all .15s}
+.tb-btn:hover{border-color:var(--phosphor-dim);color:var(--phosphor)}
+.chapter-tag{font-size:.6rem;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase}
+
+/* MAIN SCREEN */
+#screen{flex:1;overflow-y:auto;padding:0}
+.screen-inner{max-width:720px;margin:0 auto;padding:40px 24px 120px}
+
+/* TITLE SCREEN */
+.title-screen{min-height:calc(100vh - 45px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;gap:28px}
+.title-logo{font-family:'Bebas Neue';font-size:clamp(2.8rem,10vw,5.5rem);line-height:.9;letter-spacing:.02em;color:var(--phosphor);text-shadow:0 0 24px rgba(143,219,106,.3)}
+.title-logo span{color:var(--amber);text-shadow:0 0 24px rgba(232,163,61,.35)}
+.title-sub{font-size:.72rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;max-width:420px;line-height:2}
+.title-menu{display:flex;flex-direction:column;gap:2px;margin-top:12px;width:260px}
+.title-btn{background:var(--panel);border:1px solid var(--border);color:var(--phosphor);font-family:'Space Mono';font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;padding:14px;cursor:pointer;transition:all .15s;text-align:left}
+.title-btn::before{content:'▸ ';color:var(--amber)}
+.title-btn:hover{background:var(--phosphor-dim);color:var(--bg);border-color:var(--phosphor)}
+.title-btn:disabled{opacity:.3;cursor:not-allowed}
+.title-btn:disabled:hover{background:var(--panel);color:var(--phosphor)}
+.title-foot{font-size:.6rem;color:var(--text-dim);letter-spacing:.15em;margin-top:20px}
+
+/* STORY TEXT */
+.story-block{margin-bottom:20px;opacity:0}
+.story-block.show{opacity:1;transition:opacity .4s ease}
+.story-loc{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--amber);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.story-loc::before{content:'◆';font-size:.5rem}
+.story-p{font-size:.92rem;line-height:1.85;color:var(--text);margin-bottom:14px}
+.story-p.narrator{color:var(--text-dim);font-style:italic;font-size:.82rem}
+.story-p .hl{color:var(--phosphor-bright)}
+.story-speaker{color:var(--amber);font-weight:700;letter-spacing:.03em}
+.story-divider{border:none;border-top:1px dashed var(--border);margin:24px 0}
+
+/* CHOICES */
+.choices{display:flex;flex-direction:column;gap:2px;margin-top:24px;opacity:0}
+.choices.show{opacity:1;transition:opacity .4s ease .1s}
+.choice-btn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-family:'Space Mono';font-size:.82rem;line-height:1.5;padding:14px 18px;cursor:pointer;text-align:left;transition:all .15s;display:flex;gap:12px}
+.choice-btn:hover{border-color:var(--phosphor);background:rgba(143,219,106,.06)}
+.choice-btn:hover .choice-num{color:var(--phosphor-bright)}
+.choice-num{color:var(--phosphor-dim);flex-shrink:0;font-weight:700}
+.choice-btn.locked{opacity:.35;cursor:not-allowed}
+.choice-btn.locked:hover{border-color:var(--border);background:var(--panel)}
+.choice-req{font-size:.6rem;color:var(--danger);margin-top:4px;display:block}
+.choice-btn.danger .choice-num{color:var(--danger)}
+
+/* CONTINUE PROMPT */
+.continue-prompt{margin-top:20px;font-size:.72rem;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:8px;opacity:0;animation:pulse 1.6s infinite}
+.continue-prompt.show{opacity:1}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* INVENTORY DRAWER */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;opacity:0;pointer-events:none;transition:opacity .25s}
+.drawer-overlay.show{opacity:1;pointer-events:all}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:320px;max-width:88vw;background:var(--bg2);border-left:1px solid var(--border);z-index:601;transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column}
+.drawer.show{transform:translateX(0)}
+.drawer-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.drawer-title{font-family:'Bebas Neue';letter-spacing:.1em;color:var(--phosphor);font-size:1rem}
+.drawer-close{background:none;border:none;color:var(--text-dim);font-size:1.2rem;cursor:pointer}
+.drawer-body{flex:1;overflow-y:auto;padding:16px 20px}
+.inv-empty{color:var(--text-dim);font-size:.72rem;font-style:italic;text-align:center;padding:40px 0}
+.inv-item{background:var(--panel);border:1px solid var(--border);padding:12px 14px;margin-bottom:8px}
+.inv-item-name{color:var(--phosphor);font-size:.78rem;font-weight:700;margin-bottom:4px}
+.inv-item-desc{color:var(--text-dim);font-size:.68rem;line-height:1.6}
+.stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.68rem}
+.stat-row:last-child{border-bottom:none}
+.stat-label{color:var(--text-dim);letter-spacing:.05em;text-transform:uppercase}
+.stat-val{color:var(--amber)}
+.drawer-section-title{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim);margin:20px 0 10px}
+.drawer-section-title:first-child{margin-top:0}
+
+/* END SCREEN */
+.end-screen{min-height:calc(100vh - 45px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;gap:20px}
+.end-badge{font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:var(--amber)}
+.end-title{font-family:'Bebas Neue';font-size:clamp(2rem,7vw,3.5rem);color:var(--phosphor);line-height:1}
+.end-text{font-size:.82rem;color:var(--text-dim);max-width:480px;line-height:1.9}
+
+/* TOAST */
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--phosphor-dim);color:var(--phosphor);font-size:.68rem;letter-spacing:.08em;padding:10px 20px;z-index:700;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* SCROLLBAR */
+#screen::-webkit-scrollbar,.drawer-body::-webkit-scrollbar{width:6px}
+#screen::-webkit-scrollbar-thumb,.drawer-body::-webkit-scrollbar-thumb{background:var(--border)}
+
+@media(max-width:480px){
+  .screen-inner{padding:28px 16px 100px}
+  .drawer{width:100vw;max-width:100vw}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-title">DER LETZTE <span>FUNKE</span></div>
+    <div class="topbar-right">
+      <span class="chapter-tag" id="chapterTag"></span>
+      <button class="tb-btn" id="btnInventory">Inventar</button>
+      <button class="tb-btn" id="btnSave">Speichern</button>
+    </div>
+  </div>
+  <div id="screen"><div class="screen-inner" id="screenInner"></div></div>
+</div>
+
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="drawer-title">STATUS</div>
+    <button class="drawer-close" id="drawerClose">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="flicker"></div>
+<div class="crt"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   ENGINE
+   ══════════════════════════════════════════════════════════════ */
+
+const SAVE_KEY = 'funke_save_v1';
+
+let state = {
+  node: 'title',
+  flags: {},
+  inventory: [],
+  visitedNodes: []
+};
+
+function saveGame(){
+  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  showToast('💾 Fortschritt gespeichert');
+}
+function loadGame(){
+  const raw = localStorage.getItem(SAVE_KEY);
+  if(!raw) return false;
+  try{ state = JSON.parse(raw); return true; }catch(e){ return false; }
+}
+function hasSave(){ return !!localStorage.getItem(SAVE_KEY); }
+function clearSave(){ localStorage.removeItem(SAVE_KEY); }
+
+function showToast(msg, dur=2000){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+function addItem(id){
+  if(!state.inventory.includes(id)){
+    state.inventory.push(id);
+    const item = ITEMS[id];
+    showToast('📦 Erhalten: ' + (item ? item.name : id));
+  }
+}
+function hasItem(id){ return state.inventory.includes(id); }
+function setFlag(key, val=true){ state.flags[key] = val; }
+function getFlag(key){ return !!state.flags[key]; }
+
+function checkCondition(cond){
+  if(!cond) return true;
+  if(cond.item && !hasItem(cond.item)) return false;
+  if(cond.flag){
+    const flagState = getFlag(cond.flag);
+    if(cond.invert && flagState) return false;
+    if(!cond.invert && !flagState) return false;
+  }
+  if(cond.notFlag && getFlag(cond.notFlag)) return false;
+  return true;
+}
+
+/* ── RENDER ────────────────────────────────────────────────── */
+
+function renderTitle(){
+  document.getElementById('chapterTag').textContent = '';
+  const el = document.getElementById('screenInner');
+  const continueDisabled = !hasSave();
+  el.innerHTML = `
+    <div class="title-screen">
+      <div>
+        <div class="title-logo">DER LETZTE<br><span>FUNKE</span></div>
+        <p class="title-sub">Ein Text-Adventure aus der Zeit nach dem großen Absturz.<br>Keine Ausrüstung. Kein Tutorial. Nur du und das was du entscheidest.</p>
+      </div>
+      <div class="title-menu">
+        <button class="title-btn" id="btnNewGame">Neues Spiel</button>
+        <button class="title-btn" id="btnContinue" ${continueDisabled?'disabled':''}>Fortsetzen</button>
+      </div>
+      <div class="title-foot">KAPITEL 1 · "STAUB UND STILLE"</div>
+    </div>
+  `;
+  document.getElementById('btnNewGame').addEventListener('click', ()=>{
+    clearSave();
+    state = { node:'ch1_intro', flags:{}, inventory:[], visitedNodes:[] };
+    goTo('ch1_intro');
+  });
+  document.getElementById('btnContinue').addEventListener('click', ()=>{
+    if(loadGame()) goTo(state.node, true);
+  });
+}
+
+function renderEnd(node){
+  document.getElementById('chapterTag').textContent = '';
+  const el = document.getElementById('screenInner');
+  const nextBtn = node.nextChapter
+    ? `<button class="title-btn" id="btnNextChapter">Nächstes Kapitel</button>`
+    : `<button class="title-btn" disabled>Nächstes Kapitel folgt bald</button>`;
+  el.innerHTML = `
+    <div class="end-screen">
+      <div class="end-badge">${node.badge || 'ENDE'}</div>
+      <div class="end-title">${node.title}</div>
+      <p class="end-text">${node.text}</p>
+      <div class="title-menu" style="margin-top:20px">
+        ${nextBtn}
+        <button class="title-btn" id="btnRestart">Zurück zum Titel</button>
+      </div>
+    </div>
+  `;
+  if(node.nextChapter){
+    document.getElementById('btnNextChapter').addEventListener('click', ()=>{
+      goTo(node.nextChapter);
+    });
+  }
+  document.getElementById('btnRestart').addEventListener('click', ()=>{
+    goTo('title');
+  });
+}
+
+/* Cleanup für "weiter"-Listener des vorherigen Nodes */
+let advanceCleanup = null;
+
+function renderNode(nodeId, skipAnim){
+  const node = STORY[nodeId];
+  if(!node){ console.error('Missing node:', nodeId); return; }
+
+  // alte "weiter"-Listener des vorherigen Nodes entfernen
+  if(advanceCleanup){ advanceCleanup(); advanceCleanup = null; }
+
+  if(node.type === 'title'){ renderTitle(); return; }
+  if(node.type === 'end'){ renderEnd(node); return; }
+
+  // apply onEnter effects
+  if(node.onEnter){
+    if(node.onEnter.items) node.onEnter.items.forEach(addItem);
+    if(node.onEnter.flags) node.onEnter.flags.forEach(f=>setFlag(f));
+  }
+
+  // Chapter-Tag nur ändern wenn der Node ein eigenes definiert (sonst letztes behalten)
+  if(node.chapter) document.getElementById('chapterTag').textContent = node.chapter;
+
+  const el = document.getElementById('screenInner');
+  let html = '';
+
+  if(node.location){
+    html += `<div class="story-loc">${node.location}</div>`;
+  }
+
+  // Textblöcke: optionales showIf blendet Blöcke abhängig von Flags/Items ein
+  const textBlocks = (node.text || []).filter(block =>
+    typeof block === 'string' || checkCondition(block.showIf)
+  );
+
+  textBlocks.forEach(block=>{
+    if(typeof block === 'string'){
+      html += `<p class="story-p">${block}</p>`;
+    } else if(block.speaker){
+      html += `<p class="story-p"><span class="story-speaker">${block.speaker}:</span> ${block.line}</p>`;
+    } else if(block.narrator){
+      html += `<p class="story-p narrator">${block.narrator}</p>`;
+    } else if(block.p){
+      html += `<p class="story-p">${block.p}</p>`;
+    } else if(block.divider){
+      html += `<hr class="story-divider">`;
+    }
+  });
+
+  el.innerHTML = html;
+
+  setTimeout(()=>{
+    el.querySelectorAll('p, .story-loc').forEach((p,i)=>{
+      setTimeout(()=>p.classList.add('show'), i*70);
+    });
+  },10);
+
+  const afterDelay = Math.min(600, textBlocks.length*70 + 200);
+
+  setTimeout(()=>{
+    if(node.next){
+      const cp = document.createElement('div');
+      cp.className = 'continue-prompt';
+      cp.innerHTML = '▸ weiter';
+      el.appendChild(cp);
+      setTimeout(()=>cp.classList.add('show'), 100);
+      // Klick irgendwo im Text ODER Leertaste/Enter — Listener werden
+      // beim Weitergehen UND beim nächsten renderNode sauber entfernt
+      const advance = ()=>{
+        if(advanceCleanup){ advanceCleanup(); advanceCleanup = null; }
+        goTo(node.next);
+      };
+      const keyHandler = (e)=>{
+        if(e.key !== ' ' && e.key !== 'Enter') return;
+        e.preventDefault();
+        advance();
+      };
+      const clickHandler = ()=> advance();
+      document.addEventListener('keydown', keyHandler);
+      el.addEventListener('click', clickHandler);
+      advanceCleanup = ()=>{
+        document.removeEventListener('keydown', keyHandler);
+        el.removeEventListener('click', clickHandler);
+      };
+    } else if(node.choices){
+      // showIf blendet Choices komplett aus (statt sie gesperrt anzuzeigen) —
+      // für Optionen, die Wissen spoilern würden, das der Spieler nicht hat
+      const visibleChoices = node.choices.filter(c => checkCondition(c.showIf));
+      const cWrap = document.createElement('div');
+      cWrap.className = 'choices';
+      visibleChoices.forEach((choice, i)=>{
+        const locked = choice.require && !checkCondition(choice.require);
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn' + (locked ? ' locked' : '') + (choice.danger ? ' danger' : '');
+        let reqText = '';
+        if(locked && choice.require){
+          if(choice.require.item) reqText = `<span class="choice-req">Benötigt: ${ITEMS[choice.require.item]?.name || choice.require.item}</span>`;
+          else reqText = `<span class="choice-req">Nicht verfügbar</span>`;
+        }
+        btn.innerHTML = `<span class="choice-num">${i+1}</span><span>${choice.label}${reqText}</span>`;
+        if(!locked){
+          btn.addEventListener('click', ()=>{
+            if(choice.setFlag) setFlag(choice.setFlag);
+            if(choice.addItem) addItem(choice.addItem);
+            goTo(choice.to);
+          });
+        }
+        cWrap.appendChild(btn);
+      });
+      el.appendChild(cWrap);
+      setTimeout(()=>cWrap.classList.add('show'), 100);
+    }
+  }, afterDelay);
+}
+
+function goTo(nodeId, skipScroll){
+  state.node = nodeId;
+  if(!state.visitedNodes.includes(nodeId)) state.visitedNodes.push(nodeId);
+  renderNode(nodeId);
+  if(!skipScroll){
+    document.getElementById('screen').scrollTo({top:0, behavior:'instant'});
+  }
+  // autosave on every node change (except title)
+  if(nodeId !== 'title') saveGame();
+}
+
+/* ── INVENTORY DRAWER ─────────────────────────────────────── */
+
+function renderDrawer(){
+  const body = document.getElementById('drawerBody');
+  let html = '<div class="drawer-section-title">Gegenstände</div>';
+  if(state.inventory.length === 0){
+    html += '<div class="inv-empty">Nichts bei dir. Noch nicht.</div>';
+  } else {
+    state.inventory.forEach(id=>{
+      const item = ITEMS[id];
+      if(!item) return;
+      html += `<div class="inv-item"><div class="inv-item-name">${item.name}</div><div class="inv-item-desc">${item.desc}</div></div>`;
+    });
+  }
+  body.innerHTML = html;
+}
+
+document.getElementById('btnInventory').addEventListener('click', ()=>{
+  renderDrawer();
+  document.getElementById('drawer').classList.add('show');
+  document.getElementById('drawerOverlay').classList.add('show');
+});
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.getElementById('drawerOverlay').addEventListener('click', closeDrawer);
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('show');
+  document.getElementById('drawerOverlay').classList.remove('show');
+}
+document.getElementById('btnSave').addEventListener('click', ()=>{
+  if(state.node === 'title'){ showToast('⚠ Erst ein Spiel starten'); return; }
+  saveGame();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   ITEMS
+   ══════════════════════════════════════════════════════════════ */
+const ITEMS = {
+  taschenlampe: { name:'Kurbeltaschenlampe', desc:'Klappert wenn man sie schüttelt. Funktioniert trotzdem. Irgendwie tröstlich.' },
+  konservendose: { name:'Konservendose (unbeschriftet)', desc:'Könnte Bohnen sein. Könnte auch etwas anderes sein. Niemand traut sich, es rauszufinden.' },
+  drahtstueck: { name:'Verbogenes Drahtstück', desc:'Sieht aus wie Müll. Ist aber genau die richtige Form für... irgendwas. Man weiß es noch nicht.' },
+  notizzettel: { name:'Zerknitterter Zettel', desc:'"Der Generator läuft noch. Frag nach Rosa." Mehr steht nicht drauf.' },
+  wasserflasche: { name:'Halbvolle Wasserflasche', desc:'Das Wichtigste hier draußen. Wichtiger als Gold, wichtiger als Ausreden.' },
+  kompass: { name:'Rostiger Kompass', desc:'Zeigt ungefähr nach Norden. "Ungefähr" ist in dieser Welt schon ziemlich gut.' },
+  eisenstange: { name:'Eisenstange', desc:'Kein elegantes Werkzeug. Aber eins, das man in die Hand nehmen will, wenn es laut wird.' },
+  funkkristall: { name:'Funkkristall', desc:'Klein, durchsichtig, leicht warm. Summt fast unmerklich, wenn man es nah ans Ohr hält.' },
+  turmschluessel: { name:'Verrosteter Schlüssel', desc:'Passt zu keinem Schloss, das du kennst. Noch nicht.' },
+  seil: { name:'Kletterseil', desc:'Alt, aber die Fasern halten noch. Man hofft es zumindest.' },
+};
+
+/* ══════════════════════════════════════════════════════════════
+   STORY — KAPITEL 1: "STAUB UND STILLE"
+   ══════════════════════════════════════════════════════════════ */
+const STORY = {
+
+  title: { type: 'title' },
+
+  // ── INTRO ──
+  ch1_intro: {
+    chapter: 'KAPITEL 1 — STAUB UND STILLE',
+    location: 'IRGENDWO. STRASSE 9, RICHTUNG NORDEN.',
+    text: [
+      { narrator: 'Drei Jahre ist es her, seit das Netz zusammenbrach. Nicht durch Krieg. Nicht durch Bomben. Sondern weil niemand mehr wusste, wie man die Server neu startet, nachdem der letzte, der es wusste, in Rente ging und sein Passwort mitnahm.' },
+      { narrator: 'Kein Strom. Keine Kühlschränke. Kein Streaming. Die Zivilisation fiel nicht mit einem Knall, sondern mit einem Achselzucken.' },
+      'Du gehst seit drei Tagen. Deine Wasserflasche ist halb leer, deine Beine sind schwerer als deine Sorgen, und vor dir liegt eine Stadt, die auf keiner Karte mehr existiert, weil auch die Kartendienste nicht mehr existieren.',
+      'Ein Wegweiser steht schief am Straßenrand. Die Farbe ist verblasst, aber lesbar: <span class="hl">"Rattenbach — 4 km"</span>.'
+    ],
+    choices: [
+      { label: 'Weiter Richtung Rattenbach gehen.', to: 'ch1_approach' },
+      { label: 'Erstmal ausruhen und die Wasserflasche checken.', to: 'ch1_rest' },
+    ]
+  },
+
+  ch1_rest: {
+    chapter: 'KAPITEL 1 — STAUB UND STILLE',
+    text: [
+      'Du setzt dich auf einen umgekippten Leitpfosten und schüttelst deine Flasche. Noch genug für heute. Vielleicht.',
+      { narrator: 'In der Ferne bellt ein Hund. Oder etwas, das früher mal ein Hund war und sich seitdem Gedanken über seine Lebenssituation gemacht hat.' },
+    ],
+    onEnter: { items: ['wasserflasche'] },
+    next: 'ch1_approach'
+  },
+
+  ch1_approach: {
+    chapter: 'KAPITEL 1 — STAUB UND STILLE',
+    location: 'STADTRAND VON RATTENBACH',
+    text: [
+      'Rattenbach ist kleiner, als der Name vermuten lässt — vielleicht zwanzig Häuser, die meisten mit eingeschlagenen Fenstern und der Sorte Stille, die entsteht, wenn niemand mehr da ist, der sich beschwert.',
+      'Aber: Rauch. Ein dünner grauer Faden, der aus einem Schornstein am anderen Ende der Straße steigt.',
+      { narrator: 'Rauch bedeutet Feuer. Feuer bedeutet Menschen. Menschen bedeuten... eigentlich alles kann das bedeuten. Gute Nachrichten, schlechte Nachrichten, oder einfach nur jemanden, der zufällig auch noch lebt.' }
+    ],
+    choices: [
+      { label: 'Direkt zum Haus mit dem Rauch gehen.', to: 'ch1_house_direct' },
+      { label: 'Erst die Straße nach Brauchbarem absuchen.', to: 'ch1_search_street' },
+    ]
+  },
+
+  ch1_search_street: {
+    chapter: 'KAPITEL 1 — STAUB UND STILLE',
+    location: 'HAUPTSTRASSE, RATTENBACH',
+    text: [
+      'Du schleichst von Haus zu Haus. Die meisten sind längst geplündert — leere Regale, umgeworfene Möbel, der immer gleiche Geruch von Staub und altem Papier.',
+      'In einem Vorgarten, halb unter einem umgekippten Fahrrad begraben, findest du eine <span class="hl">unbeschriftete Konservendose</span> und ein <span class="hl">verbogenes Drahtstück</span>, das aussieht, als hätte es mal zu etwas Nützlichem gehört.',
+      { narrator: 'Auf einer Fensterbank liegt außerdem ein zerknitterter Zettel. Die Handschrift ist krakelig, aber lesbar: "Der Generator läuft noch. Frag nach Rosa."' }
+    ],
+    onEnter: { items: ['konservendose', 'drahtstueck', 'notizzettel'] },
+    next: 'ch1_house_direct'
+  },
+
+  ch1_house_direct: {
+    chapter: 'KAPITEL 1 — STAUB UND STILLE',
+    location: 'VOR DEM HAUS MIT DEM RAUCH',
+    text: [
+      'Das Haus sieht kaum besser aus als die anderen — aber die Tür ist neu verstärkt, mit Brettern und einem Vorhängeschloss, das definitiv nicht aus der Bauzeit stammt.',
+      { narrator: 'Jemand hier hat sich Mühe gegeben, drinnen zu bleiben, und andere draußen zu halten.' },
+      'Du klopfst. Nach einer langen Pause hörst du Schritte. Eine Stimme, gedämpft durch die Tür:',
+      { speaker: 'Stimme', line: '"Wer auch immer da draußen steht: Ich hab nichts zu verschenken, und die Tür ist stabiler als sie aussieht. Also — was willst du?"' }
+    ],
+    choices: [
+      { label: '"Ich bin auf der Durchreise. Brauche nur Wasser."', to: 'ch1_talk_water' },
+      { label: '"Ich suche jemanden namens Rosa."', to: 'ch1_talk_rosa', showIf: { item: 'notizzettel' } },
+      { label: 'Schweigen und abwarten was passiert.', to: 'ch1_talk_silent' },
+    ]
+  },
+
+  ch1_talk_water: {
+    chapter: 'KAPITEL 1 — STAUB UND STILLE',
+    text: [
+      { speaker: 'Stimme', line: '"Durchreise. Klar. Die sagen alle das."' },
+      { narrator: 'Ein Riegel wird zurückgeschoben. Die Tür öffnet sich einen Spalt breit. Eine Frau, vielleicht fünfzig, mit grauem Zopf und einem Blick, der schon zu viel gesehen hat, mustert dich von oben bis unten.' },
+      { speaker: 'Frau', line: '"Wasser hab ich. Vertrauen nicht so viel übrig. Was willst du wirklich hier?"' },
+      { narrator: 'Sie mustert dich noch einen Moment, dann seufzt sie.' },
+      { speaker: 'Frau', line: '"Rosa, übrigens. Nicht dass Namen noch viel wert wären — aber meiner funktioniert wenigstens noch."' }
+    ],
+    next: 'ch1_rosa_reveal'
+  },
+
+  ch1_talk_rosa: {
+    chapter: 'KAPITEL 1 — STAUB UND STILLE',
+    text: [
+      { narrator: 'Für einen Moment herrscht komplette Stille hinter der Tür.' },
+      { speaker: 'Stimme', line: '"...Wo hast du den Namen her?"' },
+      'Du hältst den zerknitterten Zettel hoch, obwohl niemand ihn durch die Tür sehen kann.',
+      { speaker: 'Stimme', line: '"Auf einem Zettel. In einem der Häuser weiter unten."' },
+      { narrator: 'Ein Riegel wird zurückgeschoben. Die Tür öffnet sich, diesmal etwas weiter. Eine Frau, vielleicht fünfzig, mit grauem Zopf und misstrauischem Blick, mustert dich.' },
+      { speaker: 'Rosa', line: '"Das bin ich. Und jetzt erklär mir, warum ein Fremder meinen Namen auf einem alten Zettel findet und beschließt, an meiner Tür zu klopfen."' }
+    ],
+    onEnter: { flags: ['knows_rosa_name'] },
+    next: 'ch1_rosa_reveal_trust'
+  },
+
+  ch1_talk_silent: {
+    chapter: 'KAPITEL 1 — STAUB UND STILLE',
+    text: [
+      { narrator: 'Du sagst nichts. Manchmal ist Schweigen die klügste Antwort, wenn man nicht weiß, wer zuhört.' },
+      { speaker: 'Stimme', line: '"...Kein Wort, hm? Entweder du bist vorsichtig, oder du hast nichts zu sagen. Beides ist mir grundsätzlich lieber als Lügen."' },
+      { narrator: 'Die Tür öffnet sich. Eine Frau, vielleicht fünfzig, mit grauem Zopf, mustert dich mit einer Mischung aus Argwohn und widerwilligem Respekt.' },
+      { speaker: 'Frau', line: '"Rosa. Und du bist...?"' }
+    ],
+    next: 'ch1_rosa_reveal'
+  },
+
+  ch1_rosa_reveal: {
+    text: [
+      { narrator: 'Du stellst dich vor — so gut das eben geht, wenn dein Name in einer Welt ohne Ausweise, Konten oder Profile nur noch ein Wort ist, das du selbst behauptest.' },
+      { speaker: 'Rosa', line: '"Gut. Komm rein, bevor dich jemand von der Straße sieht. Wir reden drinnen weiter."' },
+    ],
+    next: 'ch1_inside'
+  },
+
+  ch1_rosa_reveal_trust: {
+    text: [
+      { narrator: 'Du erzählst ihr, wie du hierher kamst — der Zettel, die Straße, drei Tage Fußmarsch aus dem Nichts ins Nirgendwo.' },
+      { speaker: 'Rosa', line: '"Du hast Glück, dass ich den Zettel nicht wieder eingesammelt habe. Komm rein. Aber die Tür geht wieder zu, sobald du drin bist — verstanden?"' },
+    ],
+    onEnter: { flags: ['trusted_early'] },
+    next: 'ch1_inside'
+  },
+
+  ch1_inside: {
+    chapter: 'KAPITEL 1 — STAUB UND STILLE',
+    location: 'IM HAUS VON ROSA',
+    text: [
+      'Drinnen ist es überraschend warm. Eine Öllampe flackert auf einem Tisch, umgeben von Werkzeug, Kabeln und Teilen, die aussehen, als kämen sie aus einem Dutzend verschiedener Maschinen.',
+      { narrator: 'In der Ecke, unter einer Plane, summt leise etwas. Ein Generator. Er läuft tatsächlich.' },
+      { speaker: 'Rosa', line: '"Das ist der letzte funktionierende Generator, den ich kenne — auf hundert Kilometer. Läuft seit acht Monaten mit dem, was ich zusammenflicken konnte. Aber er stottert. Braucht ein Teil, das ich nicht habe."' }
+    ],
+    choices: [
+      { label: '"Was für ein Teil brauchst du?"', to: 'ch1_ask_part' },
+      { label: '"Warum ist dir dieser Generator so wichtig?"', to: 'ch1_ask_why' },
+    ]
+  },
+
+  ch1_ask_why: {
+    text: [
+      { speaker: 'Rosa', line: '"Weil er das Einzige ist, was hier noch funktioniert. Kein Netz, keine Nachrichten, keine Ahnung, ob es woanders noch... irgendwas gibt. Dieser Generator betreibt einen alten Kurzwellenempfänger. Manchmal, nachts, fange ich Stimmen auf. Andere Überlebende. Andere Orte."' },
+      { narrator: 'Sie schaut zum Generator, als wäre er ein altes Haustier, das jeden Moment sterben könnte.' },
+      { speaker: 'Rosa', line: '"Wenn der ausfällt, sind wir wieder komplett taub für den Rest der Welt. Das will ich nicht."' }
+    ],
+    next: 'ch1_ask_part'
+  },
+
+  ch1_ask_part: {
+    text: [
+      { speaker: 'Rosa', line: '"Ein Kontaktstück für die Zündspule. Klein, aber ohne das läuft hier gar nichts mehr. Ich hab schon fast jedes Haus in Rattenbach durchsucht."' }
+    ],
+    choices: [
+      {
+        label: '"Ich hab vielleicht was Passendes." (Drahtstück zeigen)',
+        to: 'ch1_give_wire',
+        require: { item: 'drahtstueck' }
+      },
+      { label: '"Ich hab nichts dabei, aber ich kann suchen gehen."', to: 'ch1_offer_search' },
+    ]
+  },
+
+  ch1_give_wire: {
+    text: [
+      { narrator: 'Du holst das verbogene Drahtstück heraus, das du vor dem Haus gefunden hast. Rosa nimmt es, dreht es zwischen den Fingern, hält es gegen das Lampenlicht.' },
+      { speaker: 'Rosa', line: '"...Das könnte tatsächlich funktionieren. Wo hast du das her?"' },
+      { narrator: 'Sie geht zum Generator, biegt das Drahtstück mit geübten Fingern in Form und klemmt es an eine Stelle, die aussieht, als würde sie seit Monaten auf genau dieses Teil warten.' },
+      { narrator: 'Der Generator, der bisher gestottert hat wie ein alter Motor mit Asthma, läuft plötzlich ruhiger. Gleichmäßiger.' },
+      { speaker: 'Rosa', line: '"Das... das war\'s. Das war das fehlende Stück. Drei Monate hab ich danach gesucht."' }
+    ],
+    onEnter: { flags: ['fixed_generator', 'gave_wire'] },
+    next: 'ch1_ch1end_setup'
+  },
+
+  ch1_offer_search: {
+    text: [
+      { speaker: 'Rosa', line: '"Das hab ich selbst schon versucht. Aber... na gut. Mehr Augen schaden nicht. Wenn du was findest — klein, metallisch, sieht aus wie ein verbogener Draht — bring es mir."' },
+      { narrator: 'Sie deutet auf die Tür. "Aber pass auf dort draußen. Wir sind nicht die einzigen, die noch hier rumlaufen. Und nicht alle sind so freundlich wie ich."' }
+    ],
+    next: 'ch1_ch1end_setup'
+  },
+
+  ch1_ch1end_setup: {
+    chapter: 'KAPITEL 1 — STAUB UND STILLE',
+    location: 'IM HAUS VON ROSA',
+    text: [
+      { narrator: 'Draußen wird es dunkel. Rosa bietet dir an, die Nacht hier zu verbringen — auf dem Boden, neben dem summenden Generator, der zum ersten Mal seit Monaten wieder klingt, als könnte er noch lange durchhalten.' },
+      'Du liegst da, hörst das gleichmäßige Brummen der Maschine und das leise Knistern des Kurzwellenempfängers, der irgendwo in der Dunkelheit nach Stimmen sucht.',
+      { narrator: 'Kurz vor dem Einschlafen fängt der Empfänger etwas auf. Ein Rauschen. Dann, kaum hörbar, eine Stimme — verzerrt, weit weg, aber eindeutig menschlich:' },
+      { speaker: '???', line: '"...hier ist... ...falls jemand... ...der Turm im Osten... ...noch Zeit..."' },
+      { narrator: 'Dann wieder nur Rauschen. Rosa fährt hoch, starrt den Empfänger an, als hätte er gerade gesprochen. In gewisser Weise hat er das.' },
+      { speaker: 'Rosa', line: '"Das war... das war seit Wochen die erste klare Stimme. \'Der Turm im Osten.\' Weißt du, was das bedeuten könnte?"' }
+    ],
+    choices: [
+      { label: '"Wir sollten dem nachgehen. Morgen früh."', to: 'ch1_end_positive' },
+      { label: '"Vielleicht ist das eine Falle. Wir sollten vorsichtig sein."', to: 'ch1_end_cautious' },
+    ]
+  },
+
+  ch1_end_positive: {
+    text: [
+      { speaker: 'Rosa', line: '"...Das dachte ich auch. Verrückt, oder? Drei Jahre Stille, und dann sowas."' },
+      { narrator: 'Sie schaut dich an, zum ersten Mal ohne das übliche Misstrauen in den Augen.' },
+      { speaker: 'Rosa', line: '"Gut. Morgen früh, bei Licht. Wenn du wirklich mitkommen willst — der Weg nach Osten ist nicht sicher. Aber ich glaube, du bist zäher, als du aussiehst."' }
+    ],
+    onEnter: { flags: ['ch1_ending_bold'] },
+    next: 'ch1_chapter_end'
+  },
+
+  ch1_end_cautious: {
+    text: [
+      { speaker: 'Rosa', line: '"Klug gedacht. Ich hab lange genug überlebt, indem ich genau so gedacht hab."' },
+      { narrator: 'Sie nickt langsam, während der Empfänger weiter leise rauscht.' },
+      { speaker: 'Rosa', line: '"Wir beobachten erstmal. Wenn die Stimme wiederkommt, versuchen wir mehr rauszufinden, bevor wir irgendwohin rennen. Vorsicht hat uns beide bis hierher gebracht."' }
+    ],
+    onEnter: { flags: ['ch1_ending_cautious'] },
+    next: 'ch1_chapter_end'
+  },
+
+  ch1_chapter_end: {
+    type: 'end',
+    badge: 'ENDE KAPITEL 1',
+    title: 'STAUB UND STILLE',
+    text: 'Der Generator summt. Irgendwo im Osten sendet jemand — oder etwas — ein Signal in eine Welt, die längst aufgehört hat zuzuhören.',
+    nextChapter: 'ch2_intro'
+  },
+
+  /* ══════════════════════════════════════════════════════
+     KAPITEL 2 — "DER TURM IM OSTEN"
+     ══════════════════════════════════════════════════════ */
+
+  ch2_intro: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    location: 'RATTENBACH, AM NÄCHSTEN MORGEN',
+    text: [
+      'Die Sonne kämpft sich durch eine dünne Wolkendecke, als du aufwachst. Rosa ist schon wach, gebeugt über eine alte Straßenkarte, die sie mit Bleistiftlinien markiert hat.',
+      { narrator: 'In der Nacht hat der Empfänger noch zweimal geknackt. Beide Male dasselbe Muster: Rauschen, ein Wortfetzen, dann Stille. "Turm im Osten." Mehr nicht.' }
+    ],
+    choices: [
+      {
+        label: '"Kommst du mit?" (an Rosa)',
+        to: 'ch2_ask_rosa_come',
+        showIf: { flag: 'ch1_ending_bold' }
+      },
+      {
+        label: '"Ich muss trotzdem hin. Kommst du mit?"',
+        to: 'ch2_rosa_declines',
+        showIf: { flag: 'ch1_ending_cautious' }
+      },
+      {
+        label: 'Allein und ohne große Diskussion aufbrechen.',
+        to: 'ch2_leave_alone'
+      },
+    ]
+  },
+
+  ch2_rosa_declines: {
+    text: [
+      { narrator: 'Rosa schaut nicht mal von ihrer Karte auf.' },
+      { speaker: 'Rosa', line: '"Nein. Ich hab dir gestern gesagt, was ich davon halte, und eine Nacht Schlaf hat daran nichts geändert. Jemand muss beim Generator bleiben. Und ehrlich gesagt: Einer von uns sollte am Leben bleiben, falls das da draußen eine Falle ist."' },
+      { narrator: 'Sie kramt in einer Schublade und drückt dir einen alten Kompass in die Hand.' },
+      { speaker: 'Rosa', line: '"Osten ist ungefähr da, wo die Nadel nicht hinzeigt. Komm zurück. Das ist keine Bitte, das ist eine Bedingung."' }
+    ],
+    onEnter: { items: ['kompass'] },
+    next: 'ch2_departure'
+  },
+
+  ch2_ask_rosa_come: {
+    text: [
+      { speaker: 'Rosa', line: '"Ich hab schon überlegt, ob ich frage, bevor du es tust. Ja. Ich komm mit. Der Generator läuft jetzt stabil genug, dass er ein paar Tage ohne mich klarkommt."' },
+      { narrator: 'Sie packt eine abgewetzte Tasche — Werkzeug, eine Konservendose, ein Kompass, dessen Nadel leicht zittert, als könnte sie sich nicht entscheiden, wo Norden ist.' },
+      { speaker: 'Rosa', line: '"Zwei sind besser als eins da draußen. Und ehrlich — ich will auch wissen, was das für eine Stimme war."' }
+    ],
+    onEnter: { flags: ['rosa_companion'], items: ['kompass'] },
+    next: 'ch2_departure'
+  },
+
+  ch2_leave_alone: {
+    text: [
+      { narrator: 'Du beschließt, Rosa nicht zu fragen. Der Weg nach Osten ist unsicher, und ihr Generator braucht sie mehr als du.' },
+      { speaker: 'Rosa', line: '"Allein losziehen, ohne ein Wort zu sagen? Typisch."' },
+      { narrator: 'Sie seufzt, drückt dir aber trotzdem einen alten Kompass in die Hand.' },
+      { speaker: 'Rosa', line: '"Nimm den wenigstens. Und komm zurück, wenn du was findest. Oder wenn du in Schwierigkeiten steckst — dann komm auch zurück."' }
+    ],
+    onEnter: { items: ['kompass'] },
+    next: 'ch2_departure'
+  },
+
+  ch2_departure: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    location: 'ÖSTLICHE AUSFALLSTRASSE',
+    text: [
+      'Der Weg nach Osten führt durch ausgedörrte Felder und vorbei an einer verrosteten Tankstelle, deren Preisschild noch immer Zahlen zeigt, die heute so bedeutungslos sind wie Hieroglyphen.',
+      { narrator: 'Rosa geht neben dir, den Blick in ständiger Bewegung — Straßenränder, Fenster, Horizont. Man merkt, dass sie diese Art zu gehen nicht gelernt hat, weil sie es wollte.', showIf: { flag: 'rosa_companion' } },
+      { speaker: 'Rosa', line: '"Die Tankstelle hab ich vor einem Jahr durchsucht. Aber die Werkstatt war damals verriegelt — falls du neugierig bist."', showIf: { flag: 'rosa_companion' } },
+      { narrator: 'Die Tankstelle ist längst ausgeschlachtet, aber die halb geöffnete Werkstatttür könnte noch etwas Brauchbares bergen.' }
+    ],
+    choices: [
+      { label: 'Kurz die alte Werkstatt durchsuchen.', to: 'ch2_tankstelle_search' },
+      { label: 'Keine Zeit verlieren, direkt weitergehen.', to: 'ch2_turm_sighting' },
+    ]
+  },
+
+  ch2_tankstelle_search: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    location: 'VERLASSENE TANKSTELLE',
+    text: [
+      'Die Werkstatt ist ein Chaos aus umgekippten Regalen und leeren Ölkanistern. Die meisten Werkzeuge sind längst mitgenommen worden — aber unter einer verrosteten Werkbank, halb von Staub bedeckt, liegt eine <span class="hl">Eisenstange</span>.',
+      { narrator: 'Nicht elegant. Aber genau die Sorte Werkzeug, die man dabei haben will, wenn eine Tür partout nicht aufgehen will — oder wenn es aus einem anderen Grund laut wird.' },
+      { speaker: 'Rosa', line: '"Nimm sie mit. Das Werkzeug, das man nicht dabei hat, ist immer genau das, das man gebraucht hätte."', showIf: { flag: 'rosa_companion' } }
+    ],
+    onEnter: { items: ['eisenstange'] },
+    next: 'ch2_turm_sighting'
+  },
+
+  ch2_turm_sighting: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    location: 'ÖSTLICHE AUSFALLSTRASSE',
+    text: [
+      { narrator: 'Nach ein paar Stunden Fußmarsch taucht am Horizont etwas auf: ein hoher, schlanker Betonturm, der über die kahlen Bäume ragt. Ein alter Sendemast, wahrscheinlich einst für Mobilfunk oder Fernsehen gebaut, jetzt nur noch ein rostiges Skelett gegen den grauen Himmel.' },
+      { speaker: 'Rosa', line: '"Der Turm im Osten. Drei Jahre wohne ich einen Tagesmarsch entfernt und hab ihn nie bemerkt. Man sucht eben nicht nach Dingen, von denen man nicht weiß, dass sie wichtig sind."', showIf: { flag: 'rosa_companion' } },
+      'An seinem Fuß, halb versteckt zwischen umgestürzten Betonplatten, bewegt sich etwas.',
+      { speaker: 'Rosa', line: '"Da unten ist jemand. Und bevor du fragst: Nein, ich geh nicht zuerst."', showIf: { flag: 'rosa_companion' } }
+    ],
+    choices: [
+      { label: 'Näher heranschleichen und beobachten.', to: 'ch2_observe' },
+      { label: 'Direkt und offen zum Turm gehen.', to: 'ch2_direct_approach' },
+    ]
+  },
+
+  ch2_observe: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    text: [
+      'Du duckst dich hinter eine umgestürzte Betonplatte und beobachtest. Was du zunächst für eine Bedrohung hieltest, entpuppt sich als eine kleine Gruppe — drei Personen, die um ein improvisiertes Lager am Fuß des Turms herumhantieren.',
+      { narrator: 'Sie tragen zusammengewürfelte Ausrüstung, aber es wirkt organisiert. Kein wildes Chaos. Jemand hier hat einen Plan.' },
+      { speaker: 'Rosa', line: '"Drei Leute, feste Aufgaben, ein aufgeräumtes Lager. Das ist entweder ein sehr gutes Zeichen oder ein sehr schlechtes. Dazwischen gibt\'s selten was."', showIf: { flag: 'rosa_companion' } },
+      'Einer von ihnen, ein hagerer Mann mit einer Antenne, die er wie ein Zepter trägt, ruft etwas zu den anderen. Die Worte tragen über den Wind: <span class="hl">"...Kristall ist fast leer, wir brauchen den zweiten Sender bis heute Abend..."</span>'
+    ],
+    onEnter: { flags: ['scouted_group'] },
+    choices: [
+      { label: 'Dich zeigen und sie ansprechen.', to: 'ch2_reveal_self' },
+      { label: 'Weiter warten und mehr herausfinden.', to: 'ch2_wait_more' },
+    ]
+  },
+
+  ch2_wait_more: {
+    text: [
+      { narrator: 'Du wartest. Geduld war schon vor drei Jahren eine Tugend, jetzt ist sie eine Überlebensstrategie.' },
+      'Die Gruppe diskutiert weiter. Du hörst genug, um zu verstehen: Sie versuchen, den alten Sendeturm wieder zum Laufen zu bringen — mit einem "Funkkristall", der offenbar die Energiequelle für die Übertragung ist. Aber ihr Kristall ist fast leer, und der einzige Ersatz liegt irgendwo oben im Turm, in einem versperrten Technikraum.',
+      { speaker: 'Hagerer Mann', line: '"Ohne den zweiten Kristall reicht die Energie nicht für eine volle Übertragung. Wir haben vielleicht einen Versuch, bevor der erste komplett leer ist."' }
+    ],
+    onEnter: { flags: ['knows_about_crystal'] },
+    next: 'ch2_reveal_self'
+  },
+
+  ch2_direct_approach: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    text: [
+      'Du gehst offen auf das Lager zu. Sofort fahren drei Köpfe herum, Hände greifen nach improvisierten Waffen — ein Rohr, ein Messer, etwas, das früher mal ein Werkzeug war und jetzt eher bedrohlich aussieht.',
+      { speaker: 'Hagerer Mann', line: '"Stehen bleiben! Wer bist du, und was willst du hier?"' },
+      { narrator: 'Rosa hebt neben dir langsam die Hände. "Sehr diplomatisch", murmelt sie. "Einfach reinspazieren. Klappt bestimmt."', showIf: { flag: 'rosa_companion' } }
+    ],
+    next: 'ch2_reveal_self'
+  },
+
+  ch2_reveal_self: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    location: 'LAGER AM FUSS DES SENDETURMS',
+    text: [
+      { narrator: 'Du erklärst, dass du die Stimme über Funk gehört hast. Dass du gekommen bist, um herauszufinden, was hier vor sich geht.' },
+      { speaker: 'Rosa', line: '"Auf meinem Kurzwellenempfänger. Drei Jahre lang nur Rauschen, und dann eure Stimme. Wenn ihr das wart, will ich wissen, wie ihr das geschafft habt."', showIf: { flag: 'rosa_companion' } },
+      { narrator: 'Der hagere Mann senkt langsam seine Antenne. Sein Blick wird weniger feindselig, mehr müde.' },
+      { speaker: '???', line: '"Also hat es funktioniert. Wenigstens ein Mal. Ich bin Tobias. Das hier..."' },
+      { narrator: 'Er deutet auf den Turm über sich. "...ist unser letzter Versuch, ein echtes Netzwerk wieder aufzubauen. Kein Internet. Nur Funk. Aber genug, um Orte wie diesen zu verbinden."' }
+    ],
+    choices: [
+      { label: '"Wie kann ich helfen?"', to: 'ch2_offer_help' },
+      { label: '"Was ist mit dem Kristall, von dem ihr gesprochen habt?"', to: 'ch2_ask_crystal', showIf: { flag: 'knows_about_crystal' } },
+    ]
+  },
+
+  ch2_ask_crystal: {
+    text: [
+      { speaker: 'Tobias', line: '"Du hast mitgehört, hm? Kein Wunder, wenn wir so laut streiten. Ja — der Turm läuft mit einem alten Funkkristall als Energiepuffer. Unserer ist fast durch. Es gibt einen zweiten, oben im versperrten Technikraum. Aber die Tür ist verschlossen, und der Schlüssel..."' },
+      { narrator: 'Er zeigt auf den Turm, dann auf ein rostiges Loch weiter oben in der Struktur — ein zerbrochenes Fenster, durch das man theoretisch hochklettern könnte.' },
+      { speaker: 'Tobias', line: '"...ist irgendwo hier oben verloren gegangen, als der letzte Techniker vor Jahren die Flucht ergriffen hat. Wenn du hoch klettern und die Tür irgendwie aufbrechen könntest..."' }
+    ],
+    onEnter: { flags: ['asked_crystal'] },
+    next: 'ch2_offer_help'
+  },
+
+  ch2_offer_help: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    text: [
+      { speaker: 'Tobias', line: '"Ehrlich gesagt — ja, Hilfe könnten wir gebrauchen. Der Turm hat einen Technikraum weit oben, verschlossen, mit einem zweiten Funkkristall drin. Ohne den ist heute Abend unsere letzte Chance auf eine Übertragung."', showIf: { flag: 'asked_crystal', invert: true } },
+      { speaker: 'Tobias', line: '"Du weißt ja jetzt, worum es geht. Wenn du hochkletterst und den zweiten Kristall holst, haben wir heute Abend noch eine Chance auf die Übertragung."', showIf: { flag: 'asked_crystal' } },
+      { narrator: 'Er mustert dich abschätzend. "Bist du schwindelfrei?"' }
+    ],
+    choices: [
+      { label: '"Ich versuch\'s. Was brauche ich?"', to: 'ch2_prep_climb' },
+      { label: '"Lass mich zuerst das Lager und die Gruppe genauer verstehen."', to: 'ch2_lore_dump' },
+    ]
+  },
+
+  ch2_lore_dump: {
+    text: [
+      { speaker: 'Tobias', line: '"Wir sind, was von einem größeren Trupp übrig geblieben ist. Fünf waren wir mal. Jetzt sind wir drei. Der Rest... nun, nicht jeder Ort da draußen ist so freundlich wie unser kleines Lager hier."' },
+      { narrator: 'Eine der anderen, eine junge Frau mit kurzgeschorenen Haaren, tritt näher. "Mira", sagt sie knapp, als Vorstellung.' },
+      { speaker: 'Mira', line: '"Wir versuchen seit Monaten, den Turm wieder zum Laufen zu bringen. Nicht aus Nostalgie. Sondern weil wir wissen wollen, wer noch da draußen ist. Und ob es sich lohnt, danach zu suchen."' },
+      { speaker: 'Rosa', line: '"Endlich mal jemand, dessen Plan aus mehr besteht als nur Überleben. Ich fange an, diese Leute zu mögen. Sag\'s ihnen nicht."', showIf: { flag: 'rosa_companion' } }
+    ],
+    onEnter: { flags: ['met_mira'] },
+    next: 'ch2_prep_climb'
+  },
+
+  ch2_prep_climb: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    location: 'FUSS DES SENDETURMS',
+    text: [
+      { narrator: 'Der Turm ragt vor dir auf — rostig, aber die Konstruktion scheint noch stabil genug. Eine alte Wartungsleiter führt etwa zwei Drittel des Weges hoch, danach wird es unübersichtlich.' },
+      'Tobias reicht dir ein altes Kletterseil. "Für den letzten Abschnitt. Die Leiter hört irgendwann einfach auf, keine Ahnung warum."',
+      { speaker: 'Rosa', line: '"Wenn du da oben runterfällst, war der ganze weite Weg umsonst. Also: Fall nicht runter. Mehr hab ich an Ratschlägen nicht."', showIf: { flag: 'rosa_companion' } }
+    ],
+    onEnter: { items: ['seil'] },
+    choices: [
+      {
+        label: 'Mit der Eisenstange am Gürtel hochklettern.',
+        to: 'ch2_climb_armed',
+        require: { item: 'eisenstange' }
+      },
+      { label: 'Einfach hochklettern und improvisieren.', to: 'ch2_climb_unarmed' },
+    ]
+  },
+
+  ch2_climb_armed: {
+    text: [
+      { narrator: 'Mit der Eisenstange am Gürtel befestigt beginnst du den Aufstieg. Die Leiter quietscht bei jedem Schritt, aber hält.' },
+    ],
+    next: 'ch2_climb_sequence'
+  },
+
+  ch2_climb_unarmed: {
+    text: [
+      { narrator: 'Ohne Werkzeug, nur mit deinen Händen und dem geliehenen Seil, beginnst du den Aufstieg. Die Leiter quietscht bei jedem Schritt, aber hält — vorerst.' },
+    ],
+    next: 'ch2_climb_sequence'
+  },
+
+  ch2_climb_sequence: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    location: 'HALBER WEG NACH OBEN',
+    text: [
+      'Auf halber Höhe endet die Leiter abrupt — ein fehlendes Stück, wahrscheinlich vor Jahren eingestürzt. Zwischen dir und dem nächsten sicheren Absatz klafft eine Lücke von gut zwei Metern.',
+      { narrator: 'Der Wind pfeift stärker hier oben. Unten wirkt das Lager wie Spielzeug.' }
+    ],
+    choices: [
+      {
+        label: 'Das Seil um einen Träger werfen und hinüberschwingen.',
+        to: 'ch2_swing_across',
+      },
+      {
+        label: 'Vorsichtig am Rand der Struktur entlangklettern.',
+        to: 'ch2_edge_climb',
+      },
+    ]
+  },
+
+  ch2_swing_across: {
+    text: [
+      { narrator: 'Du wirfst das Seil, es fängt sich um einen rostigen Träger. Ein tiefer Atemzug, dann springst du — für einen Moment hängst du zwischen Himmel und einer sehr langen Fallhöhe, dann landest du hart, aber sicher auf der anderen Seite.' },
+      { narrator: 'Dein Herz schlägt bis zum Hals. Aber du bist oben.' }
+    ],
+    onEnter: { flags: ['climb_swing'] },
+    next: 'ch2_tech_room'
+  },
+
+  ch2_edge_climb: {
+    text: [
+      { narrator: 'Du entscheidest dich für den vorsichtigeren Weg — Hand über Hand, entlang eines schmalen Vorsprungs, der eigentlich nicht für Menschen gedacht war.' },
+      { narrator: 'Es dauert länger, und einmal löst sich ein Stück Rost unter deiner Hand und fällt lautlos in die Tiefe. Aber Schritt für Schritt erreichst du die andere Seite.' }
+    ],
+    onEnter: { flags: ['climb_edge'] },
+    next: 'ch2_tech_room'
+  },
+
+  ch2_tech_room: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    location: 'TECHNIKRAUM, TURMSPITZE',
+    text: [
+      'Die Tür zum Technikraum ist genau so verschlossen, wie Tobias gesagt hat — ein schweres Vorhängeschloss, verrostet, aber intakt.',
+      { narrator: 'Durch ein zerbrochenes Fenster daneben kannst du hineinsehen: Regale mit alter Ausrüstung, und auf einem Tisch in der Mitte, leicht leuchtend, ein kleiner kristalliner Gegenstand.' }
+    ],
+    choices: [
+      {
+        label: 'Das Schloss mit der Eisenstange aufbrechen.',
+        to: 'ch2_break_lock',
+        require: { item: 'eisenstange' }
+      },
+      { label: 'Durch das zerbrochene Fenster klettern.', to: 'ch2_window_entry' },
+    ]
+  },
+
+  ch2_break_lock: {
+    text: [
+      { narrator: 'Du setzt die Eisenstange an, drückst mit dem ganzen Körpergewicht. Nach drei Versuchen gibt das rostige Metall mit einem lauten Knacken nach. Die Tür schwingt auf.' }
+    ],
+    next: 'ch2_get_crystal'
+  },
+
+  ch2_window_entry: {
+    text: [
+      { narrator: 'Das zerbrochene Fenster ist eng, aber machbar. Du zwängst dich hindurch, vorsichtig, um dich nicht an den scharfen Glaskanten zu schneiden. Ein kleiner Kratzer am Arm ist der Preis, aber du bist drin.' }
+    ],
+    next: 'ch2_get_crystal'
+  },
+
+  ch2_get_crystal: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    location: 'IM TECHNIKRAUM',
+    text: [
+      'Der Raum ist ein Museum vergessener Technik — Kabel, Platinen, ein altes Mischpult, das seit Jahren niemand mehr berührt hat.',
+      'Auf dem Tisch liegt der Funkkristall, klein und beinahe warm anzufassen, wenn du ihn aufhebst. Er summt leise, kaum hörbar, wie etwas, das noch nicht ganz tot ist.',
+      { narrator: 'Neben dem Kristall liegt auch ein verrosteter Schlüssel. Zu welcher Tür er gehört, weiß vermutlich niemand mehr — aber du steckst ihn trotzdem ein. Alte Gewohnheit aus einer Welt, in der Türen noch etwas bedeutet haben.' }
+    ],
+    onEnter: { items: ['funkkristall', 'turmschluessel'] },
+    next: 'ch2_return_down'
+  },
+
+  ch2_return_down: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    location: 'ABSTIEG',
+    text: [
+      { narrator: 'Der Abstieg ist schneller als der Aufstieg — Angst treibt einen selten nach oben, aber immer nach unten. Als du wieder festen Boden erreichst, wartet die Gruppe bereits, sichtlich angespannt.' },
+      { speaker: 'Rosa', line: '"Mach das nie wieder, ohne mir vorher zu sagen, wie lange es dauert. Ich hab hier unten drei Fluchtrouten geplant und keine einzige gebraucht."', showIf: { flag: 'rosa_companion' } },
+      { speaker: 'Tobias', line: '"Du hast es geschafft. Ich... ehrlich gesagt hab ich nicht ganz damit gerechnet."' },
+      { narrator: 'Du reichst ihm den Funkkristall. Seine Hände zittern leicht, als er ihn entgegennimmt.' }
+    ],
+    choices: [
+      { label: '"Ich möchte dabei sein, wenn ihr sendet."', to: 'ch2_stay_for_broadcast' },
+      { label: '"Meine Arbeit hier ist getan. Ich sollte zurück zu Rosa."', to: 'ch2_leave_before_broadcast', showIf: { flag: 'rosa_companion', invert: true } },
+      { label: '"Wir machen uns auf den Rückweg. Der Generator wartet nicht ewig." (zu Rosa)', to: 'ch2_leave_with_rosa', showIf: { flag: 'rosa_companion' } },
+    ]
+  },
+
+  ch2_leave_with_rosa: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    text: [
+      { speaker: 'Rosa', line: '"Den ganzen weiten Weg, und jetzt willst du das Finale verpassen? ... Na gut. Der Generator wartet wirklich nicht ewig. Aber das hier merke ich mir."' },
+      { speaker: 'Tobias', line: '"Verstehe. Danke — euch beiden. Ohne euch würde hier heute Abend nichts passieren. Wenn die Übertragung klappt, hört ihr uns. Rattenbach liegt in Reichweite."' },
+      { narrator: 'Ihr macht euch auf den Rückweg, während hinter euch die Vorbereitungen weiterlaufen. Rosa dreht sich zweimal um. Beim zweiten Mal ertappt sie sich dabei und tut, als hätte sie nur den Himmel geprüft.' }
+    ],
+    next: 'ch2_chapter_end'
+  },
+
+  ch2_stay_for_broadcast: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    location: 'AM FUSS DES SENDETURMS, EINBRUCH DER DÄMMERUNG',
+    text: [
+      { narrator: 'Tobias und Mira arbeiten fieberhaft, verbinden den neuen Kristall mit dem alten Sender. Kabel werden gesteckt, Schalter umgelegt, ein altes Mikrofon wird abgestaubt.' },
+      { speaker: 'Tobias', line: '"Okay. Das ist es. Ein Versuch, vielleicht zwei, dann ist die Energie wieder weg. Wenn das funktioniert..."' },
+      { narrator: 'Er drückt einen Schalter. Ein tiefes Summen erfüllt die Luft, steigt zu einem hohen Pfeifen, dann — Stabilität. Ein grünes Licht am alten Mischpult blinkt gleichmäßig.' },
+      { speaker: 'Mira', line: '"Wir senden. Live. Zum ersten Mal seit drei Jahren."' },
+      { narrator: 'Rosa steht neben dir, die Arme verschränkt wie immer — aber ihre Augen glänzen im grünen Licht des Mischpults.', showIf: { flag: 'rosa_companion' } },
+      { speaker: 'Rosa', line: '"Drei Jahre lang hab ich nachts am Empfänger gesessen und Rauschen gehört. Und jetzt... jetzt sind wir die Stimme."', showIf: { flag: 'rosa_companion' } },
+      { narrator: 'Tobias greift zum Mikrofon, atmet einmal tief durch, und spricht in die Stille hinein — eine Nachricht, die vielleicht niemand hört. Oder vielleicht genau die richtigen Leute.' },
+      { speaker: 'Tobias', line: '"An wen auch immer das hier hört: Es gibt noch Menschen. Es gibt noch einen Ort. Rattenbach, östliche Region. Wir sind hier. Wir hören zu."' }
+    ],
+    onEnter: { flags: ['broadcast_sent'] },
+    next: 'ch2_chapter_end'
+  },
+
+  ch2_leave_before_broadcast: {
+    chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    text: [
+      { narrator: 'Du entscheidest dich, nicht zu bleiben. Rosa wartet, und der Weg zurück ist weit. Tobias nickt verständnisvoll.' },
+      { speaker: 'Tobias', line: '"Verstehe. Danke, für das, was du getan hast. Ohne dich würde hier heute Abend nichts passieren."' },
+      { narrator: 'Du machst dich auf den Rückweg, während hinter dir die Vorbereitungen für die Übertragung weitergehen. Ob sie erfolgreich war, wirst du vielleicht nie erfahren.' }
+    ],
+    next: 'ch2_chapter_end'
+  },
+
+  ch2_chapter_end: {
+    type: 'end',
+    badge: 'ENDE KAPITEL 2',
+    title: 'DER TURM IM OSTEN',
+    text: 'Irgendwo da draußen, auf einer Frequenz, die kaum noch jemand abhört, ist wieder eine Stimme zu hören. Ob sie ankommt, und bei wem — das ist eine andere Geschichte. Kapitel 3 folgt bald.'
+  },
+
+};
+
+/* ══════════════════════════════════════════════════════════════
+   INIT
+   ══════════════════════════════════════════════════════════════ */
+goTo('title', true);
+
+</script>
+</body>
+</html>
