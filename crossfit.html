@@ -40,7 +40,7 @@
     .hero{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 40px 60px;text-align:center;position:relative;overflow:hidden}
     .hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#0a0a08 40%,#1a0c06 100%)}
     .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,78,26,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,78,26,.04) 1px,transparent 1px);background-size:60px 60px}
-    #pulse-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.5;pointer-events:none}
+    #pulse-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
     .hero-tag{font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:var(--orange);margin-bottom:16px;position:relative}
     .hero-title{font-family:'Bebas Neue';font-size:clamp(4rem,15vw,10rem);line-height:.9;position:relative}
     .hero-title span{color:var(--orange)}
@@ -245,7 +245,7 @@
   (function(){
     const canvas = document.getElementById('pulse-canvas');
     const ctx = canvas.getContext('2d');
-    let w, h, points = [], scrollX = 0;
+    let w, h;
 
     function resize(){
       w = canvas.width = canvas.offsetWidth;
@@ -254,66 +254,91 @@
     resize();
     window.addEventListener('resize', resize);
 
-    // Generate a heartbeat waveform pattern (one "beat cycle" in pixels)
-    function generateBeatCycle(baseY, cycleWidth){
-      const pts = [];
-      const steps = 80;
-      for(let i=0;i<=steps;i++){
-        const t = i/steps;
-        const x = t*cycleWidth;
-        let y = baseY;
-        // Flat line, then spike (QRS complex style), then flat again
-        if(t > 0.35 && t < 0.42){
-          const local = (t-0.35)/0.07;
-          y = baseY + Math.sin(local*Math.PI) * -6; // small bump
-        } else if(t >= 0.42 && t < 0.47){
-          const local = (t-0.42)/0.05;
-          y = baseY - local*55; // sharp rise
-        } else if(t >= 0.47 && t < 0.52){
-          const local = (t-0.47)/0.05;
-          y = baseY - 55 + local*80; // sharp fall past baseline
-        } else if(t >= 0.52 && t < 0.58){
-          const local = (t-0.52)/0.06;
-          y = baseY + 25 - local*25; // return to baseline
-        } else if(t > 0.6 && t < 0.7){
-          const local = (t-0.6)/0.1;
-          y = baseY + Math.sin(local*Math.PI) * -4; // small aftershock
-        }
-        pts.push({x, y});
-      }
-      return pts;
+    const baseOpacity = 0.12;   // faint idle line
+    const peakOpacity = 0.75;   // bright during a beat
+    let currentOpacity = baseOpacity;
+    let scrollX = 0;
+    const speed = 0.9;
+
+    // Trace history: we draw a flat line, and inject beat-shapes at intervals
+    let nextBeatIn = randomGap();
+    let beatProgress = -1; // -1 = not currently drawing a beat
+    const beatWidth = 90;  // px width of the beat spike itself
+
+    function randomGap(){
+      // Irregular gaps between beats, like a real-ish pulse — not perfectly uniform
+      return 260 + Math.random()*180;
     }
 
-    const cycleWidth = 260;
-    let beatCycle = [];
+    // Points buffer: stores {x, y, isBeat} for the visible trace, scrolling left
+    let trace = [];
+    for(let x=0; x<2000; x+=2){
+      trace.push({ relX: x, y:0, isBeat:false });
+    }
+
+    function beatShape(t){
+      // t in [0,1] across beatWidth — returns vertical offset
+      if(t < 0.12) return Math.sin((t/0.12)*Math.PI) * -4;      // small p-wave bump
+      if(t < 0.22) return 0;
+      if(t < 0.30){ const l=(t-0.22)/0.08; return -l*58; }       // sharp rise
+      if(t < 0.38){ const l=(t-0.30)/0.08; return -58+l*85; }    // sharp fall through baseline
+      if(t < 0.46){ const l=(t-0.38)/0.08; return 27-l*27; }     // settle back
+      if(t < 0.60){ const l=(t-0.46)/0.14; return Math.sin(l*Math.PI) * -8; } // t-wave bump
+      return 0;
+    }
+
+    function step(){
+      scrollX += speed;
+
+      // Advance beat trigger
+      nextBeatIn -= speed;
+      if(nextBeatIn <= 0 && beatProgress < 0){
+        beatProgress = 0;
+        nextBeatIn = randomGap();
+      }
+      if(beatProgress >= 0){
+        beatProgress += speed;
+        if(beatProgress > beatWidth) beatProgress = -1;
+      }
+
+      // Fade opacity: brighten sharply when a beat starts, decay back to base
+      if(beatProgress >= 0 && beatProgress < beatWidth*0.5){
+        currentOpacity += (peakOpacity - currentOpacity) * 0.35;
+      } else {
+        currentOpacity += (baseOpacity - currentOpacity) * 0.04;
+      }
+    }
 
     function draw(){
+      step();
       ctx.clearRect(0,0,w,h);
       const baseY = h * 0.55;
 
-      if(beatCycle.length === 0 || beatCycle.cycleWidth !== cycleWidth){
-        beatCycle = generateBeatCycle(baseY, cycleWidth);
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(255,78,26,${currentOpacity})`;
+      ctx.lineWidth = 1.4;
+      if(currentOpacity > baseOpacity + 0.1){
+        ctx.shadowColor = 'rgba(255,78,26,0.6)';
+        ctx.shadowBlur = 7;
+      } else {
+        ctx.shadowBlur = 0;
       }
 
-      scrollX += 1.1;
-      const totalCycles = Math.ceil(w / cycleWidth) + 2;
-
-      ctx.beginPath();
-      ctx.strokeStyle = '#ff4e1a';
-      ctx.lineWidth = 1.5;
-      ctx.shadowColor = 'rgba(255,78,26,0.5)';
-      ctx.shadowBlur = 6;
-
       let first = true;
-      for(let c = -1; c < totalCycles; c++){
-        const cycleOffsetX = c*cycleWidth - (scrollX % cycleWidth);
-        beatCycle.forEach(pt=>{
-          const x = pt.x + cycleOffsetX;
-          const y = pt.y;
-          if(x < -10 || x > w+10) return;
-          if(first){ ctx.moveTo(x,y); first=false; }
-          else ctx.lineTo(x,y);
-        });
+      const rightEdgeX = w + 40;
+      // Draw a flat baseline scrolling, with a beat bump inserted at the current trigger point
+      const beatScreenX = rightEdgeX - (beatProgress >= 0 ? beatProgress : -9999);
+
+      for(let x = -40; x <= rightEdgeX; x += 3){
+        let y = baseY;
+        if(beatProgress >= 0){
+          const distFromBeat = x - beatScreenX;
+          if(distFromBeat >= 0 && distFromBeat <= beatWidth){
+            y = baseY + beatShape(distFromBeat / beatWidth);
+          }
+        }
+        if(first){ ctx.moveTo(x,y); first=false; }
+        else ctx.lineTo(x,y);
       }
       ctx.stroke();
       ctx.shadowBlur = 0;
