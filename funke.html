@@ -132,6 +132,7 @@ body{
     <div class="topbar-title">DER LETZTE <span>FUNKE</span></div>
     <div class="topbar-right">
       <span class="chapter-tag" id="chapterTag"></span>
+      <button class="tb-btn" id="btnSound">Sound An</button>
       <button class="tb-btn" id="btnInventory">Inventar</button>
       <button class="tb-btn" id="btnSave">Speichern</button>
     </div>
@@ -158,6 +159,8 @@ body{
    ══════════════════════════════════════════════════════════════ */
 
 const SAVE_KEY = 'funke_save_v1';
+const MUTE_KEY = 'funke_sound_muted';
+const BASE_VOLUME = 0.2;
 
 let state = {
   node: 'title',
@@ -165,6 +168,158 @@ let state = {
   inventory: [],
   visitedNodes: []
 };
+
+/* ══════════════════════════════════════════════════════════════
+   SOUND ENGINE — prozedural erzeugte Ambient-Szenen, keine Dateien
+   ══════════════════════════════════════════════════════════════ */
+
+let audioCtx = null, masterGain = null, audioBuilt = false;
+let soundMuted = localStorage.getItem(MUTE_KEY) === '1';
+const scenes = {};
+let pendingScene = null, currentSceneName = null;
+
+function buildGeneratorScene(){
+  const bus = audioCtx.createGain(); bus.gain.value = 0; bus.connect(masterGain);
+  const o1 = audioCtx.createOscillator(); o1.type='sine'; o1.frequency.value=62;
+  const o2 = audioCtx.createOscillator(); o2.type='sine'; o2.frequency.value=62.8;
+  const drift = audioCtx.createOscillator(); drift.type='sine'; drift.frequency.value=0.05;
+  const driftDepth = audioCtx.createGain(); driftDepth.gain.value=0.4;
+  drift.connect(driftDepth); driftDepth.connect(o1.frequency); driftDepth.connect(o2.frequency);
+  const lp = audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=200;
+  const droneGain = audioCtx.createGain(); droneGain.gain.value=0.6;
+  const breath = audioCtx.createOscillator(); breath.type='sine'; breath.frequency.value=0.08;
+  const breathDepth = audioCtx.createGain(); breathDepth.gain.value=0.3;
+  breath.connect(breathDepth); breathDepth.connect(droneGain.gain);
+  o1.connect(lp); o2.connect(lp); lp.connect(droneGain); droneGain.connect(bus);
+  o1.start(); o2.start(); drift.start(); breath.start();
+
+  const buf = audioCtx.createBuffer(1, 4*audioCtx.sampleRate, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  const noise = audioCtx.createBufferSource(); noise.buffer=buf; noise.loop=true;
+  const bp = audioCtx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2000; bp.Q.value=0.5;
+  const wave = audioCtx.createOscillator(); wave.type='sine'; wave.frequency.value=0.035;
+  const shaper = audioCtx.createWaveShaper();
+  const curve = new Float32Array(256);
+  for(let i=0;i<256;i++){ const x=(i/255)*2-1; curve[i]=Math.max(0,x); }
+  shaper.curve = curve;
+  const waveDepth = audioCtx.createGain(); waveDepth.gain.value=0.5;
+  const staticGain = audioCtx.createGain(); staticGain.gain.value=0.12;
+  wave.connect(shaper); shaper.connect(waveDepth); waveDepth.connect(staticGain.gain);
+  noise.connect(bp); bp.connect(staticGain); staticGain.connect(bus);
+  noise.start(); wave.start();
+  return bus;
+}
+
+function buildWindScene(){
+  const bus = audioCtx.createGain(); bus.gain.value = 0; bus.connect(masterGain);
+  const buf = audioCtx.createBuffer(1, 4*audioCtx.sampleRate, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  const noise = audioCtx.createBufferSource(); noise.buffer=buf; noise.loop=true;
+  const hp = audioCtx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=500;
+  const lp = audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=2200;
+  const windGain = audioCtx.createGain(); windGain.gain.value=0.35;
+  const gust = audioCtx.createOscillator(); gust.type='sine'; gust.frequency.value=0.06;
+  const gustDepth = audioCtx.createGain(); gustDepth.gain.value=0.3;
+  gust.connect(gustDepth); gustDepth.connect(windGain.gain);
+  noise.connect(hp); hp.connect(lp); lp.connect(windGain); windGain.connect(bus);
+  noise.start(); gust.start();
+  return bus;
+}
+
+function buildFireScene(){
+  const bus = audioCtx.createGain(); bus.gain.value = 0; bus.connect(masterGain);
+  const buf = audioCtx.createBuffer(1, 2*audioCtx.sampleRate, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*0.3;
+  const rumble = audioCtx.createBufferSource(); rumble.buffer=buf; rumble.loop=true;
+  const lp = audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=300;
+  const rumbleGain = audioCtx.createGain(); rumbleGain.gain.value=0.25;
+  rumble.connect(lp); lp.connect(rumbleGain); rumbleGain.connect(bus);
+  rumble.start();
+
+  function crackle(){
+    if(currentSceneName !== 'fire') return;
+    const now = audioCtx.currentTime;
+    const bufC = audioCtx.createBuffer(1, 0.03*audioCtx.sampleRate, audioCtx.sampleRate);
+    const dc = bufC.getChannelData(0);
+    for(let i=0;i<dc.length;i++) dc[i]=(Math.random()*2-1)*(1-i/dc.length);
+    const src = audioCtx.createBufferSource(); src.buffer=bufC;
+    const hp = audioCtx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1500;
+    const g = audioCtx.createGain(); g.gain.value=0.5 + Math.random()*0.4;
+    src.connect(hp); hp.connect(g); g.connect(bus);
+    src.start(now);
+    setTimeout(crackle, 300 + Math.random()*900);
+  }
+  crackle();
+  return bus;
+}
+
+function buildSilenceScene(){
+  const bus = audioCtx.createGain(); bus.gain.value = 0; bus.connect(masterGain);
+  const buf = audioCtx.createBuffer(1, 4*audioCtx.sampleRate, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  const noise = audioCtx.createBufferSource(); noise.buffer=buf; noise.loop=true;
+  const bp = audioCtx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1200; bp.Q.value=1.2;
+  const thinGain = audioCtx.createGain(); thinGain.gain.value=0.08;
+  noise.connect(bp); bp.connect(thinGain); thinGain.connect(bus);
+  noise.start();
+  return bus;
+}
+
+function buildAudioGraph(){
+  if(audioBuilt) return;
+  try{
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = soundMuted ? 0 : BASE_VOLUME;
+    masterGain.connect(audioCtx.destination);
+    scenes.generator = buildGeneratorScene();
+    scenes.wind = buildWindScene();
+    scenes.fire = buildFireScene();
+    scenes.silence = buildSilenceScene();
+    audioBuilt = true;
+    if(pendingScene) setScene(pendingScene);
+  }catch(e){ /* Web Audio nicht verfügbar — Spiel läuft trotzdem normal weiter */ }
+}
+
+function setScene(name){
+  if(!scenes[name]) return;
+  if(!audioBuilt){ pendingScene = name; return; }
+  currentSceneName = name;
+  Object.keys(scenes).forEach(k=>{
+    scenes[k].gain.setTargetAtTime(k===name ? 1 : 0, audioCtx.currentTime, 0.8);
+  });
+}
+
+function updateSoundButton(){
+  const btn = document.getElementById('btnSound');
+  if(btn) btn.textContent = soundMuted ? 'Sound Aus' : 'Sound An';
+}
+
+document.getElementById('btnSound').addEventListener('click', ()=>{
+  buildAudioGraph();
+  soundMuted = !soundMuted;
+  localStorage.setItem(MUTE_KEY, soundMuted ? '1' : '0');
+  if(masterGain) masterGain.gain.setTargetAtTime(soundMuted ? 0 : BASE_VOLUME, audioCtx.currentTime, 0.2);
+  updateSoundButton();
+});
+updateSoundButton();
+
+/* Erster Klick/Tastendruck irgendwo startet die Audio-Engine (Autoplay-Regeln der Browser) */
+function firstGestureHandler(){
+  buildAudioGraph();
+  document.removeEventListener('click', firstGestureHandler);
+  document.removeEventListener('keydown', firstGestureHandler);
+}
+document.addEventListener('click', firstGestureHandler);
+document.addEventListener('keydown', firstGestureHandler);
+
+/* ══════════════════════════════════════════════════════════════
+   ENGINE
+   ══════════════════════════════════════════════════════════════ */
 
 function saveGame(){
   localStorage.setItem(SAVE_KEY, JSON.stringify(state));
@@ -273,6 +428,9 @@ function renderNode(nodeId, skipAnim){
 
   // alte "weiter"-Listener des vorherigen Nodes entfernen
   if(advanceCleanup){ advanceCleanup(); advanceCleanup = null; }
+
+  // Sound-Szene wechseln, falls der Node eine eigene definiert (sonst bleibt die aktuelle bestehen)
+  if(node.sound) setScene(node.sound);
 
   if(node.type === 'title'){ renderTitle(); return; }
   if(node.type === 'end'){ renderEnd(node); return; }
@@ -450,6 +608,7 @@ const STORY = {
   ch1_intro: {
     chapter: 'KAPITEL 1 — STAUB UND STILLE',
     location: 'IRGENDWO. STRASSE 9, RICHTUNG NORDEN.',
+    sound: 'wind',
     text: [
       { narrator: 'Drei Jahre ist es her, seit das Netz zusammenbrach. Nicht durch Krieg. Nicht durch Bomben. Sondern weil niemand mehr wusste, wie man die Server neu startet, nachdem der letzte, der es wusste, in Rente ging und sein Passwort mitnahm.' },
       { narrator: 'Kein Strom. Keine Kühlschränke. Kein Streaming. Die Zivilisation fiel nicht mit einem Knall, sondern mit einem Achselzucken.' },
@@ -571,6 +730,7 @@ const STORY = {
   ch1_inside: {
     chapter: 'KAPITEL 1 — STAUB UND STILLE',
     location: 'IM HAUS VON ROSA',
+    sound: 'generator',
     text: [
       'Drinnen ist es überraschend warm. Eine Öllampe flackert auf einem Tisch, umgeben von Werkzeug, Kabeln und Teilen, die aussehen, als kämen sie aus einem Dutzend verschiedener Maschinen.',
       { narrator: 'In der Ecke, unter einer Plane, summt leise etwas. Ein Generator. Er läuft tatsächlich.' },
@@ -677,6 +837,7 @@ const STORY = {
   ch2_intro: {
     chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
     location: 'RATTENBACH, AM NÄCHSTEN MORGEN',
+    sound: 'generator',
     text: [
       'Die Sonne kämpft sich durch eine dünne Wolkendecke, als du aufwachst. Rosa ist schon wach, gebeugt über eine alte Straßenkarte, die sie mit Bleistiftlinien markiert hat.',
       { narrator: 'In der Nacht hat der Empfänger noch zweimal geknackt. Beide Male dasselbe Muster: Rauschen, ein Wortfetzen, dann Stille. "Turm im Osten." Mehr nicht.' }
@@ -734,6 +895,7 @@ const STORY = {
   ch2_departure: {
     chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
     location: 'ÖSTLICHE AUSFALLSTRASSE',
+    sound: 'wind',
     text: [
       'Der Weg nach Osten führt durch ausgedörrte Felder und vorbei an einer verrosteten Tankstelle, deren Preisschild noch immer Zahlen zeigt, die heute so bedeutungslos sind wie Hieroglyphen.',
       { narrator: 'Rosa geht neben dir, den Blick in ständiger Bewegung — Straßenränder, Fenster, Horizont. Man merkt, dass sie diese Art zu gehen nicht gelernt hat, weil sie es wollte.', showIf: { flag: 'rosa_companion' } },
@@ -775,6 +937,7 @@ const STORY = {
 
   ch2_observe: {
     chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
+    sound: 'silence',
     text: [
       'Du duckst dich hinter eine umgestürzte Betonplatte und beobachtest. Was du zunächst für eine Bedrohung hieltest, entpuppt sich als eine kleine Gruppe — drei Personen, die um ein improvisiertes Lager am Fuß des Turms herumhantieren.',
       { narrator: 'Sie tragen zusammengewürfelte Ausrüstung, aber es wirkt organisiert. Kein wildes Chaos. Jemand hier hat einen Plan.' },
@@ -811,6 +974,7 @@ const STORY = {
   ch2_reveal_self: {
     chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
     location: 'LAGER AM FUSS DES SENDETURMS',
+    sound: 'fire',
     text: [
       { narrator: 'Du erklärst, dass du die Stimme über Funk gehört hast. Dass du gekommen bist, um herauszufinden, was hier vor sich geht.' },
       { speaker: 'Rosa', line: '"Auf meinem Kurzwellenempfänger. Drei Jahre lang nur Rauschen, und dann eure Stimme. Wenn ihr das wart, will ich wissen, wie ihr das geschafft habt."', showIf: { flag: 'rosa_companion' } },
@@ -878,6 +1042,7 @@ const STORY = {
   },
 
   ch2_climb_armed: {
+    sound: 'silence',
     text: [
       { narrator: 'Mit der Eisenstange am Gürtel befestigt beginnst du den Aufstieg. Die Leiter quietscht bei jedem Schritt, aber hält.' },
     ],
@@ -885,6 +1050,7 @@ const STORY = {
   },
 
   ch2_climb_unarmed: {
+    sound: 'silence',
     text: [
       { narrator: 'Ohne Werkzeug, nur mit deinen Händen und dem geliehenen Seil, beginnst du den Aufstieg. Die Leiter quietscht bei jedem Schritt, aber hält — vorerst.' },
     ],
@@ -974,6 +1140,7 @@ const STORY = {
   ch2_return_down: {
     chapter: 'KAPITEL 2 — DER TURM IM OSTEN',
     location: 'ABSTIEG',
+    sound: 'fire',
     text: [
       { narrator: 'Der Abstieg ist schneller als der Aufstieg — Angst treibt einen selten nach oben, aber immer nach unten. Als du wieder festen Boden erreichst, wartet die Gruppe bereits, sichtlich angespannt.' },
       { speaker: 'Rosa', line: '"Mach das nie wieder, ohne mir vorher zu sagen, wie lange es dauert. Ich hab hier unten drei Fluchtrouten geplant und keine einzige gebraucht."', showIf: { flag: 'rosa_companion' } },
@@ -1039,6 +1206,7 @@ const STORY = {
   ch3_intro: {
     chapter: 'KAPITEL 3 — KÖNIGSMÜHLE',
     location: 'RATTENBACH, VIER TAGE SPÄTER',
+    sound: 'generator',
     text: [
       { narrator: 'Vier Tage sind vergangen seit dem Turm. Genug Zeit, damit sich alles wieder wie Alltag anfühlt — und genug Zeit, damit ein Gedanke sich festsetzt und nicht mehr weichen will.' },
       { narrator: 'Ihr seid gemeinsam nach Rattenbach zurückgekehrt, Rosa mit der stillen Zufriedenheit von jemandem, der eine Entscheidung nicht bereut, auch wenn sie sie nie laut zugeben würde.', showIf: { flag: 'rosa_companion' } },
@@ -1101,6 +1269,7 @@ const STORY = {
   ch3_tower_visit: {
     chapter: 'KAPITEL 3 — KÖNIGSMÜHLE',
     location: 'AM FUSS DES SENDETURMS',
+    sound: 'fire',
     text: [
       { narrator: 'Tobias hört sich die Nachricht kaum bis zum Ende an, bevor er anfängt, seine Tasche zu packen.' },
       { speaker: 'Tobias', line: '"Das ist es. Das ist genau das, wofür wir den Turm überhaupt repariert haben. Ich komm mit. Mira?"' },
@@ -1113,6 +1282,7 @@ const STORY = {
 
   ch3_alone_travel: {
     chapter: 'KAPITEL 3 — KÖNIGSMÜHLE',
+    sound: 'wind',
     text: [
       { narrator: 'Für einen Umweg über den Turm bleibt keine Zeit — oder zumindest redest du dir das ein. Ihr brecht direkt Richtung Steinfeld auf.', showIf: { flag: 'rosa_companion' } },
       { narrator: 'Für einen Umweg über den Turm bleibt keine Zeit — oder zumindest redest du dir das ein. Du brichst allein Richtung Steinfeld auf.', showIf: { flag: 'rosa_companion', invert: true } }
@@ -1123,6 +1293,7 @@ const STORY = {
   ch3_group_travel: {
     chapter: 'KAPITEL 3 — KÖNIGSMÜHLE',
     location: 'WEG NACH STEINFELD',
+    sound: 'wind',
     text: [
       { narrator: 'Die Straße nach Westen führt durch Landschaft, die einmal Ackerland war und jetzt nur noch ein Muster aus Furchen unter hohem, trockenem Gras ist.' },
       { narrator: 'Tobias redet fast pausenlos — Sendeleistung, Frequenzen, was Elena wohl für Ausrüstung hat. Mira lässt ihn reden und korrigiert nur jeden dritten Satz.', showIf: { flag: 'tobias_joined' } },
@@ -1138,6 +1309,7 @@ const STORY = {
   ch3_investigate_tracks: {
     chapter: 'KAPITEL 3 — KÖNIGSMÜHLE',
     location: 'RUINE AN DER KREUZUNG',
+    sound: 'silence',
     text: [
       'Das Wrack ist alt, die Reifen längst verschwunden. Aber die Asche im Inneren ist neu — Wochen, nicht Jahre.',
       { narrator: 'In der Ruine daneben, kaum lesbar, ein Satz in hastiger Handschrift auf die Wand gekratzt: <span class="hl">"Sammler waren hier. Nicht bleiben."</span>' },
@@ -1151,6 +1323,7 @@ const STORY = {
   ch3_meeting_point: {
     chapter: 'KAPITEL 3 — KÖNIGSMÜHLE',
     location: 'WASSERTURM BEI STEINFELD, SONNENAUFGANG',
+    sound: 'silence',
     text: [
       'Der Wasserturm steht allein auf einem Hügel, ein grauer Betonzylinder, der den Sonnenaufgang wie eine Sonnenuhr in Schatten wirft.',
       { narrator: 'Am Fuß des Turms warten drei Gestalten. Keine Waffen sichtbar, aber die Art, wie sie stehen — mit genug Abstand zueinander, dass keiner den anderen verdeckt — verrät, dass sie trotzdem bereit sind.' },
@@ -1199,6 +1372,7 @@ const STORY = {
   ch3_arrival: {
     chapter: 'KAPITEL 3 — KÖNIGSMÜHLE',
     location: 'KÖNIGSMÜHLE',
+    sound: 'fire',
     text: [
       'Die alte Mühle taucht hinter einer Hügelkuppe auf, umgeben von einem Flickwerk aus Zäunen, Gewächshäusern aus geborgenen Fensterscheiben und Dächern, die alle irgendwie zueinander passen, ohne dass es zwei gleiche gibt.',
       { narrator: 'Menschen. Mehr, als du seit drei Jahren an einem Ort gesehen hast. Jemand repariert ein Fahrrad. Zwei Kinder jagen sich zwischen Beeten aus Kartoffeln. Niemand starrt euch an, aber alle bemerken euch.' },
@@ -1275,6 +1449,7 @@ const STORY = {
   ch3_night_alarm: {
     chapter: 'KAPITEL 3 — KÖNIGSMÜHLE',
     location: 'KÖNIGSMÜHLE, MITTEN IN DER NACHT',
+    sound: 'silence',
     text: [
       { narrator: 'Ein Geräusch reißt dich aus dem Schlaf — keine Explosion, kein Schrei. Nur Schritte, viele, schnell, und eine gedämpfte Stimme, die andere leise weckt, ohne Panik zu verbreiten. Genau die Art, wie Menschen sich verhalten, die für genau diesen Moment geübt haben.' },
       { speaker: 'Rosa', line: '"Das ist kein Feueralarm. Das ist eine Wache, die etwas gesehen hat."', showIf: { flag: 'rosa_companion' } }
