@@ -60,18 +60,23 @@
     .section-label::after { content: ''; flex: 0 0 40px; height: 1px; background: rgba(255,255,255,0.08); }
 
     /* CARDS */
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2px; }
-    .card { background: var(--card); padding: 40px 32px; position: relative; overflow: hidden; transition: background 0.3s; text-align: center; }
-    .card:hover { background: var(--card2); }
-    .card-num { font-family: 'Bebas Neue'; font-size: 4rem; color: rgba(255,255,255,0.05); line-height: 1; margin-bottom: 16px; }
-    .card-title { font-family: 'Instrument Serif'; font-size: 1.4rem; font-style: italic; margin-bottom: 12px; }
-    .card-text { font-size: 0.72rem; line-height: 1.8; color: var(--muted); }
-    .card-tag { display: inline-block; margin-top: 20px; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--orange); border: 1px solid rgba(255,78,26,0.3); padding: 4px 10px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0; border-top: 1px solid var(--border); }
+    .card { padding: 40px 32px; position: relative; overflow: hidden; transition: background 0.25s; border-right: 1px solid var(--border); }
+    .card:last-child { border-right: none; }
+    .card:hover { background: rgba(255,78,26,0.04); }
+    .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--orange); transform: scaleX(0); transform-origin: left; transition: transform 0.3s ease; }
+    .card:hover::before { transform: scaleX(1); }
+    .card-num { font-family: 'Bebas Neue'; font-size: 2.6rem; color: var(--orange); line-height: 1; margin-bottom: 18px; transition: transform 0.25s ease; }
+    .card:hover .card-num { transform: translateX(4px); }
+    .card-title { font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: #5ecbe0; margin-bottom: 12px; font-weight: 600; font-style: normal; }
+    .card-text { font-size: 0.72rem; line-height: 1.8; color: var(--muted); font-style: italic; }
+    .card-tag { display: inline-block; margin-top: 20px; font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+    .card-tag::before { content: '// '; color: var(--orange); }
     .card-link { text-decoration: none; color: inherit; display: block; }
     .card-link .card { cursor: none; }
-    .card-link .card:hover .card-title { color: var(--orange); }
-    .card-arrow { position: absolute; bottom: 28px; right: 28px; font-size: 1.2rem; color: var(--orange); opacity: 0; transition: opacity 0.2s, transform 0.2s; }
-    .card-link:hover .card-arrow { opacity: 1; transform: translate(4px, -4px); }
+    .card-arrow { position: absolute; bottom: 24px; right: 28px; font-size: 1.1rem; color: var(--orange); opacity: 0; transition: opacity 0.2s, transform 0.2s; }
+    .card-link:hover .card-arrow { opacity: 1; transform: translate(3px, -3px); }
+    @media (max-width: 700px) { .card { border-right: none; border-bottom: 1px solid var(--border); } .card:last-child { border-bottom: none; } }
 
     /* STATEMENT */
     .statement { padding: 100px 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; align-items: center; }
@@ -104,15 +109,21 @@
     .mt-head:nth-child(2) { text-align: left; }
 
     /* PAGES SECTION */
-    .pages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2px; }
-    .page-card { background: var(--card); padding: 40px 32px; text-decoration: none; color: inherit; display: block; position: relative; overflow: hidden; transition: background 0.3s; cursor: none; text-align: center; }
-    .page-card:hover { background: var(--card2); }
-    .page-card-label { font-size: 0.58rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--orange); margin-bottom: 12px; }
-    .page-card-title { font-family: 'Bebas Neue'; font-size: 2rem; margin-bottom: 10px; line-height: 1; }
-    .page-card-desc { font-size: 0.7rem; color: var(--muted); line-height: 1.8; }
-    .page-card-lock { position: absolute; top: 28px; right: 28px; font-size: 0.9rem; opacity: 0.4; }
-    .page-card-arrow { position: absolute; bottom: 28px; right: 28px; color: var(--orange); opacity: 0; transition: opacity 0.2s, transform 0.2s; font-size: 1.1rem; }
+    .pages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0; border-top: 1px solid var(--border); }
+    .page-card { padding: 40px 32px; text-decoration: none; color: inherit; display: block; position: relative; overflow: hidden; transition: background 0.25s; cursor: none; border-right: 1px solid var(--border); }
+    .page-card:last-child { border-right: none; }
+    .page-card:hover { background: rgba(255,78,26,0.04); }
+    .page-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--orange); transform: scaleX(0); transform-origin: left; transition: transform 0.3s ease; }
+    .page-card:hover::before { transform: scaleX(1); }
+    .page-card-num { font-family: 'Bebas Neue'; font-size: 2.6rem; color: var(--orange); line-height: 1; margin-bottom: 18px; transition: transform 0.25s ease; }
+    .page-card:hover .page-card-num { transform: translateX(4px); }
+    .page-card-label { font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: #5ecbe0; margin-bottom: 12px; font-weight: 600; }
+    .page-card-title { display: none; }
+    .page-card-desc { font-size: 0.72rem; color: var(--muted); line-height: 1.8; font-style: italic; }
+    .page-card-lock { position: absolute; top: 32px; right: 28px; font-size: 0.85rem; opacity: 0.4; }
+    .page-card-arrow { position: absolute; bottom: 24px; right: 28px; color: var(--orange); opacity: 0; transition: opacity 0.2s, transform 0.2s; font-size: 1.1rem; }
     .page-card:hover .page-card-arrow { opacity: 1; transform: translate(3px,-3px); }
+    @media (max-width: 700px) { .page-card { border-right: none; border-bottom: 1px solid var(--border); } .page-card:last-child { border-bottom: none; } }
 
     /* FOOTER */
     footer { padding: 40px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: center; gap: 40px; align-items: center; font-size: 0.62rem; color: var(--muted); letter-spacing: 0.15em; text-align: center; }
@@ -215,25 +226,16 @@
   <div class="pages-grid">
 
     <a href="crossfit.html" class="page-card">
-      <div class="page-card-label">// mitglieder bereich</div>
-      <div class="page-card-title">CROSSFIT</div>
-      <p class="page-card-desc">Challenge Tracker, Jahresplan, Saison-Ranking und Dezember-Voting. Passwortgeschützt.</p>
-      <div class="page-card-lock">🔒</div>
+      <div class="page-card-num">01</div>
+      <div class="page-card-label">CROSSFIT</div>
+      <p class="page-card-desc">Challenge Tracker, Jahresplan, Saison-Ranking und Dezember-Voting.</p>
       <div class="page-card-arrow">→</div>
     </a>
 
     <a href="gaming.html" class="page-card">
-      <div class="page-card-label">// snake · wordle · block blast</div>
-      <div class="page-card-title">GAMING<br>AREA</div>
-      <p class="page-card-desc">Snake, Wordle und Block Blast — alles an einem Ort. Globale Highscores.</p>
-      <div class="page-card-arrow">→</div>
-    </a>
-
-    <a href="lisa-schueler.html" class="page-card">
-      <div class="page-card-label">// schule · schülerversion</div>
-      <div class="page-card-title">LISA<br>LICENTIA</div>
-      <p class="page-card-desc">Schülerversion der Präsentation. Passwortgeschützt.</p>
-      <div class="page-card-lock">🔒</div>
+      <div class="page-card-num">02</div>
+      <div class="page-card-label">GAMING AREA</div>
+      <p class="page-card-desc">Snake, Wordle, Block Blast, Flappy Makkus, Tetris und ein episches Text-Adventure.</p>
       <div class="page-card-arrow">→</div>
     </a>
 
