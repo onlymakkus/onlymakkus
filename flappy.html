@@ -75,6 +75,7 @@
       <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
         <div style="font-size:.6rem;color:var(--muted);letter-spacing:.1em">Name für Highscore</div>
         <input class="go-input" id="go-name" placeholder="Dein Name" maxlength="20">
+        <input type="text" id="go-hp" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
         <button class="go-btn" id="go-save">Speichern →</button>
         <div class="go-msg" id="go-msg"></div>
         <button class="go-skip" id="go-skip">Überspringen</button>
@@ -114,7 +115,7 @@ const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
 const W=canvas.width,H=canvas.height;
 const GRAV=0.45,FLAP=-8,PIPE_W=60,GAP=150,PIPE_SPEED=2.6,PIPE_INTERVAL=110;
 
-let bird,pipes,score,hi=parseInt(localStorage.getItem('fb_hi')||'0'),running,frame,over;
+let bird,pipes,score,hi=parseInt(localStorage.getItem('fb_hi')||'0'),running,frame,over,gameStartTime=0;
 document.getElementById('hi').textContent=hi;
 
 function init(){
@@ -127,7 +128,7 @@ function init(){
 
 function start(){
   if(running)return;
-  init();running=true;
+  init();running=true;gameStartTime=Date.now();
   loop=requestAnimationFrame(update);
 }
 
@@ -221,7 +222,13 @@ document.getElementById('btn-start').addEventListener('click',start);
 
 document.getElementById('go-save').addEventListener('click',async()=>{
   const name=document.getElementById('go-name').value.trim(),msg=document.getElementById('go-msg');
+  const hp=document.getElementById('go-hp').value;
+  if(hp){msg.textContent='✓ Gespeichert!';setTimeout(()=>{document.getElementById('go').classList.remove('show');init()},1200);return}
   if(!name){msg.textContent='⚠ Name eingeben';return}
+  const elapsed=(Date.now()-gameStartTime)/1000;
+  const minTimeNeeded=score*1.5;
+  if(gameStartTime===0||elapsed<minTimeNeeded||elapsed<1){msg.textContent='⚠ Ungültiger Spielverlauf';return}
+  if(score>2000){msg.textContent='⚠ Score außerhalb des möglichen Bereichs';return}
   document.getElementById('go-save').textContent='…';
   try{
     await sbFetch('/rest/v1/snake_scores',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name:'FB:'+name,score})});

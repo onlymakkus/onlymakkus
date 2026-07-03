@@ -95,6 +95,7 @@
       <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
         <div style="font-size:.6rem;color:var(--muted);letter-spacing:.1em">Name für Highscore</div>
         <input class="go-input" id="go-name" placeholder="Dein Name" maxlength="20">
+        <input type="text" id="go-hp" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
         <button class="go-btn" id="go-save">Speichern →</button>
         <div class="go-msg" id="go-msg"></div>
         <button class="go-skip" id="go-skip">Überspringen</button>
@@ -141,7 +142,7 @@ async function loadScores(){
 loadScores();
 const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
 const G=20,COLS=canvas.width/G,ROWS=canvas.height/G;
-let snake,dir,nd,food,score,hi=parseInt(localStorage.getItem('sn_hi')||'0'),loop,running,paused;
+let snake,dir,nd,food,score,hi=parseInt(localStorage.getItem('sn_hi')||'0'),loop,running,paused,gameStartTime=0;
 document.getElementById('hi').textContent=hi;
 function init(){
   snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];dir={x:1,y:0};nd={x:1,y:0};
@@ -176,7 +177,7 @@ function draw(){
   if(paused){ctx.fillStyle='rgba(10,10,8,.7)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#ff4e1a';ctx.font='bold 16px "DM Mono"';ctx.textAlign='center';ctx.fillText('// PAUSE',canvas.width/2,canvas.height/2);ctx.fillStyle='#9a9488';ctx.font='12px "DM Mono"';ctx.fillText('SPACE zum Weitermachen',canvas.width/2,canvas.height/2+24)}
   if(!running&&!paused){ctx.fillStyle='rgba(10,10,8,.5)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#ff4e1a';ctx.font='bold 13px "DM Mono"';ctx.textAlign='center';ctx.fillText('▶ STARTEN',canvas.width/2,canvas.height/2);ctx.fillStyle='#9a9488';ctx.font='11px "DM Mono"';ctx.fillText('WASD oder Pfeiltasten',canvas.width/2,canvas.height/2+22)}
 }
-function start(){if(running)return;init();running=true;document.getElementById('btn-start').textContent='▶ Läuft…';loop=setInterval(step,speed())}
+function start(){if(running)return;init();running=true;gameStartTime=Date.now();document.getElementById('btn-start').textContent='▶ Läuft…';loop=setInterval(step,speed())}
 function end(){
   clearInterval(loop);running=false;
   if(score>hi){hi=score;localStorage.setItem('sn_hi',hi);document.getElementById('hi').textContent=hi}
@@ -250,7 +251,13 @@ document.getElementById('dp-pause').addEventListener('click',()=>{
 });
 document.getElementById('go-save').addEventListener('click',async()=>{
   const name=document.getElementById('go-name').value.trim(),msg=document.getElementById('go-msg');
+  const hp=document.getElementById('go-hp').value;
+  if(hp){msg.textContent='✓ Gespeichert!';setTimeout(()=>{document.getElementById('go').classList.remove('show');init()},1200);return}
   if(!name){msg.textContent='⚠ Name eingeben';return}
+  const elapsed=(Date.now()-gameStartTime)/1000;
+  const minTimeNeeded=score*0.3;
+  if(gameStartTime===0||elapsed<minTimeNeeded||elapsed<1){msg.textContent='⚠ Ungültiger Spielverlauf';return}
+  if(score>500){msg.textContent='⚠ Score außerhalb des möglichen Bereichs';return}
   document.getElementById('go-save').textContent='…';
   try{await sbFetch('/rest/v1/snake_scores',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name,score})});localStorage.setItem('sn_name',name);msg.textContent='✓ Gespeichert!';await loadScores();setTimeout(()=>{document.getElementById('go').classList.remove('show');init()},1200)}
   catch{msg.textContent='❌ Fehler'}

@@ -126,6 +126,7 @@
         <div class="form-group"><label class="form-label">PIN</label><input type="password" class="form-input" id="fPin" placeholder="••••" maxlength="4" inputmode="numeric" pattern="[0-9]*"></div>
         <div class="form-group"><label class="form-label">&nbsp;</label><button class="form-btn" id="submitBtn">Eintragen →</button></div>
       </div>
+      <input type="text" id="fWebsite" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
       <p class="form-msg" id="formMsg"></p>
       <p style="margin-top:8px;font-size:.58rem;color:var(--muted)">Neuer Name → PIN wird neu festgelegt. Bestehender Name → richtige PIN nötig.</p>
     </div>
@@ -148,6 +149,7 @@
   async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
 
   const medals=['🥇','🥈','🥉'];
+  const pageLoadTime=Date.now();
   let ACTIVE=null, GOAL=60;
 
   function slugify(name){return name.toLowerCase().replace(/[^a-z0-9]+/g,'').trim()}
@@ -253,15 +255,19 @@
 
   document.getElementById('submitBtn').addEventListener('click',async()=>{
     if(!ACTIVE){alert('Für diesen Monat ist keine Challenge aktiv.');return}
+    const website=document.getElementById('fWebsite').value;
+    if(website)return; // honeypot triggered — silently drop, no feedback to bot
     const name=document.getElementById('fName').value.trim();
     const v1=Math.max(0,parseInt(document.getElementById('fLeft').value)||0);
     const v2=ACTIVE.dual?Math.max(0,parseInt(document.getElementById('fRight').value)||0):0;
     const pin=document.getElementById('fPin').value.trim();
     const msg=document.getElementById('formMsg');
 
+    if(Date.now()-pageLoadTime<1500){msg.textContent='⚠ Bitte kurz warten und erneut versuchen';msg.className='form-msg err';return}
     if(!name){msg.textContent='⚠ Bitte Namen eingeben';msg.className='form-msg err';return}
     if(!v1&&!v2){msg.textContent='⚠ Mindestens einen Wert eingeben';msg.className='form-msg err';return}
     if(!/^\d{4}$/.test(pin)){msg.textContent='⚠ PIN muss 4 Ziffern haben';msg.className='form-msg err';return}
+    if(v1>10000||v2>10000){msg.textContent='⚠ Wert außerhalb des möglichen Bereichs';msg.className='form-msg err';return}
 
     const btn=document.getElementById('submitBtn');
     btn.textContent='Speichern…';btn.disabled=true;

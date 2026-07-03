@@ -90,6 +90,7 @@
     <div style="display:flex;flex-direction:column;gap:8px">
       <div style="font-size:.6rem;color:var(--muted);letter-spacing:.1em">Name für Highscore</div>
       <input class="go-input" id="go-name" placeholder="Dein Name" maxlength="20">
+      <input type="text" id="go-hp" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
       <button class="go-btn primary" id="go-save">Speichern →</button>
       <div class="go-msg" id="go-msg"></div>
       <button class="go-btn secondary" id="go-skip">Überspringen</button>
@@ -176,7 +177,7 @@ const SHAPES=[
 ];
 
 // State
-let board,bbScore,bbHi=parseInt(localStorage.getItem('bb_hi')||'0'),combo,pieces,bbOver;
+let board,bbScore,bbHi=parseInt(localStorage.getItem('bb_hi')||'0'),combo,pieces,bbOver,gameStartTime=0;
 document.getElementById('hi').textContent=bbHi;
 
 // Cell size (computed after board render)
@@ -189,7 +190,7 @@ function getCellSize(){
 
 function init(){
   board=Array.from({length:GS},()=>Array(GS).fill(null));
-  bbScore=0;combo=1;pieces=[];bbOver=false;
+  bbScore=0;combo=1;pieces=[];bbOver=false;gameStartTime=Date.now();
   document.getElementById('score').textContent=0;
   document.getElementById('combo').textContent='x1';
   document.getElementById('goOverlay').classList.remove('show');
@@ -446,7 +447,12 @@ function endGame(){
 document.getElementById('go-save').addEventListener('click',async()=>{
   const name=document.getElementById('go-name').value.trim();
   const msg=document.getElementById('go-msg');
+  const hp=document.getElementById('go-hp').value;
+  if(hp){msg.textContent='✓ Gespeichert!';setTimeout(()=>{document.getElementById('goOverlay').classList.remove('show');init()},1200);return}
   if(!name){msg.textContent='⚠ Name eingeben';return}
+  const elapsed=(Date.now()-gameStartTime)/1000;
+  if(gameStartTime===0||elapsed<3){msg.textContent='⚠ Ungültiger Spielverlauf';return}
+  if(bbScore>200000){msg.textContent='⚠ Score außerhalb des möglichen Bereichs';return}
   document.getElementById('go-save').textContent='…';
   try{
     await sbFetch('/rest/v1/snake_scores',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name:'BB:'+name,score:bbScore})});

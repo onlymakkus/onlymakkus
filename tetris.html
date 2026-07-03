@@ -118,6 +118,7 @@
         <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
           <div style="font-size:.6rem;color:var(--muted);letter-spacing:.1em">Name für Highscore</div>
           <input class="go-input" id="go-name" placeholder="Dein Name" maxlength="20">
+          <input type="text" id="go-hp" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
           <button class="go-btn" id="go-save">Speichern →</button>
           <div class="go-msg" id="go-msg"></div>
           <button class="go-skip" id="go-skip">Überspringen</button>
@@ -180,7 +181,7 @@ const SHAPES={
 };
 const TYPES=Object.keys(SHAPES);
 
-let board,current,next,score,lines,level,hi=parseInt(localStorage.getItem('tt_hi')||'0'),running,over,dropCounter,dropInterval,lastTime,animFrame;
+let board,current,next,score,lines,level,hi=parseInt(localStorage.getItem('tt_hi')||'0'),running,over,dropCounter,dropInterval,lastTime,animFrame,gameStartTime=0;
 setStat('hi',hi);
 
 function randPiece(){
@@ -332,7 +333,7 @@ function gameLoop(time=0){
 
 function start(){
   if(running)return;
-  init();running=true;lastTime=0;
+  init();running=true;lastTime=0;gameStartTime=Date.now();
   animFrame=requestAnimationFrame(gameLoop);
 }
 
@@ -364,7 +365,13 @@ document.getElementById('m-drop').addEventListener('click',()=>{if(running){hard
 
 document.getElementById('go-save').addEventListener('click',async()=>{
   const name=document.getElementById('go-name').value.trim(),msg=document.getElementById('go-msg');
+  const hp=document.getElementById('go-hp').value;
+  if(hp){msg.textContent='✓ Gespeichert!';setTimeout(()=>{document.getElementById('go').classList.remove('show');init()},1200);return}
   if(!name){msg.textContent='⚠ Name eingeben';return}
+  const elapsed=(Date.now()-gameStartTime)/1000;
+  if(gameStartTime===0||elapsed<3){msg.textContent='⚠ Ungültiger Spielverlauf';return}
+  const maxPlausibleScore=elapsed*180;
+  if(score>maxPlausibleScore||score>99999){msg.textContent='⚠ Score außerhalb des möglichen Bereichs';return}
   document.getElementById('go-save').textContent='…';
   try{
     await sbFetch('/rest/v1/snake_scores',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name:'TT:'+name,score})});
