@@ -84,17 +84,7 @@
 <body>
 <div class="cursor" id="cursor"></div>
 
-<div class="login-overlay" id="loginOverlay">
-  <div class="login-logo">ONLY<span>MAKKUS</span></div>
-  <p class="login-sub">// members only</p>
-  <div class="login-form">
-    <input type="password" class="login-input" id="pwInput" placeholder="Gruppenpasswort" autocomplete="off">
-    <button class="login-btn" id="loginBtn">Einloggen →</button>
-    <p class="login-error" id="loginError"></p>
-  </div>
-</div>
-
-<div class="page-content" id="pageContent">
+<div class="page-content visible" id="pageContent">
   <nav>
     <a class="nav-logo" href="crossfit.html">← Hub</a>
     <div class="nav-links">
@@ -156,19 +146,6 @@
   const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co';
   const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
   async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
-
-  const PASSWORD='plank2026';
-  const SESSION_KEY='om_cf_auth';
-  const overlay=document.getElementById('loginOverlay');
-  const content=document.getElementById('pageContent');
-  const pwInput=document.getElementById('pwInput');
-  const loginError=document.getElementById('loginError');
-  function unlock(){overlay.classList.add('hidden');content.classList.add('visible');sessionStorage.setItem(SESSION_KEY,'1');init()}
-  function tryLogin(){if(pwInput.value.trim()===PASSWORD){unlock()}else{loginError.textContent='✕ falsches passwort';pwInput.value=''}}
-  document.getElementById('loginBtn').addEventListener('click',tryLogin);
-  pwInput.addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin()});
-  if(sessionStorage.getItem(SESSION_KEY)==='1')unlock();
-  else { /* still show login */ }
 
   const medals=['🥇','🥈','🥉'];
   let ACTIVE=null, GOAL=60;
@@ -323,6 +300,8 @@
     btn.textContent='Eintragen →';btn.disabled=false;
     setTimeout(()=>msg.textContent='',4000);
   });
+
+  init();
 </script>
 </body>
 </html>
