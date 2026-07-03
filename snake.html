@@ -132,7 +132,7 @@ let toastTimer;
 function toast(msg,d=1800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),d)}
 async function loadScores(){
   try{
-    const data=await sbFetch('/rest/v1/snake_scores?name=not.like.BB:*&select=*&order=score.desc&limit=10');
+    const data=await sbFetch('/rest/v1/snake_scores?name=not.like.BB:*&name=not.like.TT:*&name=not.like.FB:*&select=*&order=score.desc&limit=10');
     const medals=['🥇','🥈','🥉'];
     const el=document.getElementById('scores');
     if(!data||!data.length){el.innerHTML='<div class="hi-empty">Noch keine Scores — sei der Erste! 🐍</div>';return;}
