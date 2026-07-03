@@ -1485,7 +1485,337 @@ const STORY = {
     type: 'end',
     badge: 'ENDE KAPITEL 3',
     title: 'KÖNIGSMÜHLE',
-    text: 'Königsmühle ist real. Der Eintopf war real, das Lachen am Tisch war real. Und jetzt, ebenso real: Irgendetwas da draußen hat euch gefunden, bevor ihr bereit wart, gefunden zu werden. Kapitel 4 folgt bald.'
+    text: 'Königsmühle ist real. Der Eintopf war real, das Lachen am Tisch war real. Und jetzt, ebenso real: Irgendetwas da draußen hat euch gefunden, bevor ihr bereit wart, gefunden zu werden.',
+    nextChapter: 'ch4_intro'
+  },
+
+  /* ══════════════════════════════════════════════════════
+     KAPITEL 4 — "ZWISCHEN DEN FREQUENZEN"
+     ══════════════════════════════════════════════════════ */
+
+  ch4_intro: {
+    chapter: 'KAPITEL 4 — ZWISCHEN DEN FREQUENZEN',
+    location: 'KÖNIGSMÜHLE, AM MORGEN DANACH',
+    text: [
+      { narrator: 'Niemand hat viel geschlafen. Im Morgengrauen versammelt sich die halbe Siedlung im Innenhof, Tassen mit etwas, das entfernt an Kaffee erinnert, in müden Händen.' },
+      { speaker: 'Elena', line: '"Kundschafter am Zaun heißt: Sie wissen, dass wir hier sind. Es heißt nicht, dass sie schon einen Plan haben. Aber ich will nicht darauf wetten, dass sie sich Zeit lassen."' },
+      { speaker: 'Tobias', line: '"Und wenn sie einfach nur... vorbeigeschaut haben? Zufällig?"', showIf: { flag: 'tobias_joined' } },
+      { speaker: 'Elena', line: '"Glaub mir, in dem, was ich in zwei Jahren hier gelernt habe: Niemand kommt zufällig genau in der Nacht vorbei, nachdem eine neue Siedlung sich gerade erst über Funk verraten hat."', showIf: { flag: 'tobias_joined' } }
+    ],
+    choices: [
+      { label: '"Zuerst die Verteidigung stärken."', to: 'ch4_fortify_first' },
+      { label: '"Zuerst versuchen, mehr über sie herauszufinden."', to: 'ch4_intel_first' },
+    ]
+  },
+
+  ch4_fortify_first: {
+    text: [
+      { narrator: 'Der Vormittag verschwindet im Ausbessern von Zäunen, im Verlegen von Stolperdrähten mit angebundenen Blechdosen, im stillen Durchgehen von Fluchtwegen, die hoffentlich niemand je braucht.' }
+    ],
+    onEnter: { flags: ['ch4_fortify_first'] },
+    next: 'ch4_radio_attempt'
+  },
+
+  ch4_intel_first: {
+    text: [
+      { narrator: 'Statt gleich Zäune zu flicken, geht ihr den Spuren vom Vorabend nach — Fußabdrücke am Nordzaun, eine erloschene Zigarette, die nicht von hier ist. Nicht viel. Aber genug, um zu wissen: Es waren mindestens zwei, und sie kannten sich mit Gelände aus.' }
+    ],
+    onEnter: { flags: ['ch4_intel_first'] },
+    next: 'ch4_radio_attempt'
+  },
+
+  ch4_radio_attempt: {
+    chapter: 'KAPITEL 4 — ZWISCHEN DEN FREQUENZEN',
+    location: 'FUNKRAUM, KÖNIGSMÜHLE',
+    text: [
+      'Mittags versucht ihr, Rattenbach und den Turm zu erreichen — eine Vorwarnung, falls die Kundschafter mehr als nur Kundschafter waren.',
+      { narrator: 'Nur Rauschen. Die Antenne ist nicht das Problem; die Entfernung schon eher. Während jemand langsam über die Frequenzen dreht, auf der Suche nach einer Lücke im Rauschen, passiert etwas Merkwürdiges.' },
+      { narrator: 'Ein Kanal, völlig klar, kein Knistern, keine Störung. Und mittendrin: jemand, der leise und ziemlich schief vor sich hin summt, als hätte er vergessen, dass ein Mikrofon offen ist.' }
+    ],
+    next: 'ch4_shini_intro'
+  },
+
+  ch4_shini_intro: {
+    chapter: 'KAPITEL 4 — ZWISCHEN DEN FREQUENZEN',
+    text: [
+      { speaker: 'Shini', line: '"...und falls hier gerade wer mithört: Nein, ich weiß auch nicht, warum dieser Kanal so sauber ist. Antenne ist aus einem alten Wetterballon-Gestänge gebaut. Offenbar die richtige Entscheidung."' },
+      { narrator: 'Stille im Funkraum. Elena wechselt einen Blick mit dir, bevor sie den Knopf drückt.' },
+      { speaker: 'Elena', line: '"Hier ist Königsmühle. Wer bist du?"' },
+      { speaker: 'Shini', line: '"Oh — Publikum. Nennt mich Shini. Sitz seit einer Weile ziemlich allein an einem Relais, wo früher mal ein Wetterdienst war, und höre mir aus Langeweile so ziemlich jede Frequenz an, die ich finde. Euren Rufnamen hab ich vor ein paar Tagen aufgeschnappt — die Übertragung vom Turm."' }
+    ],
+    choices: [
+      { label: '"Wer bist du wirklich, und woher kennst du unsere Frequenz?"', to: 'ch4_shini_wary' },
+      { label: '"Schön, mal jemand anderen zu hören. Was weißt du?"', to: 'ch4_shini_direct' },
+    ]
+  },
+
+  ch4_shini_wary: {
+    text: [
+      { speaker: 'Shini', line: '"Faire Frage. Kurze Antwort: Ich bin niemand Wichtiges. Sitz seit dem Zusammenbruch an diesem Relais, weil ich zufällig hier war, als alles aufgehört hat zu funktionieren, und seitdem nie einen guten Grund gefunden hab zu gehen. Wenn euch das nicht reicht — hier ein Vertrauensbeweis."' },
+      { narrator: 'Er liest eine Reihe Frequenzangaben vor, mit dem beiläufigen Ton von jemandem, der das schon oft gemacht hat.' },
+      { speaker: 'Shini', line: '"Chatter, den ich seit Wochen auf diesen Kanälen abgreife. Klingt nach einer Gruppe, die andere Leute nicht besonders mag. Passt zu dem, was bei euch am Zaun war, würde ich vermuten."' }
+    ],
+    onEnter: { flags: ['shini_wary'] },
+    next: 'ch4_shini_offer'
+  },
+
+  ch4_shini_direct: {
+    text: [
+      { speaker: 'Shini', line: '"Endlich mal jemand, der nicht erst zehn Minuten mit Misstrauen verbringt. Ich mag dich jetzt schon. Also — kurz und schmerzlos: Ich sitz an einem alten Wetterdienst-Relais, höre seit Ewigkeiten Funk ab, aus Langeweile mehr als aus Plan."' }
+    ],
+    onEnter: { flags: ['shini_trusted'] },
+    next: 'ch4_shini_offer'
+  },
+
+  ch4_shini_offer: {
+    chapter: 'KAPITEL 4 — ZWISCHEN DEN FREQUENZEN',
+    text: [
+      { speaker: 'Shini', line: '"Zur Sache: Ich hab in letzter Zeit Chatter aufgeschnappt, der zu Leuten passt, die hier in der Gegend keinen guten Ruf haben. Manche nennen sie die Sammler. Nach dem, was ich aus dem Funkverkehr zusammenreime, sitzen sie in einem alten Getreidesilo-Komplex, nördlich von euch, an der alten Bahnstrecke."' },
+      { narrator: 'Eine kurze Pause. Dann, leiser, fast ernst:' },
+      { speaker: 'Shini', line: '"Ich helf euch gern, im Rahmen dessen, was ein Typ mit einer Antenne und zu viel Zeit so kann. Ruft mich auf 14.3, wenn ihr was braucht. Ich schlaf sowieso nie wirklich."' }
+    ],
+    onEnter: { flags: ['met_shini'] },
+    next: 'ch4_defense_prep'
+  },
+
+  ch4_defense_prep: {
+    chapter: 'KAPITEL 4 — ZWISCHEN DEN FREQUENZEN',
+    location: 'KÖNIGSMÜHLE',
+    text: [
+      { narrator: 'Der Rest des Tages geht in Vorbereitung auf — Elena teilt Wachschichten neu ein, jemand verstärkt das Nordtor mit allem, was nicht niet- und nagelfest ist.' },
+      { speaker: 'Mira', line: '"Wir haben am Turm noch Draht und ein paar alte Sensoren übrig. Nichts Militärisches, aber genug, um zu merken, wenn jemand über den Nordzaun klettert, statt es erst am Morgen danach zu erfahren."', showIf: { flag: 'tobias_joined' } },
+      { speaker: 'Tobias', line: '"Ich helf ihr dabei. Sagen wir einfach, Kletterei ist inzwischen mein Spezialgebiet."', showIf: { flag: 'tobias_joined' } },
+      { speaker: 'Rosa', line: '"Ich hab in Rattenbach genug leere Häuser gesehen, aus denen zu wissen, wie man einen Ort unattraktiv für Diebe macht. Zeig mir, wo eure Vorräte liegen."', showIf: { flag: 'rosa_companion' } }
+    ],
+    next: 'ch4_volunteer_scout'
+  },
+
+  ch4_volunteer_scout: {
+    chapter: 'KAPITEL 4 — ZWISCHEN DEN FREQUENZEN',
+    text: [
+      { speaker: 'Elena', line: '"Bevor wir irgendwas entscheiden — verteidigen, verhandeln, abwarten — müssen wir wissen, womit wir es zu tun haben. Wie viele, wie organisiert, wie bewaffnet. Jemand muss zum Silo und sich das ansehen. Aus sicherer Entfernung."' },
+      { narrator: 'Ihr Blick bleibt an dir hängen.' }
+    ],
+    choices: [
+      { label: '"Ich geh. Allein bin ich leiser."', to: 'ch4_scout_solo' },
+      { label: '"Ich nehme jemanden mit."', to: 'ch4_scout_group' },
+    ]
+  },
+
+  ch4_scout_solo: {
+    text: [
+      { narrator: 'Du entscheidest dich, allein zu gehen. Rosa verschränkt die Arme, sagt aber nichts — was bei ihr ungefähr einem lautstarken Protest entspricht, den sie sich verkneift.', showIf: { flag: 'rosa_companion' } },
+      { narrator: 'Elena nickt knapp, mit dem Blick von jemandem, der die Entscheidung nicht mag, aber respektiert.' }
+    ],
+    onEnter: { flags: ['ch5_solo'] },
+    next: 'ch4_night_before'
+  },
+
+  ch4_scout_group: {
+    text: [
+      { speaker: 'Rosa', line: '"Ich komm mit. Zwei Augenpaare finden mehr als eins, und ich hab schon länger niemandem mehr das Schleichen beigebracht."', showIf: { flag: 'rosa_companion' } },
+      { speaker: 'Mira', line: '"Ich komm mit. Tobias bleibt hier und hütet die Sensoren — er ist, mit Verlaub, kein Meister der Lautlosigkeit."', showIf: { flag: 'tobias_joined' } },
+      { narrator: 'Einer der Königsmühle-Wachen, ein ruhiger Mann namens Jonas, meldet sich freiwillig. "Ich kenn die Gegend nördlich besser als die meisten hier."', showIf: { flag: 'rosa_companion', invert: true, notFlag: 'tobias_joined' } }
+    ],
+    onEnter: { flags: ['ch5_group'] },
+    next: 'ch4_night_before'
+  },
+
+  ch4_night_before: {
+    chapter: 'KAPITEL 4 — ZWISCHEN DEN FREQUENZEN',
+    location: 'KÖNIGSMÜHLE, NACHT VOR DEM AUFBRUCH',
+    text: [
+      { narrator: 'Die letzten Stunden vor dem Aufbruch fühlen sich länger an als jede Wache, die du je gehalten hast.' },
+      { speaker: 'Rosa', line: '"Pass auf dich auf da draußen. Das ist keine Bitte, das ist eine Bedingung — hab ich dir das nicht schon mal gesagt?"', showIf: { flag: 'rosa_companion' } },
+      { narrator: 'Du checkst noch einmal deine Ausrüstung, mehr aus Nervosität als aus Notwendigkeit. Irgendwo in der Dunkelheit surrt leise Elenas Funkgerät — Shini, der noch einmal die Frequenz bestätigt, "für alle Fälle".' }
+    ],
+    next: 'ch4_chapter_end'
+  },
+
+  ch4_chapter_end: {
+    type: 'end',
+    badge: 'ENDE KAPITEL 4',
+    title: 'ZWISCHEN DEN FREQUENZEN',
+    text: 'Eine neue Stimme im Rauschen, eine Verteidigung, die eher nach Improvisation als nach Plan aussieht, und ein Weg nach Norden, den morgen früh jemand gehen muss. Die Nacht ist ruhig. Das macht es nicht leichter.',
+    nextChapter: 'ch5_intro'
+  },
+
+  /* ══════════════════════════════════════════════════════
+     KAPITEL 5 — "DAS SILO"
+     ══════════════════════════════════════════════════════ */
+
+  ch5_intro: {
+    chapter: 'KAPITEL 5 — DAS SILO',
+    location: 'WEG NACH NORDEN',
+    text: [
+      { narrator: 'Der Weg nach Norden führt entlang stillgelegter Gleise, deren Schienen unter Rost und Gestrüpp kaum noch als solche zu erkennen sind.' },
+      { narrator: 'Mit dir unterwegs sind Blicke, die öfter über die Schulter gehen als nach vorne, und ein Schweigen, das nichts mit schlechter Laune zu tun hat.', showIf: { flag: 'ch5_group' } },
+      { narrator: 'Allein ist der Weg leiser. Auch länger, auf eine Art, die nichts mit der Entfernung zu tun hat.', showIf: { flag: 'ch5_solo' } }
+    ],
+    next: 'ch5_approach'
+  },
+
+  ch5_approach: {
+    chapter: 'KAPITEL 5 — DAS SILO',
+    location: 'AM RAND DES SILO-KOMPLEXES',
+    text: [
+      'Der Silo-Komplex taucht hinter einem letzten Hügelkamm auf: ein grauer Betonturm, umgeben von niedrigeren Lagerhallen, ein Zaun aus zusammengeschweißtem Baustahl. Kein Ort, der zufällig so aussieht.',
+      { narrator: 'Gestalten bewegen sich zwischen den Gebäuden — organisiert, mit festen Wegen, wie Ameisen, die eine Route gelernt haben.' }
+    ],
+    choices: [
+      { label: 'Näher heranschleichen, die Wachrotation beobachten.', to: 'ch5_observe_patrol' },
+      { label: 'Auf Abstand bleiben, nur grob zählen.', to: 'ch5_count_from_distance' },
+    ]
+  },
+
+  ch5_observe_patrol: {
+    text: [
+      { narrator: 'Aus der Deckung eines umgestürzten Waggons beobachtet ihr die Wachrotation — ungefähr alle zwanzig Minuten ein Wechsel, immer die gleichen zwei Routen.' },
+      { narrator: 'Zwei Wachen kommen nah genug vorbei, dass ihr Gesprächsfetzen aufschnappt.' },
+      { speaker: 'Wache 1', line: '"...wenn der Alte sagt, in vier Tagen, dann in vier Tagen. Ich frag ihn jedenfalls nicht nochmal."' },
+      { speaker: 'Wache 2', line: '"Vier Tage bis der Zug losgeht, oder vier Tage bis wir da sind? Das ist nicht dasselbe."' },
+      { narrator: 'Die zweite Wache antwortet nicht mehr, und die beiden verschwinden außer Hörweite.' }
+    ],
+    onEnter: { flags: ['knows_raid_date'] },
+    next: 'ch5_discovery'
+  },
+
+  ch5_count_from_distance: {
+    text: [
+      { narrator: 'Ihr bleibt lieber auf Abstand. Sicherer, aber ungenauer: eine grobe Zählung, so gut es aus der Ferne geht — mindestens fünfzehn Personen, wahrscheinlich mehr, die ihr nicht seht.' },
+      { narrator: 'Genug für ein grobes Bild. Nicht genug, um zu wissen, wie viel Zeit euch bleibt.' }
+    ],
+    next: 'ch5_discovery'
+  },
+
+  ch5_discovery: {
+    chapter: 'KAPITEL 5 — DAS SILO',
+    text: [
+      { narrator: 'Beim Rückzug entlang des Zauns bemerkst du etwas, das nicht ins Muster passt: eine zusammengekauerte Gestalt, kaum älter als zwanzig, im Schatten einer umgekippten Palette, eine notdürftig verbundene Wunde am Arm.' },
+      { narrator: 'Die Person bemerkt euch im gleichen Moment und erstarrt — keine Waffe in der Hand, nur nackte Angst im Gesicht.' }
+    ],
+    choices: [
+      { label: 'Helfen.', to: 'ch5_help_deserter' },
+      { label: 'Nicht einmischen, weiterziehen.', to: 'ch5_avoid_deserter' },
+    ]
+  },
+
+  ch5_help_deserter: {
+    text: [
+      { narrator: 'Du kniest dich hin, langsam, die Hände sichtbar. Die Person zuckt zurück, entspannt sich dann minimal, als niemand nach einer Waffe greift.' },
+      { speaker: 'Finn', line: '"Bitte nicht zurückbringen. Bitte. Ich... ich bin einfach nur gelaufen, als die Wache abgelenkt war."' },
+      { narrator: 'Während du die Wunde notdürftig versorgst, erzählt Finn, stockend, mit Blicken zurück zum Silo: Nicht jeder dort ist freiwillig dabei. Manche wurden vor Jahren aufgenommen, weil die Alternative der Tod war. Der Anführer — alle nennen ihn nur "der Alte" — verlangt Beute, um alle zu ernähren, und bestraft, wer sich weigert.' },
+      { speaker: 'Finn', line: '"In vier Tagen ist ein großer Zug geplant. Eine Siedlung im Süden, die sich über Funk verraten hat. Königsmühle, glaub ich. Ich wollte nicht dabei sein. Deswegen bin ich hier, halb verblutet, und rede mit euch."' }
+    ],
+    onEnter: { flags: ['helped_finn', 'knows_sammler_motive', 'knows_raid_date'] },
+    next: 'ch5_retreat'
+  },
+
+  ch5_avoid_deserter: {
+    text: [
+      { narrator: 'So sehr es wehtut: Ihr zieht euch zurück, ohne euch zu zeigen. Eine fremde Person retten zu wollen, mitten vor den Toren des Feindes, ist der Stoff, aus dem Geschichten werden, die schlecht enden.' },
+      { narrator: 'Später, aus sicherer Entfernung, hört ihr Gesprächsfetzen von Wachen, die von "noch einem, der abgehauen ist" reden, mit mehr Genervtheit als Wut. Als wäre es nicht das erste Mal.' }
+    ],
+    onEnter: { flags: ['knows_sammler_motive'] },
+    next: 'ch5_retreat'
+  },
+
+  ch5_retreat: {
+    chapter: 'KAPITEL 5 — DAS SILO',
+    text: [
+      { narrator: 'Der Rückweg fühlt sich länger an als der Hinweg — jeder Ast, der unter einem Fuß knackt, wie ein Donnerschlag.' },
+      { narrator: 'Finn, so gut es die Wunde zulässt, hält Schritt und schweigt meistens, außer um leise den sichersten Weg vorzuschlagen — offenbar kennt er die Gegend besser als gedacht.', showIf: { flag: 'helped_finn' } }
+    ],
+    next: 'ch5_shini_checkin'
+  },
+
+  ch5_shini_checkin: {
+    text: [
+      { narrator: 'Auf halbem Weg meldet ihr euch bei Shini, wie versprochen.' },
+      { speaker: 'Shini', line: '"Deckt sich mit dem, was ich abgefangen hab. Vier Tage, vielleicht fünf, wenn sie sich Zeit lassen. Ich behalte die Frequenz im Auge — falls die früher loslegen, als sie sagen, hört ihr es zuerst von mir."', showIf: { flag: 'knows_raid_date' } },
+      { speaker: 'Shini', line: '"Kein genaues Datum von meiner Seite, aber der Funkverkehr wird dichter. Das ist selten ein gutes Zeichen. Bleibt wachsam, ich meld mich, sobald sich was Konkretes findet."', showIf: { flag: 'knows_raid_date', invert: true } }
+    ],
+    next: 'ch5_return'
+  },
+
+  ch5_return: {
+    chapter: 'KAPITEL 5 — DAS SILO',
+    location: 'KÖNIGSMÜHLE',
+    text: [
+      { narrator: 'Ihr erreicht Königsmühle bei Dämmerung. Elena hört sich den Bericht an, ohne ein einziges Mal zu unterbrechen — eine Fähigkeit, die du zu schätzen gelernt hast.' },
+      { speaker: 'Elena', line: '"Ein Deserteur. Das verändert einiges. Wenn dort drin Leute sind, die lieber weg wollen als kämpfen, ist das keine Armee. Das ist eine verzweifelte Gruppe mit einem Anführer, der Angst als Führungsstil verwechselt."', showIf: { flag: 'helped_finn' } },
+      { speaker: 'Elena', line: '"Vier Tage. Vielleicht weniger. Das ist knapp, aber es ist etwas."', showIf: { flag: 'knows_raid_date' } },
+      { narrator: 'Sie schweigt einen Moment, den Blick auf die Karte gerichtet, die an der Wand des Funkraums hängt.' }
+    ],
+    next: 'ch5_chapter_end'
+  },
+
+  ch5_chapter_end: {
+    type: 'end',
+    badge: 'ENDE KAPITEL 5',
+    title: 'DAS SILO',
+    text: 'Die Sammler sind keine Gestalten aus einer Geistergeschichte mehr. Sie haben ein Gesicht, einen Namen für ihren Anführer, und — vielleicht — eine Schwachstelle. Was ihr damit macht, entscheidet sich in den nächsten Tagen.',
+    nextChapter: 'ch6_intro'
+  },
+
+  /* ══════════════════════════════════════════════════════
+     KAPITEL 6 — "DER PREIS DER SICHTBARKEIT"
+     ══════════════════════════════════════════════════════ */
+
+  ch6_intro: {
+    chapter: 'KAPITEL 6 — DER PREIS DER SICHTBARKEIT',
+    location: 'KÖNIGSMÜHLE, FUNKRAUM',
+    text: [
+      { narrator: 'Elena breitet die Karte auf dem Tisch aus, auch wenn längst jeder im Raum weiß, was sie bedeutet.' },
+      { speaker: 'Elena', line: '"Wir haben zwei echte Optionen. Verteidigen — alles, was wir haben, in die nächsten Tage stecken, und hoffen, dass es reicht. Oder verhandeln — und dabei drauf vertrauen, dass ein Anführer, der Menschen wie Finn mit Angst hält, überhaupt verhandelbar ist."' },
+      { speaker: 'Elena', line: '"Ich sag euch ehrlich: Ich hab keine gute Antwort. Nur eine Entscheidung, die wir gemeinsam treffen müssen."' }
+    ],
+    choices: [
+      { label: '"Wir bereiten uns auf Verteidigung vor."', to: 'ch6_defend' },
+      { label: '"Wir versuchen es mit Verhandlung."', to: 'ch6_negotiate' },
+    ]
+  },
+
+  ch6_defend: {
+    chapter: 'KAPITEL 6 — DER PREIS DER SICHTBARKEIT',
+    text: [
+      { narrator: 'Die Entscheidung fällt, und ab diesem Moment gibt es keine ruhige Minute mehr. Jeder in Königsmühle bekommt eine Aufgabe, ob er sie sich ausgesucht hat oder nicht.' },
+      { speaker: 'Mira', line: '"Wenn ich die Sensoren vom Turm hier mit dem verbinde, was Königsmühle schon hat, wissen wir, wann sie kommen, bevor sie den Zaun überhaupt sehen."', showIf: { flag: 'tobias_joined' } },
+      { speaker: 'Shini', line: '"Und ich halt euch auf dem Laufenden, sobald sich am Funkverkehr was ändert. Kostenlos, im Rahmen meiner beschränkten Möglichkeiten als Typ mit Antenne."', showIf: { flag: 'met_shini' } }
+    ],
+    onEnter: { flags: ['ch6_defend_path'] },
+    next: 'ch6_final_prep'
+  },
+
+  ch6_negotiate: {
+    chapter: 'KAPITEL 6 — DER PREIS DER SICHTBARKEIT',
+    text: [
+      { speaker: 'Finn', line: '"Ich kenn einen Weg zurück rein, ohne gesehen zu werden. Wenn ihr wollt, bring ich eine Nachricht zum Alten. Riskant für mich. Aber vielleicht die einzige Chance, die nicht damit endet, dass Leute sterben."', showIf: { flag: 'helped_finn' } },
+      { narrator: 'Ohne Finn bleibt nur der unsichere Weg: eine codierte Nachricht über Shinis Kontakte in den Sammler-Funkverkehr einschleusen, in der Hoffnung, dass überhaupt jemand mit Entscheidungsgewalt zuhört.', showIf: { flag: 'helped_finn', invert: true } },
+      { speaker: 'Elena', line: '"Verhandeln heißt nicht, dass wir aufhören, uns vorzubereiten. Es heißt nur, dass wir zuerst das Gespräch versuchen."' }
+    ],
+    onEnter: { flags: ['ch6_negotiate_path'] },
+    next: 'ch6_final_prep'
+  },
+
+  ch6_final_prep: {
+    chapter: 'KAPITEL 6 — DER PREIS DER SICHTBARKEIT',
+    location: 'KÖNIGSMÜHLE, IN DEN TAGEN DANACH',
+    text: [
+      { narrator: 'Die Tage verschwimmen in Vorbereitung, Übung, Warten. Am dritten Abend, als die meisten schlafen, findest du Elena allein am Funkraum-Fenster, den Blick auf etwas gerichtet, das nicht da ist.' },
+      { speaker: 'Elena', line: '"Königsmühle ist nicht meine erste Siedlung. Die davor hieß anders. Kleiner, weniger vorbereitet, mit einer Anführerin, die dachte, Freundlichkeit allein würde reichen. Es hat nicht gereicht."' },
+      { speaker: 'Elena', line: '"Ich war nicht diese Anführerin. Aber ich war dort, als es passiert ist. Seitdem baue ich lieber Zäune zu hoch als zu niedrig."' },
+      { narrator: 'Sie sagt es ohne Selbstmitleid, nur als Tatsache — die Art, wie man über Wetter spricht, das man nicht ändern kann, nur überstehen.' },
+      { speaker: 'Rosa', line: '"Manche Leute tragen ihre Vorsicht wie eine Narbe. Ich versteh das besser, als mir lieb ist."', showIf: { flag: 'rosa_companion' } }
+    ],
+    next: 'ch6_chapter_end'
+  },
+
+  ch6_chapter_end: {
+    type: 'end',
+    badge: 'ENDE KAPITEL 6',
+    title: 'DER PREIS DER SICHTBARKEIT',
+    text: 'Der Plan steht, so gut ein Plan stehen kann, der auf Vermutungen und einem verletzten Deserteur aufbaut. Irgendwo im Norden zählt jemand die Tage bis zum Aufbruch. Hier zählt ihr sie auch. Kapitel 7 folgt bald.'
   },
 
 };
