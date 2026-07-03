@@ -67,21 +67,27 @@
     .hub-card-arrow{font-size:1.1rem;color:var(--orange);margin-top:auto;transition:transform .2s}
     .hub-card:hover .hub-card-arrow{transform:translate(4px,-4px)}
 
-    /* Live mini status */
-    .mini-status{background:var(--card);padding:18px 24px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-bottom:2px}
-    .mini-label{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
-    .mini-val{font-family:'Bebas Neue';font-size:1.3rem;color:var(--orange)}
+    /* Live status panel — elevated design */
+    .status-panel{position:relative;background:linear-gradient(160deg,var(--card) 0%,#1a0f08 100%);border:1px solid rgba(255,78,26,.15);padding:32px 36px;overflow:hidden}
+    .status-panel-glow{position:absolute;top:-60%;right:-10%;width:280px;height:280px;background:radial-gradient(circle,rgba(255,78,26,.12) 0%,transparent 70%);pointer-events:none}
+    .status-top{display:flex;align-items:center;gap:10px;margin-bottom:24px;position:relative}
+    .status-live-dot{width:8px;height:8px;border-radius:50%;background:var(--orange);box-shadow:0 0 8px var(--orange);animation:livepulse 2s infinite}
+    @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .status-live-label{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--orange);font-weight:600}
+    .status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;position:relative}
+    .status-item-label{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+    .status-item-val{font-family:'Bebas Neue';font-size:1.7rem;color:var(--cream);line-height:1}
+    .moto-inline{display:flex;gap:12px;align-items:center;margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,255,.06);position:relative}
+    .moto-icon{font-size:1.2rem;flex-shrink:0}
+    .moto-text{font-size:.7rem;color:var(--muted);line-height:1.7;font-style:italic}
+    .moto-text strong{color:var(--cream);font-style:normal}
+    @media(max-width:600px){.status-grid{grid-template-columns:1fr;gap:14px}.status-panel{padding:24px}}
 
     footer{padding:36px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
     footer a{color:var(--muted);text-decoration:none}
 
     @media(max-width:600px){nav{padding:16px 20px}.hero{padding:100px 20px 50px}.section{padding:60px 20px}}
     @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-  
-    .moto-box{background:var(--card);border-left:3px solid var(--orange);padding:16px 20px;margin:0 0 0;max-width:1100px;margin:0 auto 0;display:flex;gap:14px;align-items:flex-start}
-    .moto-icon{font-size:1.4rem;flex-shrink:0}
-    .moto-text{font-size:.72rem;color:var(--muted);line-height:1.8;font-style:italic}
-    .moto-text strong{color:var(--cream);font-style:normal}
 </style>
 </head>
 <body>
@@ -117,32 +123,35 @@
     </div>
   </div>
 
-
-<div style="padding:0 40px;max-width:1100px;margin:24px auto 0;">
-  <div class="moto-box">
-    <span class="moto-icon">💀</span>
-    <p class="moto-text" id="motoQuote"></p>
-  </div>
-</div>
-
-  <div class="section">
-    <p class="section-label">live status</p>
-    <div class="mini-status" id="miniStatus">
-      <div><div class="mini-label">Aktuelle Challenge</div><div class="mini-val" id="ms-challenge">—</div></div>
-      <div><div class="mini-label">Teilnehmer</div><div class="mini-val" id="ms-count">—</div></div>
-      <div><div class="mini-label">Anführer</div><div class="mini-val" id="ms-leader">—</div></div>
+  <div class="section" style="padding-bottom:0;">
+    <div class="status-panel">
+      <div class="status-panel-glow"></div>
+      <div class="status-top">
+        <span class="status-live-dot"></span>
+        <span class="status-live-label">Live Status</span>
+      </div>
+      <div class="status-grid">
+        <div class="status-item">
+          <div class="status-item-label">Aktuelle Challenge</div>
+          <div class="status-item-val" id="ms-challenge">—</div>
+        </div>
+        <div class="status-item">
+          <div class="status-item-label">Teilnehmer</div>
+          <div class="status-item-val" id="ms-count">—</div>
+        </div>
+        <div class="status-item">
+          <div class="status-item-label">Anführer</div>
+          <div class="status-item-val" id="ms-leader">—</div>
+        </div>
+      </div>
+      <div class="moto-inline">
+        <span class="moto-icon" id="motoIcon">💀</span>
+        <p class="moto-text" id="motoQuote"></p>
+      </div>
     </div>
   </div>
 
-
-<div style="padding:0 40px;max-width:1100px;margin:24px auto 0;">
-  <div class="moto-box">
-    <span class="moto-icon">💀</span>
-    <p class="moto-text" id="motoQuote"></p>
-  </div>
-</div>
-
-  <div class="section" style="padding-top:0;">
+  <div class="section">
     <p class="section-label">bereiche</p>
     <div class="hub-cards">
       <a href="challenge.html" class="hub-card">
@@ -244,7 +253,7 @@
   ];
   const q=QUOTES[Math.floor(Math.random()*QUOTES.length)];
   document.getElementById('motoQuote').innerHTML=q.text;
-  document.getElementById('motoQuote').parentElement.previousElementSibling.textContent=q.icon;
+  document.getElementById('motoIcon').textContent=q.icon;
 
 </script>
 </body>
