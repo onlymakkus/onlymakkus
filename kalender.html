@@ -34,6 +34,8 @@
     .page-sub{text-align:center;font-size:.75rem;color:var(--muted);margin-bottom:48px}
     .timeline{display:flex;flex-direction:column;gap:2px}
     .tl-row{display:grid;grid-template-columns:120px 1fr auto;align-items:stretch}
+    .tl-row-link{text-decoration:none;color:inherit;cursor:pointer;transition:transform .15s}
+    .tl-row-link:hover{transform:translateX(4px)}
     .tl-month{background:var(--card);padding:20px 24px;display:flex;flex-direction:column;justify-content:center;border-right:2px solid var(--black)}
     .tl-month-name{font-family:'Bebas Neue';font-size:1.4rem;line-height:1}
     .tl-month-sub{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:2px}
@@ -122,11 +124,15 @@
         const goalText=ex.default_dual?`${goal} ${ex.default_unit} / Seite sammeln`:`${goal} ${ex.default_unit} gesamt sammeln`;
         const lvlClass=levelClass(goal,ex.default_unit);
         const lvlLabel=lvlClass==='level-easy'?'Einstieg':lvlClass==='level-medium'?'Mittel':'Hart';
-        return `<div class="tl-row ${isActive?'active':''}">
+        const rowHTML=`
           <div class="tl-month"><div class="tl-month-name">${monthLabel}</div><div class="tl-month-sub">${isActive?'✦ aktiv':''}</div></div>
           <div class="tl-body"><div class="tl-exercise">${ex.name}</div><div class="tl-goal">${goalText}</div></div>
           <div class="tl-meta"><span class="tl-level ${lvlClass}">${lvlLabel}</span><span class="tl-pts">bis 10 Pts</span></div>
-        </div>`;
+        `;
+        if(isActive){
+          return `<a href="challenge.html" class="tl-row active tl-row-link">${rowHTML}</a>`;
+        }
+        return `<div class="tl-row">${rowHTML}</div>`;
       }).join('');
     }catch(e){
       wrap.innerHTML='<div class="tl-row"><div class="tl-month"></div><div class="tl-body" style="color:var(--muted);font-size:.7rem;">Fehler beim Laden.</div><div class="tl-meta"></div></div>';
