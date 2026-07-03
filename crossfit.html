@@ -40,7 +40,7 @@
     .hero{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 40px 60px;text-align:center;position:relative;overflow:hidden}
     .hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#0a0a08 40%,#1a0c06 100%)}
     .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,78,26,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,78,26,.04) 1px,transparent 1px);background-size:60px 60px}
-    #pulse-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+    #particle-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
     .hero-tag{font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:var(--orange);margin-bottom:16px;position:relative}
     .hero-title{font-family:'Bebas Neue';font-size:clamp(4rem,15vw,10rem);line-height:.9;position:relative}
     .hero-title span{color:var(--orange)}
@@ -108,7 +108,7 @@
   <section class="hero">
     <div class="hero-bg"></div>
     <div class="hero-grid"></div>
-    <canvas id="pulse-canvas"></canvas>
+    <canvas id="particle-canvas"></canvas>
     <p class="hero-tag">// schmerz ist optional. aufhören auch.</p>
     <h1 class="hero-title">CROSS<span>FIT</span></h1>
     <p class="hero-sub">Challenges, Ranking, Saisonplan — alles an einem Ort. Für die Gruppe die sich freiwillig quält.</p>
@@ -241,11 +241,11 @@
   }
   loadMiniStatus();
 
-  // ── PULSE MONITOR BACKGROUND ──
+  // ── DUST / SWEAT PARTICLES ──
   (function(){
-    const canvas = document.getElementById('pulse-canvas');
+    const canvas = document.getElementById('particle-canvas');
     const ctx = canvas.getContext('2d');
-    let w, h;
+    let w, h, particles = [];
 
     function resize(){
       w = canvas.width = canvas.offsetWidth;
@@ -254,120 +254,44 @@
     resize();
     window.addEventListener('resize', resize);
 
-    const baseOpacity = 0.12;   // faint idle line
-    const peakOpacity = 0.75;   // bright during a beat
-    let currentOpacity = baseOpacity;
-    let scrollX = 0;
-    const speed = 0.9;
-
-    // Trace history: we draw a flat line, and inject beat-shapes at intervals
-    let nextBeatIn = randomGap();
-    let beatProgress = -1; // -1 = not currently drawing a beat
-    const beatWidth = 90;  // px width of the beat spike itself
-
-    function randomGap(){
-      // Irregular gaps between beats, like a real-ish pulse — not perfectly uniform
-      return 260 + Math.random()*180;
+    function makeParticle(startAtBottom){
+      return {
+        x: Math.random()*w,
+        y: startAtBottom ? h + Math.random()*40 : Math.random()*h,
+        r: 0.6 + Math.random()*1.8,
+        speed: 0.15 + Math.random()*0.35,
+        drift: (Math.random()-0.5) * 0.3,
+        opacity: 0.08 + Math.random()*0.22,
+        wobble: Math.random()*Math.PI*2,
+        wobbleSpeed: 0.008 + Math.random()*0.015
+      };
     }
 
-    // Points buffer: stores {x, y, isBeat} for the visible trace, scrolling left
-    let trace = [];
-    for(let x=0; x<2000; x+=2){
-      trace.push({ relX: x, y:0, isBeat:false });
-    }
-
-    function beatShape(t){
-      // t in [0,1] across beatWidth — returns vertical offset
-      if(t < 0.12) return Math.sin((t/0.12)*Math.PI) * -4;      // small p-wave bump
-      if(t < 0.22) return 0;
-      if(t < 0.30){ const l=(t-0.22)/0.08; return -l*58; }       // sharp rise
-      if(t < 0.38){ const l=(t-0.30)/0.08; return -58+l*85; }    // sharp fall through baseline
-      if(t < 0.46){ const l=(t-0.38)/0.08; return 27-l*27; }     // settle back
-      if(t < 0.60){ const l=(t-0.46)/0.14; return Math.sin(l*Math.PI) * -8; } // t-wave bump
-      return 0;
-    }
-
-    function step(){
-      scrollX += speed;
-
-      // Advance beat trigger
-      nextBeatIn -= speed;
-      if(nextBeatIn <= 0 && beatProgress < 0){
-        beatProgress = 0;
-        nextBeatIn = randomGap();
-      }
-      if(beatProgress >= 0){
-        beatProgress += speed;
-        if(beatProgress > beatWidth) beatProgress = -1;
-      }
-
-      // Fade opacity: brighten sharply when a beat starts, decay back to base
-      if(beatProgress >= 0 && beatProgress < beatWidth*0.5){
-        currentOpacity += (peakOpacity - currentOpacity) * 0.35;
-      } else {
-        currentOpacity += (baseOpacity - currentOpacity) * 0.04;
-      }
-    }
+    const PARTICLE_COUNT = 46;
+    for(let i=0;i<PARTICLE_COUNT;i++) particles.push(makeParticle(false));
 
     function draw(){
-      step();
       ctx.clearRect(0,0,w,h);
-      const baseY = h * 0.55;
+      particles.forEach(p=>{
+        p.y -= p.speed;
+        p.wobble += p.wobbleSpeed;
+        p.x += p.drift + Math.sin(p.wobble)*0.15;
 
-      ctx.beginPath();
-      ctx.strokeStyle = `rgba(255,78,26,${currentOpacity})`;
-      ctx.lineWidth = 1.4;
-      if(currentOpacity > baseOpacity + 0.1){
-        ctx.shadowColor = 'rgba(255,78,26,0.6)';
-        ctx.shadowBlur = 7;
-      } else {
-        ctx.shadowBlur = 0;
-      }
-
-      let first = true;
-      const rightEdgeX = w + 40;
-      // Draw a flat baseline scrolling, with a beat bump inserted at the current trigger point
-      const beatScreenX = rightEdgeX - (beatProgress >= 0 ? beatProgress : -9999);
-
-      for(let x = -40; x <= rightEdgeX; x += 3){
-        let y = baseY;
-        if(beatProgress >= 0){
-          const distFromBeat = x - beatScreenX;
-          if(distFromBeat >= 0 && distFromBeat <= beatWidth){
-            y = baseY + beatShape(distFromBeat / beatWidth);
-          }
+        if(p.y < -10){
+          Object.assign(p, makeParticle(true));
         }
-        if(first){ ctx.moveTo(x,y); first=false; }
-        else ctx.lineTo(x,y);
-      }
-      ctx.stroke();
-      ctx.shadowBlur = 0;
+        if(p.x < -10) p.x = w+10;
+        if(p.x > w+10) p.x = -10;
 
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255,150,100,${p.opacity})`;
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        ctx.fill();
+      });
       requestAnimationFrame(draw);
     }
     draw();
   })();
-
-
-  // ── MOTIVATIONSSPRÜCHE ──
-  const QUOTES=[
-    {icon:'💀',text:'<strong>Heute ist ein guter Tag</strong> um Schmerzen zu ignorieren.'},
-    {icon:'🔥',text:'Du hast keine Ausreden. Nur <strong>schlechte Entscheidungen.</strong>'},
-    {icon:'😤',text:'Dein Körper sagt Nein. <strong>Dein Kopf auch.</strong> Mach es trotzdem.'},
-    {icon:'🏆',text:'Niemand hat je einen <strong>Side Plank bereut.</strong> Lüge. Aber trotzdem.'},
-    {icon:'💪',text:'<strong>Schmerz ist temporär.</strong> Peinlichkeit im Gruppenranking ist für immer.'},
-    {icon:'😅',text:'Irgendwo macht gerade jemand <strong>keine Burpees.</strong> Sei nicht diese Person.'},
-    {icon:'🧠',text:'Der Unterschied zwischen dir und dem Erstplatzierten? <strong>Minuten.</strong> Manchmal viele.'},
-    {icon:'⚡',text:'<strong>Du kannst aufhören.</strong> Die anderen werden es aber sehen.'},
-    {icon:'🎯',text:'60 Minuten Side Plank klingen nach viel. <strong>Weil es viel ist.</strong>'},
-    {icon:'😂',text:'Wer hat sich das eigentlich ausgedacht? <strong>Egal. Weitermachen.</strong>'},
-    {icon:'🦾',text:'Dein Körper kann mehr als dein Gehirn <strong>erlauben will.</strong>'},
-    {icon:'📊',text:'Das Ranking lügt nicht. <strong>Aber es urteilt.</strong>'},
-  ];
-  const q=QUOTES[Math.floor(Math.random()*QUOTES.length)];
-  document.getElementById('motoQuote').innerHTML=q.text;
-  document.getElementById('motoIcon').textContent=q.icon;
-
 </script>
 </body>
 </html>
