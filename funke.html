@@ -347,6 +347,14 @@ function addItem(id){
     showToast('📦 Erhalten: ' + (item ? item.name : id));
   }
 }
+function removeItem(id){
+  const idx = state.inventory.indexOf(id);
+  if(idx !== -1){
+    state.inventory.splice(idx, 1);
+    const item = ITEMS[id];
+    showToast('📤 Abgegeben: ' + (item ? item.name : id));
+  }
+}
 function hasItem(id){ return state.inventory.includes(id); }
 function setFlag(key, val=true){ state.flags[key] = val; }
 function getFlag(key){ return !!state.flags[key]; }
@@ -438,6 +446,7 @@ function renderNode(nodeId, skipAnim){
   // apply onEnter effects
   if(node.onEnter){
     if(node.onEnter.items) node.onEnter.items.forEach(addItem);
+    if(node.onEnter.removeItems) node.onEnter.removeItems.forEach(removeItem);
     if(node.onEnter.flags) node.onEnter.flags.forEach(f=>setFlag(f));
   }
 
@@ -595,6 +604,7 @@ const ITEMS = {
   turmschluessel: { name:'Verrosteter Schlüssel', desc:'Passt zu keinem Schloss, das du kennst. Noch nicht.' },
   seil: { name:'Kletterseil', desc:'Alt, aber die Fasern halten noch. Man hofft es zumindest.' },
   sicherheitsmarke: { name:'Sicherheitsmarke von Königsmühle', desc:'Ein Stück gestanztes Blech an einer Schnur. Öffnet vermutlich kein einziges Schloss — aber es sagt jedem, der es kennt: diese Person gehört dazu.' },
+  handfunkgeraet: { name:'Handfunkgerät', desc:'Elenas Leihgabe. Reichweite überschaubar, Batterie launisch, Shinis Frequenz 14.3 mit Bleistift auf die Rückseite gekritzelt.' },
 };
 
 /* ══════════════════════════════════════════════════════════════
@@ -789,7 +799,8 @@ const STORY = {
     chapter: 'KAPITEL 1 — STAUB UND STILLE',
     location: 'IM HAUS VON ROSA',
     text: [
-      { narrator: 'Draußen wird es dunkel. Rosa bietet dir an, die Nacht hier zu verbringen — auf dem Boden, neben dem summenden Generator, der zum ersten Mal seit Monaten wieder klingt, als könnte er noch lange durchhalten.' },
+      { narrator: 'Draußen wird es dunkel. Rosa bietet dir an, die Nacht hier zu verbringen — auf dem Boden, neben dem summenden Generator, der zum ersten Mal seit Monaten wieder klingt, als könnte er noch lange durchhalten.', showIf: { flag: 'fixed_generator' } },
+      { narrator: 'Draußen wird es dunkel. Rosa bietet dir an, die Nacht hier zu verbringen — auf dem Boden, neben dem Generator, der weiter tapfer vor sich hin stottert, wie ein alter Mann, der sich weigert, sich hinzusetzen.', showIf: { flag: 'fixed_generator', invert: true } },
       'Du liegst da, hörst das gleichmäßige Brummen der Maschine und das leise Knistern des Kurzwellenempfängers, der irgendwo in der Dunkelheit nach Stimmen sucht.',
       { narrator: 'Kurz vor dem Einschlafen fängt der Empfänger etwas auf. Ein Rauschen. Dann, kaum hörbar, eine Stimme — verzerrt, weit weg, aber eindeutig menschlich:' },
       { speaker: '???', line: '"...hier ist... ...falls jemand... ...der Turm im Osten... ...noch Zeit..."' },
@@ -873,7 +884,8 @@ const STORY = {
 
   ch2_ask_rosa_come: {
     text: [
-      { speaker: 'Rosa', line: '"Ich hab schon überlegt, ob ich frage, bevor du es tust. Ja. Ich komm mit. Der Generator läuft jetzt stabil genug, dass er ein paar Tage ohne mich klarkommt."' },
+      { speaker: 'Rosa', line: '"Ich hab schon überlegt, ob ich frage, bevor du es tust. Ja. Ich komm mit. Der Generator läuft jetzt stabil genug, dass er ein paar Tage ohne mich klarkommt."', showIf: { flag: 'fixed_generator' } },
+      { speaker: 'Rosa', line: '"Ich hab schon überlegt, ob ich frage, bevor du es tust. Ja. Ich komm mit. Der Generator stottert — ob ich daneben sitze oder nicht, ändert daran genau gar nichts."', showIf: { flag: 'fixed_generator', invert: true } },
       { narrator: 'Sie packt eine abgewetzte Tasche — Werkzeug, eine Konservendose, ein Kompass, dessen Nadel leicht zittert, als könnte sie sich nicht entscheiden, wo Norden ist.' },
       { speaker: 'Rosa', line: '"Zwei sind besser als eins da draußen. Und ehrlich — ich will auch wissen, was das für eine Stimme war."' }
     ],
@@ -1147,6 +1159,7 @@ const STORY = {
       { speaker: 'Tobias', line: '"Du hast es geschafft. Ich... ehrlich gesagt hab ich nicht ganz damit gerechnet."' },
       { narrator: 'Du reichst ihm den Funkkristall. Seine Hände zittern leicht, als er ihn entgegennimmt.' }
     ],
+    onEnter: { removeItems: ['funkkristall'] },
     choices: [
       { label: '"Ich möchte dabei sein, wenn ihr sendet."', to: 'ch2_stay_for_broadcast' },
       { label: '"Meine Arbeit hier ist getan. Ich sollte zurück zu Rosa."', to: 'ch2_leave_before_broadcast', showIf: { flag: 'rosa_companion', invert: true } },
@@ -1213,7 +1226,8 @@ const STORY = {
       { narrator: 'Du bist allein zurück nach Rattenbach gegangen, den Kompass fest in der Hand, bis die vertrauten schiefen Dächer wieder auftauchten. Rosa öffnete die Tür, sah dich an, und sagte nichts — was bei ihr ungefähr einer Umarmung entspricht.', showIf: { flag: 'rosa_companion', invert: true } },
       { narrator: 'Die Erinnerung an das grüne Licht am Mischpult, an Miras Worte "Wir senden, live" — die hast du seitdem mehrfach im Kopf durchgespielt.', showIf: { flag: 'broadcast_sent' } },
       { narrator: 'Du hast Rattenbach erreicht, ohne zu wissen, ob die Übertragung am Ende überhaupt funktioniert hat. Ein Gedanke, der dich seitdem nicht ganz loslässt: Hat es überhaupt jemand gehört?', showIf: { flag: 'broadcast_sent', invert: true } },
-      'Der Generator summt gleichmäßig vor sich hin. Der Empfänger rauscht, wie er es jede Nacht tut — bis er es diesmal nicht tut.',
+      { narrator: 'Der Generator summt gleichmäßig vor sich hin. Der Empfänger rauscht, wie er es jede Nacht tut — bis er es diesmal nicht tut.', showIf: { flag: 'fixed_generator' } },
+      { narrator: 'Der Generator stottert vor sich hin, unbeirrbar wie eh und je. Der Empfänger rauscht, wie er es jede Nacht tut — bis er es diesmal nicht tut.', showIf: { flag: 'fixed_generator', invert: true } },
       { narrator: 'Kein Fragment diesmal. Keine drei Wortfetzen im Rauschen. Eine klare, ruhige Stimme, als würde jemand sehr bewusst in ein Mikrofon sprechen und genau wissen, was er sagen will.' }
     ],
     next: 'ch3_transmission'
@@ -1227,8 +1241,8 @@ const STORY = {
       { narrator: 'Eine Pause. Rauschen. Dann wieder die Stimme, jetzt etwas näher am Mikrofon, wie jemand, der sich vorbeugt.' },
       { speaker: 'Elena', line: '"Wenn ihr antworten wollt: Wasserturm bei Steinfeld, zwei Tagesmärsche westlich. Übermorgen, bei Sonnenaufgang. Kommt vorsichtig — und kommt nicht allein, wenn ihr es vermeiden könnt. Diese Welt ist kleiner, als wir alle dachten. Nicht unbedingt freundlicher."' },
       { narrator: 'Dann nur noch Rauschen. Egal wie lange ihr wartet, es kommt nichts mehr.' },
-      { speaker: 'Rosa', line: '"Zwei Tagesmärsche. Ein Wasserturm. Und eine Stimme, die weiß, dass die Welt kleiner geworden ist, ohne dass wir ihr das gesagt hätten."', showIf: { flag: 'rosa_companion' } },
-      { speaker: 'Rosa', line: '"Sie klingt vorsichtig. Das ist gut. Vorsichtige Leute erschießen einen seltener aus Versehen."', showIf: { flag: 'rosa_companion' } }
+      { speaker: 'Rosa', line: '"Zwei Tagesmärsche. Ein Wasserturm. Und eine Stimme, die weiß, dass die Welt kleiner geworden ist, ohne dass wir ihr das gesagt hätten."' },
+      { speaker: 'Rosa', line: '"Sie klingt vorsichtig. Das ist gut. Vorsichtige Leute erschießen einen seltener aus Versehen."' }
     ],
     choices: [
       { label: '"Wir sollten sofort zurückfunken und zusagen."', to: 'ch3_respond_bold' },
@@ -1238,7 +1252,7 @@ const STORY = {
 
   ch3_respond_bold: {
     text: [
-      { narrator: 'Du greifst zum Mikrofon und bestätigst: Ihr kommt. Kurz, klar, ohne große Umschweife.' },
+      { narrator: 'Du greifst zum Mikrofon und bestätigst: Die Nachricht ist angekommen, jemand wird am Wasserturm sein. Kurz, klar, ohne große Umschweife.' },
       { speaker: 'Rosa', line: '"Na dann. Hoffen wir, dass Zuversicht diesmal die richtige Strategie ist."', showIf: { flag: 'rosa_companion' } }
     ],
     onEnter: { flags: ['ch3_bold'] },
@@ -1258,6 +1272,7 @@ const STORY = {
   ch3_prep: {
     chapter: 'KAPITEL 3 — KÖNIGSMÜHLE',
     text: [
+      { narrator: 'Rosa bleibt — wie immer — beim Generator. "Einer muss zuhören, falls die Stimme sich noch mal meldet", sagt sie, und ihr wisst beide, dass das nur die halbe Wahrheit ist.', showIf: { flag: 'rosa_companion', invert: true } },
       { narrator: 'Zwei Tage Fußmarsch. Genug Zeit, um noch einmal am Turm vorbeizuschauen — Tobias und Mira haben ein Recht, das hier zu erfahren. Immerhin war es ihre Übertragung.' }
     ],
     choices: [
@@ -1298,7 +1313,7 @@ const STORY = {
       { narrator: 'Die Straße nach Westen führt durch Landschaft, die einmal Ackerland war und jetzt nur noch ein Muster aus Furchen unter hohem, trockenem Gras ist.' },
       { narrator: 'Tobias redet fast pausenlos — Sendeleistung, Frequenzen, was Elena wohl für Ausrüstung hat. Mira lässt ihn reden und korrigiert nur jeden dritten Satz.', showIf: { flag: 'tobias_joined' } },
       { speaker: 'Rosa', line: '"Wenn er so weitermacht, hören uns die Sammler schon, bevor wir überhaupt ankommen."', showIf: { flag: 'rosa_companion', invert: false } },
-      { narrator: 'Am zweiten Tag, kurz vor einer Straßenkreuzung, seht ihr etwas: ein ausgebranntes Fahrzeugwrack, und daneben, in die Wand einer Ruine geritzt, ein Zeichen — drei parallele Striche, roh, aber eindeutig absichtlich.' }
+      { narrator: 'Am zweiten Tag, kurz vor einer Straßenkreuzung, taucht etwas am Wegrand auf: ein ausgebranntes Fahrzeugwrack, und daneben, in die Wand einer Ruine geritzt, ein Zeichen — drei parallele Striche, roh, aber eindeutig absichtlich.' }
     ],
     choices: [
       { label: 'Kurz nachsehen, was hier passiert ist.', to: 'ch3_investigate_tracks' },
@@ -1328,7 +1343,9 @@ const STORY = {
       'Der Wasserturm steht allein auf einem Hügel, ein grauer Betonzylinder, der den Sonnenaufgang wie eine Sonnenuhr in Schatten wirft.',
       { narrator: 'Am Fuß des Turms warten drei Gestalten. Keine Waffen sichtbar, aber die Art, wie sie stehen — mit genug Abstand zueinander, dass keiner den anderen verdeckt — verrät, dass sie trotzdem bereit sind.' },
       { narrator: 'Eine Frau tritt einen Schritt vor. Mitte dreißig, kurzes Haar, ein Blick, der gleichzeitig wach und erschöpft wirkt — die Sorte Müdigkeit, die man sich durch Verantwortung einhandelt, nicht durch Schlafmangel.' },
-      { speaker: 'Elena', line: '"Ihr seid tatsächlich gekommen. Ehrlich gesagt hatte ich das nur zu fünfzig Prozent erwartet."' }
+      { speaker: 'Elena', line: '"Ihr seid tatsächlich gekommen. Ehrlich gesagt hatte ich das nur zu fünfzig Prozent erwartet."', showIf: { flag: 'rosa_companion' } },
+      { speaker: 'Elena', line: '"Ihr seid tatsächlich gekommen. Ehrlich gesagt hatte ich das nur zu fünfzig Prozent erwartet."', showIf: { flag: 'tobias_joined', notFlag: 'rosa_companion' } },
+      { speaker: 'Elena', line: '"Du bist tatsächlich gekommen. Allein, trotz meiner Warnung. Das ist entweder sehr mutig oder sehr verzweifelt — vermutlich beides."', showIf: { flag: 'rosa_companion', invert: true, notFlag: 'tobias_joined' } }
     ],
     next: 'ch3_first_contact'
   },
@@ -1337,7 +1354,8 @@ const STORY = {
     chapter: 'KAPITEL 3 — KÖNIGSMÜHLE',
     text: [
       { speaker: 'Elena', line: '"Ich bin Elena. Königsmühle liegt eine Stunde von hier. Bevor ich euch dorthin mitnehme, muss ich wissen, mit wem ich es zu tun habe."' },
-      { narrator: 'Ihr Blick wandert kurz über die Gruppe — Tobias, unruhig wie immer; Mira, die den Blick ruhig erwidert; Rosa, deren Miene nichts preisgibt.', showIf: { flag: 'tobias_joined' } }
+      { narrator: 'Ihr Blick wandert kurz über die Gruppe — Tobias, unruhig wie immer; Mira, die den Blick ruhig erwidert.', showIf: { flag: 'tobias_joined' } },
+      { narrator: 'Rosas Miene daneben gibt, wie üblich, nichts preis.', showIf: { flag: 'rosa_companion' } }
     ],
     choices: [
       { label: '"Warum sollten wir euch trauen? Wir kennen euch nicht."', to: 'ch3_trust_wary' },
@@ -1363,7 +1381,7 @@ const STORY = {
 
   ch3_invite: {
     text: [
-      { speaker: 'Elena', line: '"Kommt mit. Eine Stunde zu Fuß, warmes Essen, und ein Dach, das nicht hereinregnet. Das Reden können wir unterwegs fortsetzen."' },
+      { speaker: 'Elena', line: '"Dann los. Eine Stunde zu Fuß, warmes Essen, und ein Dach, das nicht hereinregnet. Das Reden können wir unterwegs fortsetzen."' },
       { narrator: 'Sie dreht sich um, ohne auf eine Antwort zu warten — die Sorte Selbstverständlichkeit, die man sich erst erarbeiten muss.' }
     ],
     next: 'ch3_arrival'
@@ -1375,7 +1393,7 @@ const STORY = {
     sound: 'fire',
     text: [
       'Die alte Mühle taucht hinter einer Hügelkuppe auf, umgeben von einem Flickwerk aus Zäunen, Gewächshäusern aus geborgenen Fensterscheiben und Dächern, die alle irgendwie zueinander passen, ohne dass es zwei gleiche gibt.',
-      { narrator: 'Menschen. Mehr, als du seit drei Jahren an einem Ort gesehen hast. Jemand repariert ein Fahrrad. Zwei Kinder jagen sich zwischen Beeten aus Kartoffeln. Niemand starrt euch an, aber alle bemerken euch.' },
+      { narrator: 'Menschen. Mehr, als du seit drei Jahren an einem Ort gesehen hast. Jemand repariert ein Fahrrad. Zwei Kinder jagen sich zwischen Beeten aus Kartoffeln. Niemand starrt dich an, aber alle bemerken dich.' },
       { speaker: 'Tobias', line: '"Das... das sind mehr Leute als in Rattenbach und am Turm zusammen."', showIf: { flag: 'tobias_joined' } },
       { speaker: 'Rosa', line: '"Und trotzdem noch am Leben. Das ist die eigentliche Nachricht hier."', showIf: { flag: 'rosa_companion' } }
     ],
@@ -1403,9 +1421,9 @@ const STORY = {
   ch3_elena_offer: {
     chapter: 'KAPITEL 3 — KÖNIGSMÜHLE',
     text: [
-      { speaker: 'Elena', line: '"Mein Vorschlag: regelmäßiger Funkkontakt zwischen Königsmühle, eurem Turm und Rattenbach. Handel, wo es geht. Warnung, wenn nötig."' },
+      { speaker: 'Elena', line: '"Mein Vorschlag: regelmäßiger Funkkontakt zwischen Königsmühle, dem Turm im Osten und Rattenbach. Handel, wo es geht. Warnung, wenn nötig."' },
       { narrator: 'Sie zögert kurz, bevor sie weiterspricht.' },
-      { speaker: 'Elena', line: '"Und ich sage euch ehrlich, was das kostet: Jeder Funkspruch kann abgehört werden. Von denen, die den Turm gehört haben, hört vielleicht auch jemand euch. Sichtbarkeit rettet Leben — bis sie es nicht mehr tut."' }
+      { speaker: 'Elena', line: '"Und ich sage ehrlich dazu, was das kostet: Jeder Funkspruch kann abgehört werden. Von denen, die den Turm gehört haben, hört vielleicht auch jemand euch. Sichtbarkeit rettet Leben — bis sie es nicht mehr tut."' }
     ],
     choices: [
       { label: '"Wir machen mit. Das Risiko ist es wert."', to: 'ch3_ally_yes' },
@@ -1441,7 +1459,7 @@ const STORY = {
       { speaker: 'Mira', line: '"Weißt du, was das Verrückte ist? Wir haben den Turm repariert, um herauszufinden, ob es noch andere gibt. Und jetzt sitzen wir hier und essen Eintopf mit dreißig Fremden, als wäre das völlig normal."', showIf: { flag: 'tobias_joined' } },
       { speaker: 'Tobias', line: '"Ist es doch auch. Oder war es mal. Vielleicht wird es das wieder."', showIf: { flag: 'tobias_joined' } },
       { speaker: 'Rosa', line: '"Drei Jahre hab ich gedacht, mein Generator und ich sind das Letzte, was von irgendwas übrig ist. Ganz schön überheblich von mir, im Rückblick."', showIf: { flag: 'rosa_companion' } },
-      { narrator: 'Später, als die meisten Feuer heruntergebrannt sind, weist man euch einen trockenen Schuppen zum Schlafen zu. Zum ersten Mal seit Tagen fühlt sich Müdigkeit an wie etwas, das man sich verdient hat, und nicht wie etwas, das einen einfach überwältigt.' }
+      { narrator: 'Später, als die meisten Feuer heruntergebrannt sind, weist man den Gästen einen trockenen Schuppen zum Schlafen zu. Zum ersten Mal seit Tagen fühlt sich Müdigkeit an wie etwas, das man sich verdient hat, und nicht wie etwas, das einen einfach überwältigt.' }
     ],
     next: 'ch3_night_alarm'
   },
@@ -1528,7 +1546,9 @@ const STORY = {
     chapter: 'KAPITEL 4 — ZWISCHEN DEN FREQUENZEN',
     location: 'FUNKRAUM, KÖNIGSMÜHLE',
     text: [
-      'Mittags versucht ihr, Rattenbach und den Turm zu erreichen — eine Vorwarnung, falls die Kundschafter mehr als nur Kundschafter waren.',
+      'Mittags versucht ihr, die anderen zu erreichen — eine Vorwarnung, falls die Kundschafter mehr als nur Kundschafter waren.',
+      { narrator: 'Rosa sitzt allein in Rattenbach am Empfänger. Wenn irgendjemand eine Warnung verdient hat, dann sie.', showIf: { flag: 'rosa_companion', invert: true } },
+      { narrator: 'Am Turm hält nur noch das dritte Mitglied von Tobias\' Trupp die Stellung — auch das ist jemand, der wissen sollte, was hier nachts am Zaun stand.', showIf: { flag: 'tobias_joined' } },
       { narrator: 'Nur Rauschen. Die Antenne ist nicht das Problem; die Entfernung schon eher. Während jemand langsam über die Frequenzen dreht, auf der Suche nach einer Lücke im Rauschen, passiert etwas Merkwürdiges.' },
       { narrator: 'Ein Kanal, völlig klar, kein Knistern, keine Störung. Und mittendrin: jemand, der leise und ziemlich schief vor sich hin summt, als hätte er vergessen, dass ein Mikrofon offen ist.' }
     ],
@@ -1626,9 +1646,11 @@ const STORY = {
     location: 'KÖNIGSMÜHLE, NACHT VOR DEM AUFBRUCH',
     text: [
       { narrator: 'Die letzten Stunden vor dem Aufbruch fühlen sich länger an als jede Wache, die du je gehalten hast.' },
+      { narrator: 'Elena drückt dir zwei Dinge in die Hand: ein Handfunkgerät — "Reichweite bescheiden, aber Shinis Relais liegt günstig, er kann weiterleiten" — und eine Kurbeltaschenlampe. "Nicht benutzen, außer es geht wirklich nicht anders. Licht sieht man nachts kilometerweit."' },
       { speaker: 'Rosa', line: '"Pass auf dich auf da draußen. Das ist keine Bitte, das ist eine Bedingung — hab ich dir das nicht schon mal gesagt?"', showIf: { flag: 'rosa_companion' } },
       { narrator: 'Du checkst noch einmal deine Ausrüstung, mehr aus Nervosität als aus Notwendigkeit. Irgendwo in der Dunkelheit surrt leise Elenas Funkgerät — Shini, der noch einmal die Frequenz bestätigt, "für alle Fälle".' }
     ],
+    onEnter: { items: ['handfunkgeraet', 'taschenlampe'] },
     next: 'ch4_chapter_end'
   },
 
@@ -1670,8 +1692,8 @@ const STORY = {
 
   ch5_observe_patrol: {
     text: [
-      { narrator: 'Aus der Deckung eines umgestürzten Waggons beobachtet ihr die Wachrotation — ungefähr alle zwanzig Minuten ein Wechsel, immer die gleichen zwei Routen.' },
-      { narrator: 'Zwei Wachen kommen nah genug vorbei, dass ihr Gesprächsfetzen aufschnappt.' },
+      { narrator: 'Aus der Deckung eines umgestürzten Waggons beobachtest du die Wachrotation — ungefähr alle zwanzig Minuten ein Wechsel, immer die gleichen zwei Routen.' },
+      { narrator: 'Zwei Wachen kommen nah genug vorbei, dass du Gesprächsfetzen aufschnappst.' },
       { speaker: 'Wache 1', line: '"...wenn der Alte sagt, in vier Tagen, dann in vier Tagen. Ich frag ihn jedenfalls nicht nochmal."' },
       { speaker: 'Wache 2', line: '"Vier Tage bis der Zug losgeht, oder vier Tage bis wir da sind? Das ist nicht dasselbe."' },
       { narrator: 'Die zweite Wache antwortet nicht mehr, und die beiden verschwinden außer Hörweite.' }
@@ -1682,8 +1704,8 @@ const STORY = {
 
   ch5_count_from_distance: {
     text: [
-      { narrator: 'Ihr bleibt lieber auf Abstand. Sicherer, aber ungenauer: eine grobe Zählung, so gut es aus der Ferne geht — mindestens fünfzehn Personen, wahrscheinlich mehr, die ihr nicht seht.' },
-      { narrator: 'Genug für ein grobes Bild. Nicht genug, um zu wissen, wie viel Zeit euch bleibt.' }
+      { narrator: 'Du bleibst lieber auf Abstand. Sicherer, aber ungenauer: eine grobe Zählung, so gut es aus der Ferne geht — mindestens fünfzehn Personen, wahrscheinlich mehr, die du nicht siehst.' },
+      { narrator: 'Genug für ein grobes Bild. Nicht genug, um zu wissen, wie viel Zeit bleibt.' }
     ],
     next: 'ch5_discovery'
   },
@@ -1692,7 +1714,7 @@ const STORY = {
     chapter: 'KAPITEL 5 — DAS SILO',
     text: [
       { narrator: 'Beim Rückzug entlang des Zauns bemerkst du etwas, das nicht ins Muster passt: eine zusammengekauerte Gestalt, kaum älter als zwanzig, im Schatten einer umgekippten Palette, eine notdürftig verbundene Wunde am Arm.' },
-      { narrator: 'Die Person bemerkt euch im gleichen Moment und erstarrt — keine Waffe in der Hand, nur nackte Angst im Gesicht.' }
+      { narrator: 'Die Person bemerkt dich im gleichen Moment und erstarrt — keine Waffe in der Hand, nur nackte Angst im Gesicht.' }
     ],
     choices: [
       { label: 'Helfen.', to: 'ch5_help_deserter' },
@@ -1705,7 +1727,7 @@ const STORY = {
       { narrator: 'Du kniest dich hin, langsam, die Hände sichtbar. Die Person zuckt zurück, entspannt sich dann minimal, als niemand nach einer Waffe greift.' },
       { speaker: 'Finn', line: '"Bitte nicht zurückbringen. Bitte. Ich... ich bin einfach nur gelaufen, als die Wache abgelenkt war."' },
       { narrator: 'Während du die Wunde notdürftig versorgst, erzählt Finn, stockend, mit Blicken zurück zum Silo: Nicht jeder dort ist freiwillig dabei. Manche wurden vor Jahren aufgenommen, weil die Alternative der Tod war. Der Anführer — alle nennen ihn nur "der Alte" — verlangt Beute, um alle zu ernähren, und bestraft, wer sich weigert.' },
-      { speaker: 'Finn', line: '"In vier Tagen ist ein großer Zug geplant. Eine Siedlung im Süden, die sich über Funk verraten hat. Königsmühle, glaub ich. Ich wollte nicht dabei sein. Deswegen bin ich hier, halb verblutet, und rede mit euch."' }
+      { speaker: 'Finn', line: '"In vier Tagen ist ein großer Zug geplant. Eine Siedlung im Süden, die sich über Funk verraten hat. Königsmühle, glaub ich. Ich wollte nicht dabei sein. Deswegen bin ich hier, halb verblutet, und rede mit dir."' }
     ],
     onEnter: { flags: ['helped_finn', 'knows_sammler_motive', 'knows_raid_date'] },
     next: 'ch5_retreat'
@@ -1713,10 +1735,10 @@ const STORY = {
 
   ch5_avoid_deserter: {
     text: [
-      { narrator: 'So sehr es wehtut: Ihr zieht euch zurück, ohne euch zu zeigen. Eine fremde Person retten zu wollen, mitten vor den Toren des Feindes, ist der Stoff, aus dem Geschichten werden, die schlecht enden.' },
-      { narrator: 'Später, aus sicherer Entfernung, hört ihr Gesprächsfetzen von Wachen, die von "noch einem, der abgehauen ist" reden, mit mehr Genervtheit als Wut. Als wäre es nicht das erste Mal.' }
+      { narrator: 'So sehr es wehtut: Du ziehst dich zurück, ohne dich zu zeigen. Eine fremde Person retten zu wollen, mitten vor den Toren des Feindes, ist der Stoff, aus dem Geschichten werden, die schlecht enden.' },
+      { narrator: 'Später, aus sicherer Entfernung, hörst du Gesprächsfetzen von Wachen, die von "noch einem, der abgehauen ist" reden, mit mehr Genervtheit als Wut. Als wäre es nicht das erste Mal.' }
     ],
-    onEnter: { flags: ['knows_sammler_motive'] },
+    onEnter: { flags: ['knows_deserters'] },
     next: 'ch5_retreat'
   },
 
@@ -1731,7 +1753,7 @@ const STORY = {
 
   ch5_shini_checkin: {
     text: [
-      { narrator: 'Auf halbem Weg meldet ihr euch bei Shini, wie versprochen.' },
+      { narrator: 'Auf halbem Weg meldest du dich über Elenas Handfunkgerät bei Shini, wie versprochen.' },
       { speaker: 'Shini', line: '"Deckt sich mit dem, was ich abgefangen hab. Vier Tage, vielleicht fünf, wenn sie sich Zeit lassen. Ich behalte die Frequenz im Auge — falls die früher loslegen, als sie sagen, hört ihr es zuerst von mir."', showIf: { flag: 'knows_raid_date' } },
       { speaker: 'Shini', line: '"Kein genaues Datum von meiner Seite, aber der Funkverkehr wird dichter. Das ist selten ein gutes Zeichen. Bleibt wachsam, ich meld mich, sobald sich was Konkretes findet."', showIf: { flag: 'knows_raid_date', invert: true } }
     ],
@@ -1742,9 +1764,11 @@ const STORY = {
     chapter: 'KAPITEL 5 — DAS SILO',
     location: 'KÖNIGSMÜHLE',
     text: [
-      { narrator: 'Ihr erreicht Königsmühle bei Dämmerung. Elena hört sich den Bericht an, ohne ein einziges Mal zu unterbrechen — eine Fähigkeit, die du zu schätzen gelernt hast.' },
+      { narrator: 'Du erreichst Königsmühle bei Dämmerung. Elena hört sich den Bericht an, ohne ein einziges Mal zu unterbrechen — eine Fähigkeit, die du zu schätzen gelernt hast.' },
       { speaker: 'Elena', line: '"Ein Deserteur. Das verändert einiges. Wenn dort drin Leute sind, die lieber weg wollen als kämpfen, ist das keine Armee. Das ist eine verzweifelte Gruppe mit einem Anführer, der Angst als Führungsstil verwechselt."', showIf: { flag: 'helped_finn' } },
+      { speaker: 'Elena', line: '"Leute, die abhauen. Das ist mehr wert, als es klingt — wer desertiert, kämpft nicht mit ganzem Herzen. Und wer mit halbem Herzen kämpft, ist berechenbar."', showIf: { flag: 'knows_deserters' } },
       { speaker: 'Elena', line: '"Vier Tage. Vielleicht weniger. Das ist knapp, aber es ist etwas."', showIf: { flag: 'knows_raid_date' } },
+      { speaker: 'Elena', line: '"Kein Datum, keine Zahlen. Nur die Gewissheit, dass sie kommen werden. Dann planen wir eben mit dem, was wir haben: nichts als Vorsicht."', showIf: { flag: 'knows_raid_date', invert: true } },
       { narrator: 'Sie schweigt einen Moment, den Blick auf die Karte gerichtet, die an der Wand des Funkraums hängt.' }
     ],
     next: 'ch5_chapter_end'
@@ -1791,7 +1815,7 @@ const STORY = {
     chapter: 'KAPITEL 6 — DER PREIS DER SICHTBARKEIT',
     text: [
       { speaker: 'Finn', line: '"Ich kenn einen Weg zurück rein, ohne gesehen zu werden. Wenn ihr wollt, bring ich eine Nachricht zum Alten. Riskant für mich. Aber vielleicht die einzige Chance, die nicht damit endet, dass Leute sterben."', showIf: { flag: 'helped_finn' } },
-      { narrator: 'Ohne Finn bleibt nur der unsichere Weg: eine codierte Nachricht über Shinis Kontakte in den Sammler-Funkverkehr einschleusen, in der Hoffnung, dass überhaupt jemand mit Entscheidungsgewalt zuhört.', showIf: { flag: 'helped_finn', invert: true } },
+      { narrator: 'Ohne Finn bleibt nur der unsichere Weg: eine Nachricht über die Frequenzen einschleusen, die Shini seit Wochen abhört — in der Hoffnung, dass überhaupt jemand mit Entscheidungsgewalt zuhört.', showIf: { flag: 'helped_finn', invert: true } },
       { speaker: 'Elena', line: '"Verhandeln heißt nicht, dass wir aufhören, uns vorzubereiten. Es heißt nur, dass wir zuerst das Gespräch versuchen."' }
     ],
     onEnter: { flags: ['ch6_negotiate_path'] },
