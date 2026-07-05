@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,27 +7,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08)}
-    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;cursor:none;overflow-x:hidden}
+    :root, [data-theme="dark"]{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--orange2:#ff6b3d;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08);--body-bg:var(--black);--body-text:var(--cream);color-scheme:dark;--dec-month-bg:#1a1520;--dec-purple:#c084fc;--dec-body-bg:#0f0d14}
+    [data-theme="light"]{color-scheme:light;--black:#2A2420;--cream:#2A2420;--orange:#FF6E35;--orange2:#e85a1f;--muted:#8A8078;--card:#FFFFFF;--card2:#FFF6EE;--border:rgba(42,36,32,0.1);--body-bg:#FBF6EE;--body-text:#2A2420;--dec-month-bg:#F0E4F7;--dec-purple:#8B2FC9;--dec-body-bg:#F7F0FC}
+    body{background:var(--body-bg);color:var(--body-text);font-family:'DM Mono',monospace;cursor:none;overflow-x:hidden;transition:background .3s,color .3s}
     .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
     .cursor.big{width:36px;height:36px}
-    .login-overlay{position:fixed;inset:0;z-index:9999;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity .5s,visibility .5s;cursor:auto}
-    .login-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
-    .login-logo{font-family:'Bebas Neue';font-size:2.4rem}
-    .login-logo span{color:var(--orange)}
-    .login-sub{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted)}
-    .login-form{display:flex;flex-direction:column;gap:10px;width:280px;padding:0 20px}
-    .login-input{background:var(--card);border:1px solid var(--border);color:var(--cream);font-family:'DM Mono';font-size:.85rem;padding:13px 16px;outline:none;width:100%;cursor:text}
-    .login-input:focus{border-color:var(--orange)}
-    .login-btn{padding:13px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.7rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
-    .login-error{font-size:.62rem;color:#ff4444;text-align:center;min-height:16px}
+    [data-theme="light"] .cursor{mix-blend-mode:normal}
     .page-content{opacity:1}
     .page-content.visible{opacity:1}
     nav{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
-    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--cream);text-decoration:none}
-    .nav-links{display:flex;gap:20px}
+    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--body-text);text-decoration:none}
+    .nav-links{display:flex;gap:20px;align-items:center}
     .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
-    .nav-link:hover,.nav-link.active{color:var(--cream)}
+    .nav-link:hover,.nav-link.active{color:var(--body-text)}
+    .theme-toggle{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:transform .2s}
+    .theme-toggle:hover{transform:scale(1.1)}
     main{max-width:900px;margin:0 auto;padding:40px 24px 80px}
     .page-title{font-family:'Bebas Neue';font-size:clamp(2.5rem,8vw,4.5rem);line-height:.95;text-align:center;margin-bottom:8px}
     .page-title span{color:var(--orange)}
@@ -36,28 +30,32 @@
     .tl-row{display:grid;grid-template-columns:120px 1fr auto;align-items:stretch}
     .tl-row-link{text-decoration:none;color:inherit;cursor:pointer;transition:transform .15s}
     .tl-row-link:hover{transform:translateX(4px)}
-    .tl-month{background:var(--card);padding:20px 24px;display:flex;flex-direction:column;justify-content:center;border-right:2px solid var(--black)}
+    .tl-month{background:var(--card);padding:20px 24px;display:flex;flex-direction:column;justify-content:center;border-right:2px solid var(--body-bg)}
     .tl-month-name{font-family:'Bebas Neue';font-size:1.4rem;line-height:1}
     .tl-month-sub{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:2px}
     .tl-body{background:var(--card);padding:20px 28px;display:flex;flex-direction:column;justify-content:center;gap:6px}
     .tl-exercise{font-family:'Instrument Serif';font-style:italic;font-size:1.15rem}
     .tl-goal{font-size:.65rem;color:var(--muted)}
-    .tl-meta{background:var(--card);padding:20px 24px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:8px;border-left:2px solid var(--black)}
+    .tl-meta{background:var(--card);padding:20px 24px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:8px;border-left:2px solid var(--body-bg)}
     .tl-level{font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;padding:3px 10px;border:1px solid;white-space:nowrap}
     .tl-pts{font-size:.6rem;color:var(--muted)}
     .tl-row.active .tl-month{background:var(--orange)}
     .tl-row.active .tl-month-name{color:var(--black)}
+    [data-theme="light"] .tl-row.active .tl-month-name{color:#FFFFFF}
     .tl-row.active .tl-month-sub{color:rgba(0,0,0,.5)}
-    .tl-row.active .tl-body,.tl-row.active .tl-meta{background:#1e1e18;border-top:2px solid var(--orange);border-bottom:2px solid var(--orange)}
+    [data-theme="light"] .tl-row.active .tl-month-sub{color:rgba(255,255,255,.7)}
+    .tl-row.active .tl-body,.tl-row.active .tl-meta{background:var(--card2);border-top:2px solid var(--orange);border-bottom:2px solid var(--orange)}
     .tl-row.active .tl-exercise{color:var(--orange)}
-    .tl-row.december .tl-month{background:#1a1520;border-right-color:#6b21a8}
-    .tl-row.december .tl-month-name{color:#c084fc}
-    .tl-row.december .tl-body,.tl-row.december .tl-meta{background:#0f0d14}
-    .tl-row.december .tl-exercise{color:#c084fc}
+    .tl-row.december .tl-month{background:var(--dec-month-bg);border-right-color:#6b21a8}
+    [data-theme="light"] .tl-row.december .tl-month{border-right-color:#8B2FC9}
+    .tl-row.december .tl-month-name{color:var(--dec-purple)}
+    .tl-row.december .tl-body,.tl-row.december .tl-meta{background:var(--dec-body-bg)}
+    .tl-row.december .tl-exercise{color:var(--dec-purple)}
     .level-easy{color:#22c55e;border-color:#22c55e}
-    .level-medium{color:#facc15;border-color:#facc15}
+    .level-medium{color:#d4a400;border-color:#d4a400}
+    [data-theme="dark"] .level-medium{color:#facc15;border-color:#facc15}
     .level-hard{color:var(--orange);border-color:var(--orange)}
-    .level-boss{color:#c084fc;border-color:#c084fc}
+    .level-boss{color:var(--dec-purple);border-color:var(--dec-purple)}
     footer{padding:32px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
     footer a{color:var(--muted);text-decoration:none}
     @media(max-width:600px){.tl-row{grid-template-columns:80px 1fr}.tl-meta{display:none}}
@@ -68,6 +66,9 @@
 <div class="page-content visible" id="pageContent">
   <nav>
     <a class="nav-logo" href="crossfit.html">← CrossFit</a>
+    <div class="nav-links">
+      <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
+    </div>
   </nav>
   <main>
     <h1 class="page-title">JAHRES<span>PLAN</span></h1>
@@ -138,6 +139,19 @@
       wrap.innerHTML='<div class="tl-row"><div class="tl-month"></div><div class="tl-body" style="color:var(--muted);font-size:.7rem;">Fehler beim Laden.</div><div class="tl-meta"></div></div>';
     }
   }
+  const THEME_KEY='om_cf_theme';
+  const html=document.documentElement;
+  const themeToggle=document.getElementById('themeToggle');
+  function applyTheme(t){
+    html.setAttribute('data-theme',t);
+    themeToggle.textContent=t==='dark'?'🌙':'☀️';
+    localStorage.setItem(THEME_KEY,t);
+  }
+  applyTheme(localStorage.getItem(THEME_KEY)||'dark');
+  themeToggle.addEventListener('click',()=>{
+    applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark');
+  });
+
   loadTimeline();
 </script>
 </body>

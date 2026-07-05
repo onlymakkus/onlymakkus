@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,30 +7,23 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08);--gold:#FFD700;--silver:#C0C0C0;--bronze:#CD7F32;--green:#22c55e}
-    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;cursor:none;overflow-x:hidden}
+    :root, [data-theme="dark"]{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--orange2:#ff6b3d;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08);--gold:#FFD700;--silver:#C0C0C0;--bronze:#CD7F32;--green:#22c55e;--body-bg:var(--black);--body-text:var(--cream)}
+    [data-theme="light"]{color-scheme:light;--black:#2A2420;--cream:#2A2420;--orange:#FF6E35;--orange2:#e85a1f;--muted:#8A8078;--card:#FFFFFF;--card2:#FFF6EE;--border:rgba(42,36,32,0.1);--gold:#D4A400;--silver:#8A8078;--bronze:#B0693A;--green:#1a9c53;--body-bg:#FBF6EE;--body-text:#2A2420}
+    body{background:var(--body-bg);color:var(--body-text);font-family:'DM Mono',monospace;cursor:none;overflow-x:hidden;transition:background .3s,color .3s}
     .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
     .cursor.big{width:36px;height:36px}
-
-    .login-overlay{position:fixed;inset:0;z-index:9999;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity .5s,visibility .5s;cursor:auto}
-    .login-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
-    .login-logo{font-family:'Bebas Neue';font-size:2.4rem}
-    .login-logo span{color:var(--orange)}
-    .login-sub{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted)}
-    .login-form{display:flex;flex-direction:column;gap:10px;width:280px;padding:0 20px}
-    .login-input{background:var(--card);border:1px solid var(--border);color:var(--cream);font-family:'DM Mono';font-size:.85rem;padding:13px 16px;outline:none;width:100%;cursor:text}
-    .login-input:focus{border-color:var(--orange)}
-    .login-btn{padding:13px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.7rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
-    .login-error{font-size:.62rem;color:#ff4444;text-align:center;min-height:16px}
+    [data-theme="light"] .cursor{mix-blend-mode:normal}
 
     .page-content{opacity:0;transition:opacity .6s}
     .page-content.visible{opacity:1}
 
     nav{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
-    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--cream);text-decoration:none}
-    .nav-links{display:flex;gap:20px}
+    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--body-text);text-decoration:none}
+    .nav-links{display:flex;gap:20px;align-items:center}
     .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
-    .nav-link:hover,.nav-link.active{color:var(--cream)}
+    .nav-link:hover,.nav-link.active{color:var(--body-text)}
+    .theme-toggle{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:transform .2s}
+    .theme-toggle:hover{transform:scale(1.1)}
 
     main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
     .page-title{font-family:'Bebas Neue';font-size:clamp(2.5rem,8vw,4.5rem);line-height:.95;text-align:center;margin-bottom:8px}
@@ -38,11 +31,13 @@
     .page-sub{text-align:center;font-size:.75rem;color:var(--muted);margin-bottom:40px}
 
     .active-hero{background:linear-gradient(135deg,var(--card) 0%,#1a0c06 100%);border:2px solid var(--orange);padding:36px 32px;margin-bottom:40px;position:relative;overflow:hidden}
+    [data-theme="light"] .active-hero{background:linear-gradient(135deg,#FFFFFF 0%,#FFF6EE 100%);box-shadow:0 4px 20px rgba(42,36,32,.06)}
     .active-badge{display:inline-block;font-size:.58rem;letter-spacing:.25em;text-transform:uppercase;color:var(--orange);border:1px solid rgba(255,78,26,.4);padding:4px 12px;margin-bottom:16px}
     .active-title{font-family:'Bebas Neue';font-size:clamp(2.5rem,7vw,4rem);line-height:.95;margin-bottom:8px;text-align:center}
     .active-goal{font-size:.78rem;color:var(--orange);margin-bottom:16px;font-weight:500;text-align:center}
     .active-tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
     .active-tip{background:rgba(255,255,255,.03);padding:12px 14px;border-left:2px solid var(--orange)}
+    [data-theme="light"] .active-tip{background:rgba(255,110,53,.05)}
     .active-tip-label{font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--orange);margin-bottom:4px}
     .active-tip-text{font-size:.66rem;color:var(--muted);line-height:1.6}
     .active-video{display:block;text-decoration:none;background:rgba(90,157,181,.06);padding:12px 14px;border-left:2px solid #5a9db5;margin-top:12px}
@@ -58,12 +53,15 @@
     .lb-val.done{color:var(--orange)}
     .lb-prog{display:flex;align-items:center;gap:8px}
     .lb-bar{flex:1;height:5px;background:rgba(255,255,255,.07);overflow:hidden}
+    [data-theme="light"] .lb-bar{background:rgba(42,36,32,.08)}
     .lb-fill{height:100%;background:linear-gradient(90deg,var(--orange),#ffaa00);transition:width .8s cubic-bezier(.34,1.56,.64,1)}
     .lb-pct{font-size:.6rem;color:var(--muted);min-width:30px;text-align:right}
     .lb-status{font-size:.65rem;text-align:center}
     .lb-head{font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.2);text-align:center}
+    [data-theme="light"] .lb-head{color:rgba(42,36,32,.3)}
     .lb-head:nth-child(2){text-align:left}
     .lb-empty{padding:40px;text-align:center;font-size:.72rem;color:#444;font-style:italic;background:var(--card2)}
+    [data-theme="light"] .lb-empty{color:#B0A99C}
 
     .pin-info{background:var(--card);border:1px solid var(--border);padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:center}
     .points-info{background:var(--card);border:1px solid var(--border);padding:12px 16px;margin-top:16px;display:flex;gap:10px;align-items:flex-start}
@@ -80,10 +78,12 @@
     @media(max-width:700px){.form-row{grid-template-columns:1fr 1fr}}
     .form-group{display:flex;flex-direction:column;gap:5px}
     .form-label{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
-    .form-input{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--cream);font-family:'DM Mono';font-size:.82rem;padding:11px 13px;outline:none;width:100%}
+    .form-input{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--body-text);font-family:'DM Mono';font-size:.82rem;padding:11px 13px;outline:none;width:100%}
+    [data-theme="light"] .form-input{background:rgba(42,36,32,.03)}
     .form-input:focus{border-color:var(--orange)}
     .form-btn{padding:11px 20px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.7rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
-    .form-btn:hover{background:#ff6b3d}
+    [data-theme="light"] .form-btn{color:#FFFFFF}
+    .form-btn:hover{background:var(--orange2)}
     .form-msg{margin-top:10px;font-size:.65rem;min-height:18px}
     .form-msg.ok{color:var(--green)}
     .form-msg.err{color:#ff4444}
@@ -98,6 +98,9 @@
 <div class="page-content visible" id="pageContent">
   <nav>
     <a class="nav-logo" href="crossfit.html">← CrossFit</a>
+    <div class="nav-links">
+      <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
+    </div>
   </nav>
 
   <main>
@@ -297,6 +300,19 @@
     }catch(e){msg.textContent='❌ Fehler: '+e.message;msg.className='form-msg err'}
     btn.textContent='Eintragen →';btn.disabled=false;
     setTimeout(()=>msg.textContent='',4000);
+  });
+
+  const THEME_KEY='om_cf_theme';
+  const html=document.documentElement;
+  const themeToggle=document.getElementById('themeToggle');
+  function applyTheme(t){
+    html.setAttribute('data-theme',t);
+    themeToggle.textContent=t==='dark'?'🌙':'☀️';
+    localStorage.setItem(THEME_KEY,t);
+  }
+  applyTheme(localStorage.getItem(THEME_KEY)||'dark');
+  themeToggle.addEventListener('click',()=>{
+    applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark');
   });
 
   init();
