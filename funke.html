@@ -605,6 +605,7 @@ const ITEMS = {
   seil: { name:'Kletterseil', desc:'Alt, aber die Fasern halten noch. Man hofft es zumindest.' },
   sicherheitsmarke: { name:'Sicherheitsmarke von Königsmühle', desc:'Ein Stück gestanztes Blech an einer Schnur. Öffnet vermutlich kein einziges Schloss — aber es sagt jedem, der es kennt: diese Person gehört dazu.' },
   handfunkgeraet: { name:'Handfunkgerät', desc:'Elenas Leihgabe. Reichweite überschaubar, Batterie launisch, Shinis Frequenz 14.3 mit Bleistift auf die Rückseite gekritzelt.' },
+  netzhandbuch: { name:'Netzhandbuch (Station 9)', desc:'Wasserdicht verpackte Behördenprosa: Stationsliste, Frequenzpläne, Betriebsprotokolle. Erster Satz: "Das Netz ist so ausgelegt, dass es von einer einzelnen eingewiesenen Person wieder in Betrieb genommen werden kann."' },
 };
 
 /* ══════════════════════════════════════════════════════════════
@@ -1839,7 +1840,465 @@ const STORY = {
     type: 'end',
     badge: 'ENDE KAPITEL 6',
     title: 'DER PREIS DER SICHTBARKEIT',
-    text: 'Der Plan steht, so gut ein Plan stehen kann, der auf Vermutungen und einem verletzten Deserteur aufbaut. Irgendwo im Norden zählt jemand die Tage bis zum Aufbruch. Hier zählt ihr sie auch. Kapitel 7 folgt bald.'
+    text: 'Der Plan steht, so gut ein Plan stehen kann, der auf Vermutungen und einem verletzten Deserteur aufbaut. Irgendwo im Norden zählt jemand die Tage bis zum Aufbruch. Hier zählt ihr sie auch.',
+    nextChapter: 'ch7_intro'
+  },
+
+  /* ══════════════════════════════════════════════════════
+     KAPITEL 7 — "STURMNACHT"
+     ══════════════════════════════════════════════════════ */
+
+  ch7_intro: {
+    chapter: 'KAPITEL 7 — STURMNACHT',
+    location: 'KÖNIGSMÜHLE, VIERTER ABEND',
+    text: [
+      { narrator: 'Der vierte Abend bringt Wind. Erst als Ahnung in den Baumwipfeln, dann als Wand aus grauen Wolken, die sich von Westen heranschiebt wie etwas, das eine Rechnung offen hat.' },
+      { narrator: 'Vier Tage, hatte die Wache am Silo gesagt. Heute ist der vierte Tag, und alle in Königsmühle wissen es.', showIf: { flag: 'knows_raid_date' } },
+      { narrator: 'Niemand weiß, wann sie kommen. Das Warten ohne Datum ist eine eigene Sorte Zermürbung — jede ruhige Nacht fühlt sich an wie geliehene Zeit.', showIf: { flag: 'knows_raid_date', invert: true } },
+      { narrator: 'Kurz nach Einbruch der Dunkelheit knackt das Funkgerät. Shini, und zum ersten Mal, seit ihr ihn kennt, ohne jede Ironie in der Stimme:' },
+      { speaker: 'Shini', line: '"Sie sind unterwegs. Ihr Funkverkehr ist vor einer Stunde verstummt — und Leute wie die werden nur still, wenn sie loslaufen. Bei dem Wetter rechne ich mit ihnen kurz vor Mitternacht. Viel Glück. Ich bleib auf der Frequenz."' }
+    ],
+    next: 'ch7_branch'
+  },
+
+  ch7_branch: {
+    chapter: 'KAPITEL 7 — STURMNACHT',
+    text: [
+      { narrator: 'Elena steht bereits im Innenhof, das Haar nass vom ersten Regen, und verteilt letzte Anweisungen. Der Plan, den ihr vor Tagen beschlossen habt, ist jetzt keine Diskussion mehr. Er ist das Einzige, was zwischen euch und Mitternacht steht.', showIf: { flag: 'ch6_defend_path' } },
+      { narrator: 'Elena steht bereits im Innenhof, das Haar nass vom ersten Regen. Die Nachricht an den Alten ist seit zwei Tagen draußen — und heute Nacht, mitten im aufziehenden Sturm, wird sich zeigen, ob Worte in dieser Welt noch irgendetwas wert sind.', showIf: { flag: 'ch6_negotiate_path' } }
+    ],
+    choices: [
+      { label: 'Auf die Positionen. Die Nacht wird lang.', to: 'ch7_defense_night', showIf: { flag: 'ch6_defend_path' } },
+      { label: 'Zum Tor. Wenn eine Antwort kommt, dann dort.', to: 'ch7_parley_setup', showIf: { flag: 'ch6_negotiate_path' } },
+    ]
+  },
+
+  /* ── Verhandlungs-Pfad ── */
+
+  ch7_parley_setup: {
+    chapter: 'KAPITEL 7 — STURMNACHT',
+    location: 'AM NORDTOR, IM AUFZIEHENDEN STURM',
+    text: [
+      { narrator: 'Finn hat die Nachricht selbst ins Silo zurückgebracht — der gefährlichste Botengang, den man sich vorstellen kann, und er hat darauf bestanden. "Wenn einer weiß, wie man da rein- und rauskommt, dann ich."', showIf: { flag: 'helped_finn' } },
+      { narrator: 'Die Nachricht ging über die Frequenzen raus, die Shini seit Wochen abhört — dreimal wiederholt, unverschlüsselt, an jeden, der zuhört. Ob sie den Richtigen erreicht hat, weiß niemand.', showIf: { flag: 'helped_finn', invert: true } },
+      { narrator: 'Kurz vor Mitternacht, als der Regen waagerecht geht, meldet die Wache am Nordtor Bewegung: eine kleine Gruppe, Laternen, langsames Tempo. Wer angreifen will, kommt nicht mit Licht.' },
+      { speaker: 'Elena', line: '"Er ist gekommen. Er ist tatsächlich gekommen."' }
+    ],
+    next: 'ch7_parley'
+  },
+
+  ch7_parley: {
+    chapter: 'KAPITEL 7 — STURMNACHT',
+    location: 'VOR DEM NORDTOR',
+    text: [
+      { narrator: 'Der Alte ist tatsächlich alt — aber nicht auf die gebrechliche Art. Eher wie ein Baum, der zu oft im Sturm gestanden hat, um sich noch von Wetter beeindrucken zu lassen. Vier Begleiter halten Abstand hinter ihm, die Kapuzen tief im Gesicht.' },
+      { speaker: 'Der Alte', line: '"Henrik. So hieß ich, als Namen noch auf Papieren standen. Ihr habt um ein Gespräch gebeten, mitten in der Nacht, mitten im Sturm. Entweder seid ihr verzweifelt, oder ihr seid klug. Ich bin hier, um rauszufinden, was von beidem."' },
+      { narrator: 'Sein Blick wandert über die Palisade, die Wachen, das Licht hinter den Fenstern — taxierend, wie jemand, der Orte wie diesen schon oft von außen gesehen hat. Und von innen, danach.' },
+      { speaker: 'Henrik', line: '"Ich sag euch, wie es ist: Das Silo ernährt fast vierzig Leute, und das Getreide vom letzten Jahr geht zu Ende. Wir nehmen, was wir brauchen, weil niemand freiwillig gibt. Wenn ihr eine bessere Rechnung habt — ich höre."' }
+    ],
+    onEnter: { flags: ['henrik_met'] },
+    choices: [
+      { label: '"Wir bieten Handel: Saatgut, Wissen, Funkkontakt. Dauerhaft."', to: 'ch7_offer_trade' },
+      { label: '"Die Rechnung ist: Zieht ab. Wir sind vorbereitet, und ihr wisst es."', to: 'ch7_stand_firm' },
+    ]
+  },
+
+  ch7_offer_trade: {
+    chapter: 'KAPITEL 7 — STURMNACHT',
+    text: [
+      { narrator: 'Elena übernimmt, und du hörst zum ersten Mal, wie gut sie darin ist: Zahlen, Erträge, Anbauflächen. Kein Betteln, kein Drohen — ein Angebot, das rechnet.' },
+      { speaker: 'Elena', line: '"Ihr könnt uns einmal ausrauben und nächsten Winter verhungern. Oder ihr könnt jedes Jahr ernten, was wir euch beibringen anzubauen. Das ist keine Moralfrage. Das ist Mathematik."' },
+      { narrator: 'Henrik schweigt lange. Der Regen läuft ihm über das Gesicht, und er scheint es nicht zu bemerken.' },
+      { narrator: 'Dann tritt Finn aus dem Schatten des Tores — und die vier Begleiter hinter Henrik werden gleichzeitig sehr still.', showIf: { flag: 'helped_finn' } },
+      { speaker: 'Finn', line: '"Sie haben mich aufgenommen, als ich halb verblutet am Zaun lag, Henrik. Keine Fragen, keine Bedingungen. Sowas gibt es also noch. Ich dachte, das solltest du hören, bevor du rechnest."', showIf: { flag: 'helped_finn' } },
+      { narrator: 'Einer der vier Begleiter schlägt die Kapuze zurück — eine junge Frau, die Finn ansieht, als wäre er von den Toten zurückgekehrt. Vielleicht ist er das, aus ihrer Sicht.', showIf: { flag: 'helped_finn' } },
+      { speaker: 'Henrik', line: '"...Vierzig Leute, die satt werden, ohne dass ich sie jede Nacht in fremde Zäune schicken muss." Er lacht — kurz, rau, ohne Humor. "Weißt du, wie lange ich auf eine bessere Rechnung gewartet habe? Drei Jahre. Also gut. Reden wir über Saatgut."' }
+    ],
+    onEnter: { flags: ['sammler_deal'] },
+    next: 'ch7_deal_sealed'
+  },
+
+  ch7_deal_sealed: {
+    text: [
+      { narrator: 'Es gibt keinen Handschlag — Henrik ist nicht die Sorte Mann, und Elena nicht die Sorte Frau. Aber es gibt ein Nicken, im strömenden Regen, und in dieser Welt ist ein Nicken mehr wert als früher ein Vertrag mit drei Durchschlägen.' },
+      { speaker: 'Rosa', line: '"Ich hab heute Nacht mit allem gerechnet. Mit Feuer, mit Geschrei, mit Schlimmerem. Aber nicht mit Mathematik."', showIf: { flag: 'rosa_companion' } },
+      { narrator: 'Zwei von Henriks Begleitern bleiben freiwillig zurück, als die Gruppe im Sturm verschwindet — die junge Frau, die Finn kennt, und ein schweigsamer älterer Mann. "Als Pfand", sagt Henrik. Aber jeder am Tor sieht, dass es keine Geiseln sind. Es sind die Ersten, die das sinkende Schiff verlassen, das keins mehr sein muss.', showIf: { flag: 'helped_finn' } },
+      { narrator: 'Als Henriks Gruppe im Sturm verschwindet, bleiben zwei seiner Begleiter einfach stehen — ein junger Mann und eine Frau mittleren Alters, die Kapuzen abgenommen, als wollten sie gesehen werden. "Wir würden gern bleiben", sagt die Frau, und mehr Erklärung gibt es nicht. Mehr braucht es auch nicht.', showIf: { flag: 'helped_finn', invert: true } }
+    ],
+    next: 'ch7_refugee_choice'
+  },
+
+  ch7_stand_firm: {
+    chapter: 'KAPITEL 7 — STURMNACHT',
+    text: [
+      { narrator: 'Du sagst es ruhig, ohne Drohung in der Stimme — nur als Tatsache, wie Wetter. Henrik mustert dich lange.' },
+      { speaker: 'Henrik', line: '"Vorbereitet. Das sagen alle. Die letzten drei Siedlungen waren auch vorbereitet."' },
+      { narrator: 'In diesem Moment knistert das Handfunkgerät an deinem Gürtel — laut genug, dass alle es hören. Shinis Stimme, aber nicht an euch gerichtet. Er spricht auf einer offenen Frequenz, förmlich, geschäftsmäßig, mit jemandem, den es nicht gibt:' },
+      { speaker: 'Shini', line: '"...bestätige, Konvoi aus Steinfeld hat die Kreuzung passiert, Ankunft Königsmühle vor Sonnenaufgang. Zweiter Trupp vom Turm meldet sich beim Nordposten. Ende."' },
+      { narrator: 'Es gibt keinen Konvoi. Es gibt keinen zweiten Trupp. Aber Henrik weiß das nicht — und seine vier Begleiter, die im Regen die Umgebung absuchen, wissen es erst recht nicht.' },
+      { speaker: 'Henrik', line: '"...Ihr habt Verbündete." Er sagt es tonlos, und zum ersten Mal sieht er müde aus statt gefährlich. "Vierzig hungrige Leute gegen ein Netz aus Siedlungen. Das ist keine Rechnung mehr. Das ist Selbstmord mit Anlauf."' },
+      { narrator: 'Er dreht sich um, ohne Abschied. Aber zwei seiner Begleiter bleiben stehen, mitten im Regen, und drehen sich nicht mit.' }
+    ],
+    onEnter: { flags: ['sammler_scattered'] },
+    next: 'ch7_refugee_choice'
+  },
+
+  /* ── Verteidigungs-Pfad ── */
+
+  ch7_defense_night: {
+    chapter: 'KAPITEL 7 — STURMNACHT',
+    location: 'NORDZAUN, KURZ VOR MITTERNACHT',
+    text: [
+      { narrator: 'Der Sturm ist jetzt kein Wetter mehr, sondern ein Zustand. Regen peitscht waagerecht über das Gelände, und die Welt endet drei Meter hinter dem Zaun in einer Wand aus Schwarz und Wasser.' },
+      { narrator: 'Die neu verstärkten Zäune ächzen im Wind — aber sie ächzen nur. Die Arbeit der letzten Tage hält, und jeder am Nordposten weiß, wem er die trockenen Füße im Graben zu verdanken hat.', showIf: { flag: 'ch4_fortify_first' } },
+      { narrator: 'Du kennst die Spuren vom Nordzaun noch — und deshalb weißt du als Einziger, aus welcher Richtung sie kommen werden: nicht über das offene Feld, sondern durch die Senke im Nordwesten, wo das Gelände Deckung bietet. Genau dort haben Elenas Wachen sich eingegraben.', showIf: { flag: 'ch4_intel_first' } },
+      { narrator: 'Miras Sensorkette ist die einzige Technik weit und breit, die dem Sturm egal ist. Drei Drähte, zwei Blechdosen, ein Summer im Funkraum — primitiv, aber wach.', showIf: { flag: 'tobias_joined' } }
+    ],
+    next: 'ch7_first_contact_night'
+  },
+
+  ch7_first_contact_night: {
+    chapter: 'KAPITEL 7 — STURMNACHT',
+    text: [
+      { narrator: 'Kurz nach Mitternacht summt der Draht. Einmal, zweimal — Nordwest-Sektor. Keine Fehlmeldung: Der Summer geht nur, wenn etwas über den Stolperdraht steigt, das schwerer ist als ein Fuchs.', showIf: { flag: 'tobias_joined' } },
+      { narrator: 'Kurz nach Mitternacht sieht die Wache im Nordwest-Sektor Bewegung — Schemen zwischen den Regenwänden, zu koordiniert für Tiere, zu vorsichtig für Verirrte.', showIf: { flag: 'tobias_joined', invert: true } },
+      { narrator: 'Der Plan sieht vor, dass der Nordposten ein Signal an die Reserve im Innenhof gibt, sobald klar ist, wo der Schwerpunkt liegt. Das Problem: Bei diesem Sturm trägt kein Ruf zwanzig Meter weit, und das Handfunkgerät liegt bei Elena.' },
+      { narrator: 'Du hast Elenas Kurbeltaschenlampe am Gürtel. Drei kurze Blitze — das vereinbarte Zeichen. Aber Licht sieht man in dieser Nacht in beide Richtungen.' }
+    ],
+    choices: [
+      { label: 'Das Lichtsignal geben — die Reserve muss es wissen, koste es die Deckung.', to: 'ch7_signal' },
+      { label: 'Im Dunkeln bleiben und die Nachricht zu Fuß durch den Sturm bringen.', to: 'ch7_dark_run' },
+    ]
+  },
+
+  ch7_signal: {
+    text: [
+      { narrator: 'Drei kurze Blitze in die Nacht. Für einen Moment bist du der hellste Punkt der Welt — und du spürst förmlich, wie sich da draußen Blicke auf dich richten.' },
+      { narrator: 'Aber die Reserve antwortet sofort: Bewegung im Innenhof, Gestalten, die im Laufschritt Position beziehen. Als die Angreifer die Senke verlassen, erwartet sie kein schlafendes Dorf, sondern eine Wand aus wachen Leuten hinter einem Zaun, der nicht nachgibt.' },
+      { narrator: 'Und dann sehen die Angreifer noch etwas: dich, auf dem Posten, sichtbar, ohne Deckung — und ohne jede Angst, gesehen zu werden. Nichts ist entmutigender für Leute, die auf Überraschung gesetzt haben.' }
+    ],
+    onEnter: { flags: ['gave_light_signal'] },
+    next: 'ch7_shini_gambit'
+  },
+
+  ch7_dark_run: {
+    text: [
+      { narrator: 'Du entscheidest dich gegen das Licht und rennst — geduckt, durch knöcheltiefes Wasser, den Weg zum Innenhof mehr erinnernd als sehend. Zweimal rutschst du weg, einmal hältst du dich an etwas fest, das hoffentlich ein Zaunpfahl war.' },
+      { narrator: 'Die Nachricht kommt an, eine Minute später als das Licht gebraucht hätte — aber sie kommt an, und niemand da draußen weiß, dass ihr wisst, dass sie kommen. Als die Angreifer die Senke verlassen, laufen sie in eine Stille, die keine schlafende ist.' }
+    ],
+    next: 'ch7_shini_gambit'
+  },
+
+  ch7_shini_gambit: {
+    chapter: 'KAPITEL 7 — STURMNACHT',
+    text: [
+      { narrator: 'Was dann passiert, hat mit Kampf nichts zu tun — und alles mit Nerven.' },
+      { narrator: 'Die Angreifer stehen im strömenden Regen vor einem Zaun, der hält, hinter dem Menschen stehen, die nicht schlafen und nicht weichen. Minuten vergehen, in denen niemand den ersten Schritt macht. Und dann meldet sich, auf der Frequenz der Sammler, eine förmliche Stimme:' },
+      { speaker: 'Shini', line: '"...an alle Posten: Konvoi aus Steinfeld hat die Kreuzung passiert, Ankunft Königsmühle vor Sonnenaufgang. Trupp vom Turm meldet Sichtkontakt mit dem Nordfeld. Ende."' },
+      { narrator: 'Es gibt keinen Konvoi. Es gibt keinen Trupp. Aber die Gestalten im Regen wissen das nicht — sie wissen nur, dass ihr Überfall geplatzt ist, ihr Rückweg lang, und die Nacht plötzlich sehr viel größer als sie selbst.' },
+      { narrator: 'Erst gehen zwei. Dann fünf. Dann alle — zurück in den Sturm, aus dem sie gekommen sind. Kein Schuss, kein Schrei. Nur Regen, und das langsame Begreifen auf beiden Seiten, dass diese Nacht anders ausgegangen ist als alle Nächte davor.' }
+    ],
+    onEnter: { flags: ['sammler_scattered'] },
+    next: 'ch7_stragglers'
+  },
+
+  ch7_stragglers: {
+    chapter: 'KAPITEL 7 — STURMNACHT',
+    text: [
+      { narrator: 'Im ersten grauen Licht des Morgens, als der Sturm zu einem müden Nieseln zerfallen ist, stehen drei Gestalten am Nordtor. Durchnässt, erschöpft, die Hände sichtbar. Sie sind nicht mit den anderen gegangen.' },
+      { narrator: 'Einer von ihnen, kaum älter als Finn, sagt es für alle drei: "Wir gehen da nicht zurück. Egal, was ihr mit uns macht — wir gehen da nicht zurück."', showIf: { flag: 'helped_finn' } },
+      { narrator: 'Finn steht bereits am Tor, als du ankommst, und mustert die drei mit einem Blick, der alles über seine eigene Geschichte erzählt.', showIf: { flag: 'helped_finn' } },
+      { narrator: 'Einer von ihnen, kaum älter als zwanzig, sagt es für alle drei: "Wir gehen da nicht zurück. Egal, was ihr mit uns macht — wir gehen da nicht zurück."', showIf: { flag: 'helped_finn', invert: true } }
+    ],
+    next: 'ch7_refugee_choice'
+  },
+
+  /* ── Konvergenz: Deserteure ── */
+
+  ch7_refugee_choice: {
+    chapter: 'KAPITEL 7 — STURMNACHT',
+    location: 'AM NORDTOR, MORGENGRAUEN',
+    text: [
+      { narrator: 'Elena sieht dich an. Es ist eine dieser Entscheidungen, die sie bewusst nicht allein trifft — nicht, weil sie es nicht könnte, sondern weil sie will, dass Königsmühle sie gemeinsam trägt.' },
+      { speaker: 'Elena', line: '"Mehr Leute heißt mehr Hände — und mehr Mäuler. Und Leute, die gestern noch auf der anderen Seite standen, heißt: Vertrauen, das erst noch verdient werden muss. Ich kann beides vertreten. Was denkst du?"' },
+      { speaker: 'Rosa', line: '"Ich stand auch mal vor einer Tür und musste hoffen, dass jemand aufmacht. Nur zur Erinnerung."', showIf: { flag: 'rosa_companion' } }
+    ],
+    choices: [
+      { label: '"Wer bleiben will, bleibt. Wir fangen mit Vertrauen an."', to: 'ch7_accept_refugees' },
+      { label: '"Nicht jetzt. Erst wenn sich der Staub gelegt hat — sie können im Frühjahr wiederkommen."', to: 'ch7_turn_away' },
+    ]
+  },
+
+  ch7_accept_refugees: {
+    text: [
+      { narrator: 'Und so wächst Königsmühle in einer einzigen Sturmnacht — nicht durch Geburten oder Zufall, sondern durch die älteste Rechnung der Welt: Menschen gehen dorthin, wo man sie nicht zuerst fragt, was sie wert sind.' },
+      { narrator: 'Finn nimmt die Neuen unter seine Fittiche, mit der Autorität von jemandem, der genau weiß, wie sich die erste Nacht auf der richtigen Seite des Zauns anfühlt.', showIf: { flag: 'helped_finn' } }
+    ],
+    onEnter: { flags: ['sammler_refugees'] },
+    next: 'ch7_chapter_end'
+  },
+
+  ch7_turn_away: {
+    text: [
+      { narrator: 'Es ist keine grausame Entscheidung — sie bekommen Essen für drei Tage, trockene Decken und eine Wegbeschreibung. Aber es ist auch keine, die sich gut anfühlt, als die Gestalten im Morgengrauen kleiner werden.' },
+      { speaker: 'Elena', line: '"Vorsicht hat ihren Preis. Meistens zahlen ihn andere. Ich sag nicht, dass es falsch war — ich sag nur, dass wir uns daran erinnern sollten, wie sich dieser Morgen angefühlt hat."' }
+    ],
+    onEnter: { flags: ['refugees_turned_away'] },
+    next: 'ch7_chapter_end'
+  },
+
+  ch7_chapter_end: {
+    type: 'end',
+    badge: 'ENDE KAPITEL 7',
+    title: 'STURMNACHT',
+    text: 'Der Sturm zieht weiter, wie Stürme es tun. Was bleibt: Königsmühle steht. Niemand ist gestorben. Und zum ersten Mal seit drei Jahren hat jemand den Sammlern eine andere Rechnung vorgelegt — und sie haben gerechnet.',
+    nextChapter: 'ch8_intro'
+  },
+
+  /* ══════════════════════════════════════════════════════
+     KAPITEL 8 — "NACH DEM STURM"
+     ══════════════════════════════════════════════════════ */
+
+  ch8_intro: {
+    chapter: 'KAPITEL 8 — NACH DEM STURM',
+    location: 'KÖNIGSMÜHLE, DER MORGEN DANACH',
+    text: [
+      { narrator: 'Der Morgen nach der Sturmnacht ist von der Sorte, die man nur kennt, wenn man eine sehr lange Nacht überstanden hat: zu hell, zu still, und voller Dinge, die repariert werden wollen.' },
+      { narrator: 'Der Sturm hat mehr Schaden angerichtet als die Sammler: Das Dach der alten Scheune hat den halben First verloren, zwei Gewächshäuser sind Rahmen ohne Scheiben, und irgendwo gackert ein Huhn von einem Baum herunter, auf den es nach eigener Einschätzung niemals freiwillig geflogen ist.' },
+      { narrator: 'Die Menschen arbeiten. Nicht verbissen — es wird sogar gelacht, hier und da, das erschöpfte Lachen von Leuten, die wissen, wie viel schlimmer dieser Morgen hätte aussehen können.' }
+    ],
+    next: 'ch8_repairs'
+  },
+
+  ch8_repairs: {
+    chapter: 'KAPITEL 8 — NACH DEM STURM',
+    text: [
+      { narrator: 'Die Neuen arbeiten härter als alle anderen — die Übereifrigkeit von Menschen, die beweisen wollen, dass die Entscheidung von gestern Nacht richtig war. Mittags sitzt einer von ihnen zum ersten Mal mit am langen Tisch, und niemand macht ein Aufheben darum. Genau das ist das Aufheben.', showIf: { flag: 'sammler_refugees' } },
+      { narrator: 'Die Plätze am langen Tisch, die gestern Nacht hätten dazukommen können, bleiben leer. Niemand spricht es aus. Aber Elena schaut zweimal zur Tür, als könnte doch noch jemand kommen.', showIf: { flag: 'refugees_turned_away' } },
+      { speaker: 'Tobias', line: '"Miras Sensordraht hat den Sturm überlebt. Der Draht! Mein halbes Werkzeug liegt irgendwo im Nordfeld, aber der Draht summt fröhlich weiter. Ich werde nie wieder Technik-Witze über Blechdosen machen."', showIf: { flag: 'tobias_joined' } },
+      { speaker: 'Rosa', line: '"Weißt du, was mir heute Morgen aufgefallen ist? Ich hab seit drei Tagen nicht ein einziges Mal an meinen Generator gedacht. Ich weiß nicht, ob mich das freut oder beunruhigt."', showIf: { flag: 'rosa_companion' } },
+      { speaker: 'Finn', line: '"Henrik hat den Deal ernst gemeint. Heute früh kam ein Läufer vom Silo — mit einer Liste, was sie im Tausch anbieten können. Ganz unten steht Werkzeug. Darüber steht: Entschuldigung. Durchgestrichen. Aber man kann es noch lesen."', showIf: { flag: 'sammler_deal' } }
+    ],
+    next: 'ch8_alliance'
+  },
+
+  ch8_alliance: {
+    chapter: 'KAPITEL 8 — NACH DEM STURM',
+    location: 'FUNKRAUM, KÖNIGSMÜHLE',
+    text: [
+      { narrator: 'Am Nachmittag versammelt sich der harte Kern im Funkraum — es ist Zeit für die Runde, die nach so einer Nacht ansteht.' },
+      { narrator: 'Das Bündnis, das ihr in der ersten Nacht besiegelt habt, hat sich bezahlt gemacht: Shini hat die ganze Sturmnacht über Meldungen zwischen den Orten weitergeleitet — Rattenbach, der Turm, Königsmühle, alle auf einer Karte aus Frequenzen, die es vor einem Monat noch nicht gab.', showIf: { flag: 'koenigsmuehle_ally' } },
+      { narrator: 'Shini schaltet Rattenbach dazu — und aus dem Lautsprecher kommt Rosas Stimme, blechern, aber unverkennbar.', showIf: { flag: 'rosa_companion', invert: true } },
+      { speaker: 'Rosa (über Funk)', line: '"Ich hab die halbe Nacht am Empfänger gesessen und zugehört, wie ihr da draußen wart und ich nichts tun konnte außer zuhören. Das war die längste Nacht seit dem Zusammenbruch. Und trotzdem — ich wusste wenigstens, was passiert. Das ist mehr, als diese Welt einem sonst gönnt."', showIf: { flag: 'rosa_companion', invert: true } }
+    ],
+    next: 'ch8_alliance_decision'
+  },
+
+  ch8_alliance_decision: {
+    chapter: 'KAPITEL 8 — NACH DEM STURM',
+    text: [
+      { narrator: 'Mit dem Bündnis vom ersten Abend ist die Sache längst klar — Königsmühle, Rattenbach und der Turm sind ein Netz, und die Sturmnacht war sein erster Belastungstest. Bestanden.', showIf: { flag: 'koenigsmuehle_ally' } },
+      { speaker: 'Elena', line: '"Ihr wolltet damals Bedenkzeit, bevor ihr euch bindet. Die hattet ihr jetzt — inklusive einer Nacht, die gezeigt hat, was auf dem Spiel steht. Also, letzte Gelegenheit für eine klare Antwort: Seid ihr dabei?"', showIf: { flag: 'koenigsmuehle_hesitant' } }
+    ],
+    choices: [
+      { label: '"Wir sind dabei. Endgültig."', to: 'ch8_join_late', showIf: { flag: 'koenigsmuehle_hesitant' } },
+      { label: '"Wir bleiben eigenständig — aber als Freunde."', to: 'ch8_stay_independent', showIf: { flag: 'koenigsmuehle_hesitant' } },
+      { label: 'Weiter.', to: 'ch8_network_confirmed', showIf: { flag: 'koenigsmuehle_ally' } },
+    ]
+  },
+
+  ch8_network_confirmed: {
+    text: [
+      { narrator: 'Kein Beschluss nötig, keine Abstimmung — nur ein kurzer Blick durch den Raum und Elenas trockenes Fazit: "Das Netz steht. Weiter im Programm."' }
+    ],
+    onEnter: { flags: ['network_alive'] },
+    next: 'ch8_elena_moment'
+  },
+
+  ch8_join_late: {
+    text: [
+      { speaker: 'Elena', line: '"Gut. Besser spät und überzeugt als früh und halbherzig."' },
+      { narrator: 'Sie holt eine Sicherheitsmarke aus der Schublade — dasselbe gestanzte Blech, das sie beim ersten Treffen angeboten hatte — und legt sie diesmal ohne Kommentar auf den Tisch. Manche Angebote werden besser, wenn man sie zweimal machen muss.' }
+    ],
+    onEnter: { flags: ['network_alive'], items: ['sicherheitsmarke'] },
+    next: 'ch8_elena_moment'
+  },
+
+  ch8_stay_independent: {
+    text: [
+      { speaker: 'Elena', line: '"Eigenständig, aber als Freunde. Weißt du, vor einem Monat hätte ich das für eine höfliche Absage gehalten. Heute weiß ich, dass ihr gekommen seid, als es darauf ankam — ohne Vertrag, ohne Marke. Vielleicht ist das die bessere Sorte Bündnis."' },
+      { narrator: 'Es ist keine Enttäuschung in ihrer Stimme. Eher etwas wie Respekt für eine Entscheidung, die sie selbst nicht getroffen hätte.' }
+    ],
+    onEnter: { flags: ['network_independent'] },
+    next: 'ch8_elena_moment'
+  },
+
+  ch8_elena_moment: {
+    chapter: 'KAPITEL 8 — NACH DEM STURM',
+    location: 'AM NORDZAUN, ABENDS',
+    text: [
+      { narrator: 'Am Abend findest du Elena am Nordzaun, an der Stelle, wo vor zwei Nächten die Kundschafter standen. Sie repariert nichts, bewacht nichts. Sie steht nur da.' },
+      { speaker: 'Elena', line: '"Bei meiner ersten Siedlung gab es auch so eine Nacht. Nur dass am Morgen danach nichts mehr zu reparieren war. Ich hab drei Jahre gebraucht, um zu verstehen, dass ich seitdem nicht Siedlungen baue, sondern Festungen."' },
+      { narrator: 'Sie dreht sich zu dir, und zum ersten Mal, seit du sie kennst, sieht sie nicht müde aus.' },
+      { speaker: 'Elena', line: '"Diese Nacht war anders. Nicht, weil der Zaun gehalten hat. Sondern weil zum ersten Mal jemand von außen mitgehalten hat. Das ist der Unterschied zwischen einer Festung und einem Zuhause: Bei einem Zuhause hilft die Nachbarschaft."' }
+    ],
+    next: 'ch8_map_found'
+  },
+
+  ch8_map_found: {
+    chapter: 'KAPITEL 8 — NACH DEM STURM',
+    location: 'FUNKRAUM, SPÄTER ABEND',
+    text: [
+      { narrator: 'Der Fund des Abends kommt mit dem zweiten Läufer vom Silo: Henrik schickt, als Zeichen guten Willens, eine Kiste mit Dingen, "die wir genommen haben und nicht brauchen können". Zuoberst, sorgfältig gefaltet: eine Karte.', showIf: { flag: 'sammler_deal' } },
+      { narrator: 'Der Fund des Abends stammt aus der Senke: Eine Patrouille hat das aufgegebene vorgeschobene Lager der Sammler durchsucht — und zwischen nassen Decken und leeren Konserven lag, in Wachstuch gewickelt, eine Karte.', showIf: { flag: 'sammler_deal', invert: true } },
+      { narrator: 'Es ist keine Straßenkarte. Das Papier ist behördengrau, der Aufdruck nüchtern, und über das ganze Land verteilt: kleine Dreiecke mit Nummern, verbunden durch dünne, gerade Linien. Wie ein Spinnennetz, das jemand mit dem Lineal gezogen hat.' },
+      { narrator: 'Und mitten im Netz, dort wo die meisten Linien zusammenlaufen, ein Symbol, das nur einmal vorkommt: ein Doppelkreis, daneben zwei Buchstaben. <span class="hl">LS</span>.' },
+      { narrator: 'Ihr lest Shini die Nummern über Funk vor, eine nach der anderen, mehr aus Ratlosigkeit als aus Plan. Bei der zwölften wird es still auf der Frequenz. Sehr still.' },
+      { speaker: 'Shini', line: '"...Lest mir die Zwölf noch mal vor. Die Position." Eine Pause, in der man ihn schlucken hört. "Das ist mein Relais. Ich sitze seit drei Jahren auf Station zwölf von irgendwas — und ich hatte keine Ahnung."' }
+    ],
+    onEnter: { flags: ['found_map'] },
+    next: 'ch8_chapter_end'
+  },
+
+  ch8_chapter_end: {
+    type: 'end',
+    badge: 'ENDE KAPITEL 8',
+    title: 'NACH DEM STURM',
+    text: 'Ein repariertes Dach, ein längerer Tisch, ein Netz, das gehalten hat. Und auf dem Tisch im Funkraum: eine behördengraue Karte, die behauptet, dass alles, was ihr bisher aufgebaut habt, nur die Randbezirke von etwas viel Größerem sind.',
+    nextChapter: 'ch9_intro'
+  },
+
+  /* ══════════════════════════════════════════════════════
+     KAPITEL 9 — "DIE KARTE"
+     ══════════════════════════════════════════════════════ */
+
+  ch9_intro: {
+    chapter: 'KAPITEL 9 — DIE KARTE',
+    location: 'FUNKRAUM, KÖNIGSMÜHLE, AM NÄCHSTEN TAG',
+    text: [
+      { narrator: 'Die Karte liegt ausgebreitet auf dem Tisch, beschwert mit vier Tassen, und Shini ist seit dem Morgen auf der Frequenz — man hört ihn im Hintergrund in Papieren wühlen, die er seit drei Jahren nicht angerührt hat.' },
+      { speaker: 'Shini', line: '"Okay. Ich hab\'s. In meinem Relais hängt ein laminierter Aushang, den ich immer für Deko gehalten habe. \'Ersatzfunknetz — Betriebsanweisung im Krisenfall.\' Die Dreiecke auf eurer Karte sind Stationen. Alte Notfall-Infrastruktur, gebaut für den Fall, dass alles andere ausfällt. Der Fall ist dann ja auch eingetreten — nur hat offenbar keiner mehr die Anweisung gelesen."' },
+      { speaker: 'Shini', line: '"Mein Wetterdienst-Relais ist Station zwölf. Und jetzt haltet euch fest: Euer Sendeturm — der im Osten, mit dem alles angefangen hat — müsste nach den Koordinaten Station <span class=\'hl\'>neun</span> sein. Deswegen die Funkkristall-Technik. Das war nie ein normaler Fernsehturm."' }
+    ],
+    next: 'ch9_key_reveal'
+  },
+
+  ch9_key_reveal: {
+    chapter: 'KAPITEL 9 — DIE KARTE',
+    text: [
+      { speaker: 'Shini', line: '"Und noch was, das steht hier im Kleingedruckten und ist das Bürokratischste, was ich je gehört habe: <span class=\'hl\'>Einheitsschließung</span>. Alle Wartungszugänge des Netzes haben dasselbe Schloss. Ein Schlüssel, alle Stationen. Die deutsche Verwaltung hat den Weltuntergang überlebt, Leute."' },
+      { narrator: 'Und da fällt es dir wieder ein. Der Technikraum. Der Tisch neben dem Kristall. Der verrostete Schlüssel, den du eingesteckt hast — aus alter Gewohnheit, aus einer Welt, in der Türen noch etwas bedeutet haben.' },
+      { narrator: 'Du legst ihn auf die Karte, genau auf den Doppelkreis mit den zwei Buchstaben. Niemand sagt etwas. Alle rechnen dasselbe.' },
+      { speaker: 'Elena', line: '"LS. Leitstelle. Das Zentrum von dem Ding. Und wir haben womöglich den Schlüssel dazu seit Wochen in der Tasche."' }
+    ],
+    onEnter: { flags: ['key_is_netzschluessel'] },
+    next: 'ch9_verify_choice'
+  },
+
+  ch9_verify_choice: {
+    chapter: 'KAPITEL 9 — DIE KARTE',
+    text: [
+      { speaker: 'Shini', line: '"Bevor jemand losrennt: Das ist eine Theorie, zusammengebaut aus einer geklauten Karte und einem Deko-Aushang. Wenn ihr sichergehen wollt, testet den Schlüssel — Station neun ist einen Tagesmarsch entfernt. Jeder Wartungszugang müsste eine gestanzte Plakette haben. Und wenn der Schlüssel dort passt, passt er überall."' }
+    ],
+    choices: [
+      { label: 'Zum Turm gehen und den Schlüssel testen. Gewissheit ist einen Tagesmarsch wert.', to: 'ch9_verify_tower' },
+      { label: 'Shini vertrauen und die Zeit sparen. Die Karte lügt nicht.', to: 'ch9_skip_verify' },
+    ]
+  },
+
+  ch9_verify_tower: {
+    chapter: 'KAPITEL 9 — DIE KARTE',
+    location: 'SENDETURM, STATION NEUN',
+    text: [
+      { narrator: 'Der Turm sieht aus wie immer — rostig, schief, vertraut. Aber diesmal weißt du, wonach du suchst, und findest es innerhalb von Minuten: Am Fuß der Struktur, hinter Gestrüpp und drei Jahren Dreck, eine gestanzte Metallplakette. <span class="hl">ST 9</span>.' },
+      { narrator: 'Darunter, halb im Boden versunken, eine flache Wartungsluke mit einem Schloss, das trotz Rost kompromisslos amtlich aussieht.' },
+      { narrator: 'Der Schlüssel klemmt, widersetzt sich — und dreht sich dann mit einem Knirschen, das wie ein sehr langer Seufzer klingt. Die Luke schwingt auf.' },
+      { narrator: 'Darin: kein Schatz, keine Waffen. Ein wasserdicht verpacktes <span class="hl">Netzhandbuch</span> — Stationsliste, Frequenzpläne, Betriebsprotokolle. Und auf der ersten Seite, in nüchternem Behördendeutsch, ein Satz, der in dieser Welt wie Poesie klingt: "Das Netz ist so ausgelegt, dass es von einer einzelnen eingewiesenen Person wieder in Betrieb genommen werden kann."' },
+      { speaker: 'Mira', line: '"Von einer einzelnen Person. Die haben das Ding für genau diese Situation gebaut. Für Leute wie uns, nach einem Tag wie damals."', showIf: { flag: 'tobias_joined' } }
+    ],
+    onEnter: { flags: ['verified_station'], items: ['netzhandbuch'] },
+    next: 'ch9_debate'
+  },
+
+  ch9_skip_verify: {
+    chapter: 'KAPITEL 9 — DIE KARTE',
+    text: [
+      { narrator: 'Ihr entscheidet euch gegen den Umweg. Die Karte, der Aushang, die Kristall-Technik im Turm — es passt alles zusammen, und Zeit ist das Einzige, wovon niemand hier zu viel hat.' },
+      { speaker: 'Shini', line: '"Mutig. Oder faul. Ich protokolliere: Die Expedition startet auf Basis von Deko. Nur damit das festgehalten ist, wenn ihr vor einer Tür steht, in der der Schlüssel nicht dreht."' }
+    ],
+    next: 'ch9_debate'
+  },
+
+  ch9_debate: {
+    chapter: 'KAPITEL 9 — DIE KARTE',
+    location: 'KÖNIGSMÜHLE, ABENDS AM LANGEN TISCH',
+    text: [
+      { narrator: 'Am Abend liegt die Karte in der Mitte des langen Tisches, und um sie herum die Frage, die niemand als Erster aussprechen will. Elena tut es dann doch.' },
+      { speaker: 'Elena', line: '"Die Leitstelle ist eine gute Woche Fußmarsch entfernt, durch Gegend, die keiner von uns kennt. Wenn das Ding funktioniert, reden wir nicht mehr über drei Dörfer und ein Silo. Wir reden über Regionen. Und wenn es eine Ruine ist, haben wir eine Woche und wer weiß was riskiert — für Behörden-Poesie."' },
+      { speaker: 'Tobias', line: '"Wir haben einen halb toten Sendeturm mit einem Fahrradkristall wiederbelebt. Sag mir nicht, dass wir vor der Luxusausgabe Angst haben."', showIf: { flag: 'tobias_joined' } },
+      { speaker: 'Rosa', line: '"Ich hab drei Jahre neben einem Generator gesessen und auf Stimmen gewartet. Jetzt liegt da eine Karte, auf der steht, wo die Stimmen wohnen. Ich sag nur: Ich bin zu alt, um so zu tun, als wäre ich nicht neugierig."', showIf: { flag: 'rosa_companion' } },
+      { speaker: 'Finn', line: '"Ich kenne die Gegend Richtung Hügel ein Stück weit — wir haben da früher... gesammelt. Der Weg ist machbar. Nicht schön, aber machbar."', showIf: { flag: 'helped_finn' } }
+    ],
+    next: 'ch9_henrik_thread'
+  },
+
+  ch9_henrik_thread: {
+    chapter: 'KAPITEL 9 — DIE KARTE',
+    text: [
+      { narrator: 'Der Läufer vom Silo bringt an diesem Abend nicht nur die zweite Tauschliste, sondern eine Nachricht von Henrik persönlich — drei Sätze, in harter, alter Handschrift: "Den Doppelkreis auf eurer Karte hab ich schon mal gesehen. Vor zwei Jahren ist eine Gruppe aus dem Süden losgezogen, ihn zu suchen. Es ist nie jemand zurückgekommen."', showIf: { flag: 'sammler_deal' } },
+      { narrator: 'Von den Neuen kommt an diesem Abend eine Nachricht, die niemand bestellt hat: Henrik ist nach dem Sturm mit dem harten Kern nach Norden gezogen — aber eine Splittergruppe hat sich abgesetzt. Richtung Hügel. Richtung Doppelkreis. Offenbar habt nicht nur ihr die Karte gelesen, bevor sie in der Senke liegen blieb.', showIf: { flag: 'sammler_refugees', notFlag: 'sammler_deal' } },
+      { narrator: 'Die drei, die ihr im Morgengrauen weggeschickt habt, haben der Torwache zum Abschied noch etwas erzählt — als Dank für die Decken, vielleicht: Henrik zieht mit dem harten Kern nach Norden. Aber eine Splittergruppe hat sich abgesetzt, Richtung Hügel. Richtung Doppelkreis. Offenbar habt nicht nur ihr die Karte gelesen, bevor sie in der Senke liegen blieb.', showIf: { flag: 'refugees_turned_away', notFlag: 'sammler_deal' } },
+      { narrator: 'Die Stille am Tisch hat plötzlich eine andere Qualität. Es geht nicht mehr darum, ob die Leitstelle das Risiko wert ist. Es geht darum, dass die Frage vielleicht gerade jemand anderes beantwortet.' }
+    ],
+    onEnter: { flags: ['leitstelle_contested'] },
+    next: 'ch9_expedition_choice'
+  },
+
+  ch9_expedition_choice: {
+    chapter: 'KAPITEL 9 — DIE KARTE',
+    text: [
+      { speaker: 'Elena', line: '"Also gut. Wir gehen. Die Frage ist nur noch: wie."' }
+    ],
+    choices: [
+      { label: 'Als Netz: mit Unterstützung aus allen Orten, Nachschub, Funkkette über Shini.', to: 'ch9_full_backing', showIf: { flag: 'network_alive' } },
+      { label: 'Klein und leise: eine Handvoll Leute, schnell und unauffällig.', to: 'ch9_small_team' },
+    ]
+  },
+
+  ch9_full_backing: {
+    text: [
+      { narrator: 'Das Netz, das in der Sturmnacht seinen ersten Test bestanden hat, bekommt seine erste echte Aufgabe: Rattenbach stellt Vorräte, das Silo Werkzeug und zwei Läufer, der Turm hält Station neun besetzt — und Shini wird die Funkkette, die euch mit allem verbindet, was hinter euch liegt.' },
+      { speaker: 'Shini', line: '"Ich hab mein Relais drei Jahre lang für einen Ruhestandsposten gehalten. Jetzt bin ich Rückgrat einer Expedition. Ich hätte gern eine Gehaltserhöhung, zahlbar in Kaffee."' }
+    ],
+    onEnter: { flags: ['expedition_full_backing'] },
+    next: 'ch9_shini_warning'
+  },
+
+  ch9_small_team: {
+    text: [
+      { narrator: 'Klein und leise also — eine Handvoll Leute, leichtes Gepäck, kein Nachschub, der verraten könnte, woher ihr kommt. Was ihr an Sicherheit aufgebt, gewinnt ihr an Tempo. Hoffentlich.' },
+      { speaker: 'Elena', line: '"Ich bleibe hier. Nicht, weil ich nicht will — sondern weil Königsmühle nicht zweimal in einem Monat ohne Kopf dastehen darf. Aber ihr nehmt das Beste mit, was wir haben. Und ihr meldet euch. Jeden Abend."' }
+    ],
+    onEnter: { flags: ['expedition_small_team'] },
+    next: 'ch9_shini_warning'
+  },
+
+  ch9_shini_warning: {
+    chapter: 'KAPITEL 9 — DIE KARTE',
+    location: 'FUNKRAUM, SPÄT IN DER NACHT',
+    text: [
+      { narrator: 'Die Vorbereitungen laufen bis in die Nacht. Kurz bevor du dich hinlegst, knackt das Funkgerät ein letztes Mal — Shini, und seine Stimme hat wieder diesen Ton aus der Sturmnacht. Der ohne Ironie.' },
+      { speaker: 'Shini', line: '"Eine Sache noch, bevor ihr morgen loszieht. Heute Nacht sind Leute an meinem Relais vorbeigezogen. Zu Fuß, gutes Tempo, kein Licht. Ich hab sie nur gehört — Richtung Hügel. Richtung Leitstelle."' },
+      { speaker: 'Shini', line: '"Was auch immer da draußen in dem Bunker wartet: Ihr seid nicht mehr die Einzigen, die es suchen. Schlaft gut. Falls das nach dieser Info noch geht."' }
+    ],
+    next: 'ch9_chapter_end'
+  },
+
+  ch9_chapter_end: {
+    type: 'end',
+    badge: 'ENDE KAPITEL 9',
+    title: 'DIE KARTE',
+    text: 'Ein Schlüssel, der in ein amtliches Schloss passt. Ein Handbuch, das behauptet, eine einzige Person könne das Netz wiederbeleben. Und irgendwo auf dem Weg zur Leitstelle: Schritte im Dunkeln, die dasselbe Ziel haben. Morgen früh beginnt der weiteste Weg seit dem Zusammenbruch. Kapitel 10 folgt bald.'
   },
 
 };
