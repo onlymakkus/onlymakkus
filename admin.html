@@ -189,7 +189,7 @@
         <div>
           <p style="font-size:.7rem;color:var(--muted);line-height:2;">
             <strong style="color:var(--cream)">Punktesystem:</strong><br>
-            🥇 10 Pts · 🥈 7 Pts · 🥉 5 Pts · 4. Platz 3 Pts · Ziel erreicht 3 Pts · Teilnahme 1 Pt · unter 25% → immer nur 1 Pt<br>
+            🥇 Teilnahme 1 Pt · pro 10% Fortschritt +1 Pt · Platz 1 +5 Pts · Platz 2 +3 Pts · Platz 3 +2 Pts<br>
             Dezember: alles ×2<br><br>
             <strong style="color:var(--cream)">Hinweis:</strong><br>
             Änderungen hier wirken sich direkt auf die Live-Datenbank aus. Bei Unsicherheit lieber vorsichtig sein — es gibt kein automatisches Backup.
@@ -266,12 +266,11 @@
     try{
       const data=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${challenge}&select=*&order=value1.desc`);
       if(!data||!data.length){wrap.innerHTML='<div class="empty">Keine Einträge für diese Challenge.</div>';return}
-      let html='<table><tr><th>Name</th><th>Wert 1</th><th>Wert 2</th><th>PIN gesetzt</th><th>Aktionen</th></tr>';
+      let html='<table><tr><th>Name</th><th>Wert</th><th>PIN gesetzt</th><th>Aktionen</th></tr>';
       data.forEach(e=>{
         html+=`<tr data-id="${e.id}">
           <td>${e.name}</td>
           <td><input type="number" value="${e.value1}" class="edit-v1"></td>
-          <td><input type="number" value="${e.value2}" class="edit-v2"></td>
           <td>${e.pin_hash?'✓ ja':'— nein'}</td>
           <td class="row-actions">
             <button class="btn" onclick="saveEntry(${e.id})">Speichern</button>
@@ -288,9 +287,8 @@
   window.saveEntry=async(id)=>{
     const row=document.querySelector(`tr[data-id="${id}"]`);
     const v1=parseInt(row.querySelector('.edit-v1').value)||0;
-    const v2=parseInt(row.querySelector('.edit-v2').value)||0;
     try{
-      await sbFetch(`/rest/v1/challenge_entries?id=eq.${id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({value1:v1,value2:v2})});
+      await sbFetch(`/rest/v1/challenge_entries?id=eq.${id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({value1:v1})});
       showMsg('✓ Eintrag aktualisiert','ok');
       loadEntries();
     }catch(e){showMsg('❌ Fehler beim Speichern','err')}

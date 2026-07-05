@@ -84,11 +84,11 @@
     <h1 class="page-title">SAISON<span> RANKING</span></h1>
     <div class="points-box">
       <div class="pts-label">Punkte:</div>
-      <div class="pts-item">🥇 <strong>10</strong> Pts</div>
-      <div class="pts-item">🥈 <strong>7</strong> Pts</div>
-      <div class="pts-item">🥉 <strong>5</strong> Pts</div>
-      <div class="pts-item">4. <strong>3</strong> Pts</div>
-      <div class="pts-item">Ziel erreicht <strong>3</strong> Pts</div><div class="pts-item">Teilnahme <strong>1</strong> Pt</div><div class="pts-item" style="color:var(--muted)">unter 25% → immer <strong style="color:var(--muted)">1</strong> Pt</div>
+      <div class="pts-item">Teilnahme <strong>1</strong> Pt</div>
+      <div class="pts-item">pro 10% Fortschritt <strong>+1</strong> Pt</div>
+      <div class="pts-item">🥇 Platz 1 <strong>+5</strong> Pts</div>
+      <div class="pts-item">🥈 Platz 2 <strong>+3</strong> Pts</div>
+      <div class="pts-item">🥉 Platz 3 <strong>+2</strong> Pts</div>
       <div class="pts-item" style="color:#c084fc">🎄 Dez. ×2</div>
     </div>
     <div class="season-grid">
@@ -138,7 +138,7 @@
 
   async function init(){await checkAndFinalizeChallenge();renderHallOfFame();renderSeasonRanking()}
 
-  const POINTS_MAP=[10,7,5,3],POINTS_GOAL=3,POINTS_PART=1,DEC_MULTIPLIER=2;
+  const PLACEMENT_BONUS=[5,3,2],PARTICIPATION_PTS=1,PROGRESS_STEP_PTS=1,PROGRESS_STEP_SIZE=0.10,DEC_MULTIPLIER=2;
   function slugify(name){return name.toLowerCase().replace(/[^a-z0-9]+/g,'').trim()}
   const MONTH_LABELS={1:'Januar',2:'Februar',3:'März',4:'April',5:'Mai',6:'Juni',7:'Juli',8:'August',9:'September',10:'Oktober',11:'November',12:'Dezember'};
 
@@ -159,19 +159,14 @@
       const entries=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${challengeId}&select=*`);
       if(!entries||!entries.length)return;
       const isDecChallenge=lastMonth===12;
-      entries.sort((a,b)=>{const aT=a.value1+a.value2,bT=b.value1+b.value2;if(bT!==aT)return bT-aT;return(a.completed_ts||Infinity)-(b.completed_ts||Infinity)});
+      entries.sort((a,b)=>{if(b.value1!==a.value1)return b.value1-a.value1;return(a.completed_ts||Infinity)-(b.completed_ts||Infinity)});
       for(let i=0;i<entries.length;i++){
         const e=entries[i];
-        if(!(e.value1>0||e.value2>0))continue;
-        const totalVal=e.value1+(e.value2||0);
-        const maxVal=(goal||60)*(rows[0].exercises?.default_dual?2:1);
-        const pct=totalVal/maxVal;
-        const goalReached=pct>=1;
-        const aboveThreshold=pct>=0.25;
-        let pts;
-        if(!aboveThreshold){pts=POINTS_PART;}
-        else if(i<POINTS_MAP.length){pts=POINTS_MAP[i];}
-        else{pts=goalReached?POINTS_GOAL:POINTS_PART;}
+        if(!(e.value1>0))continue;
+        const pct=Math.min(1,e.value1/(goal||60));
+        const progressSteps=Math.floor(pct/PROGRESS_STEP_SIZE);
+        let pts=PARTICIPATION_PTS+(progressSteps*PROGRESS_STEP_PTS);
+        if(i<PLACEMENT_BONUS.length)pts+=PLACEMENT_BONUS[i];
         if(isDecChallenge)pts*=DEC_MULTIPLIER;
         const rank=i+1;
         await sbFetch('/rest/v1/season_results',{method:'POST',prefer:'return=minimal',body:JSON.stringify({challenge:challengeId,name:e.name,rank,points:pts})});

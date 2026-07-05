@@ -50,7 +50,7 @@
     .active-video-text{font-size:.66rem;color:var(--muted);line-height:1.6}
 
     .lb-table{display:flex;flex-direction:column;gap:2px;margin-bottom:32px}
-    .lb-row{display:grid;grid-template-columns:44px 1fr 70px 70px 1fr 90px;gap:8px;align-items:center;padding:16px 20px;background:var(--card2)}
+    .lb-row{display:grid;grid-template-columns:44px 1fr 70px 1fr 90px;gap:8px;align-items:center;padding:16px 20px;background:var(--card2)}
     .lb-row.lb-header{background:transparent;padding:6px 20px}
     .lb-rank{font-family:'Bebas Neue';font-size:1.2rem}
     .lb-name{font-size:.82rem}
@@ -66,6 +66,10 @@
     .lb-empty{padding:40px;text-align:center;font-size:.72rem;color:#444;font-style:italic;background:var(--card2)}
 
     .pin-info{background:var(--card);border:1px solid var(--border);padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:center}
+    .points-info{background:var(--card);border:1px solid var(--border);padding:12px 16px;margin-top:16px;display:flex;gap:10px;align-items:flex-start}
+    .points-info-icon{font-size:1rem;flex-shrink:0}
+    .points-info-text{font-size:.62rem;color:var(--muted);line-height:1.6}
+    .points-info-text strong{color:var(--orange);font-weight:600}
     .pin-info-icon{font-size:1rem;flex-shrink:0}
     .pin-info-text{font-size:.62rem;color:var(--muted);line-height:1.6}
     .pin-info-text strong{color:var(--orange);font-weight:600}
@@ -85,7 +89,7 @@
     .form-msg.err{color:#ff4444}
     footer{padding:32px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
     footer a{color:var(--muted);text-decoration:none}
-    @media(max-width:600px){.lb-row{grid-template-columns:36px 1fr 56px 56px}.lb-prog,.lb-status{display:none}}
+    @media(max-width:600px){.lb-row{grid-template-columns:36px 1fr 56px}.lb-prog,.lb-status{display:none}}
   </style>
 </head>
 <body>
@@ -108,8 +112,7 @@
       <div class="lb-row lb-header">
         <div class="lb-head">#</div>
         <div class="lb-head" style="text-align:left">Name</div>
-        <div class="lb-head" id="lh1">Wert 1</div>
-        <div class="lb-head" id="lh2">Wert 2</div>
+        <div class="lb-head" id="lh1">Wert</div>
         <div class="lb-head">Fortschritt</div>
         <div class="lb-head">Status</div>
       </div>
@@ -124,14 +127,17 @@
       <p class="form-title">// Zeit eintragen</p>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="fName" placeholder="Dein Name"></div>
-        <div class="form-group"><label class="form-label" id="fl1Label">Wert 1</label><input type="number" class="form-input" id="fLeft" placeholder="10" min="0"></div>
-        <div class="form-group" id="fl2Group"><label class="form-label" id="fl2Label">Wert 2</label><input type="number" class="form-input" id="fRight" placeholder="10" min="0"></div>
+        <div class="form-group"><label class="form-label" id="fl1Label">Wert</label><input type="number" class="form-input" id="fLeft" placeholder="10" min="0"></div>
         <div class="form-group"><label class="form-label">PIN</label><input type="password" class="form-input" id="fPin" placeholder="••••" maxlength="4" inputmode="numeric" pattern="[0-9]*"></div>
         <div class="form-group"><label class="form-label">&nbsp;</label><button class="form-btn" id="submitBtn">Eintragen →</button></div>
       </div>
       <input type="text" id="fWebsite" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
       <p class="form-msg" id="formMsg"></p>
       <p style="margin-top:8px;font-size:.58rem;color:var(--muted)">Neuer Name → PIN wird neu festgelegt. Bestehender Name → richtige PIN nötig.</p>
+    </div>
+    <div class="points-info">
+      <span class="points-info-icon">💡</span>
+      <div class="points-info-text"><strong>Punkte-System:</strong> 1 Pt fürs Mitmachen, +1 Pt pro erreichten 10%-Fortschritt (bis zu 10 Pts). Zusätzlich: Platz 1 = +5 Pts, Platz 2 = +3 Pts, Platz 3 = +2 Pts.</div>
     </div>
   </main>
 
@@ -182,10 +188,7 @@
         id:slugify(ex.name),
         label:ex.name,
         goal:row.custom_goal||ex.default_goal,
-        dual:ex.default_dual,
         unit:ex.default_unit,
-        l1:ex.default_dual?'Links':'Gesamt',
-        l2:ex.default_dual?'Rechts':'',
         tips:[
           ex.level_beginner?['🟢 Anfänger',ex.level_beginner]:null,
           ex.level_intermediate?['🟡 Fortgeschritten',ex.level_intermediate]:null,
@@ -207,17 +210,10 @@
     const ok=await loadActiveChallenge();
     if(!ok)return;
     document.getElementById('pageTitle').innerHTML=ACTIVE.label.toUpperCase();
-    document.getElementById('pageSub').textContent=`Ziel: ${GOAL} ${ACTIVE.unit} ${ACTIVE.dual?'pro Seite':'gesamt'}`;
+    document.getElementById('pageSub').textContent=`Ziel: ${GOAL} ${ACTIVE.unit} gesamt`;
     document.getElementById('chTips').innerHTML=ACTIVE.tips.map(([label,text])=>`<div class="active-tip"><div class="active-tip-label">${label}</div><div class="active-tip-text">${text}</div></div>`).join('')+(ACTIVE.videoUrl?`<a href="${ACTIVE.videoUrl}" target="_blank" rel="noopener" class="active-video"><div class="active-video-label">🎥 Video-Anleitung</div><div class="active-video-text">Zur Übungsausführung ansehen →</div></a>`:'');
-    document.getElementById('fl1Label').textContent=ACTIVE.l1+' ('+ACTIVE.unit+')';
-    document.getElementById('lh1').textContent=ACTIVE.l1;
-    if(ACTIVE.dual){
-      document.getElementById('fl2Label').textContent=ACTIVE.l2+' ('+ACTIVE.unit+')';
-      document.getElementById('lh2').textContent=ACTIVE.l2;
-    } else {
-      document.getElementById('fl2Group').style.display='none';
-      document.getElementById('lh2').style.display='none';
-    }
+    document.getElementById('fl1Label').textContent='Wert ('+ACTIVE.unit+')';
+    document.getElementById('lh1').textContent='Fortschritt';
     renderLeaderboard();
   }
 
@@ -231,8 +227,7 @@
     catch(e){loading.textContent='⚠ Fehler beim Laden.';return}
 
     data.sort((a,b)=>{
-      const aT=a.value1+a.value2,bT=b.value1+b.value2;
-      if(bT!==aT)return bT-aT;
+      if(b.value1!==a.value1)return b.value1-a.value1;
       return (a.completed_ts||Infinity)-(b.completed_ts||Infinity);
     });
 
@@ -240,15 +235,11 @@
     if(!data.length){const el=document.createElement('div');el.className='lb-empty';el.textContent='Noch niemand dabei — sei der Erste! 💪';table.appendChild(el);return}
 
     data.forEach((e,i)=>{
-      const v1done=e.value1>=GOAL;
-      const v2done=ACTIVE.dual?e.value2>=GOAL:true;
-      const both=ACTIVE.dual?v1done&&v2done:v1done;
-      const total=ACTIVE.dual?Math.round(((e.value1+e.value2)/(GOAL*2))*100):Math.round((e.value1/GOAL)*100);
-      const pct=Math.min(100,total);
+      const done=e.value1>=GOAL;
+      const pct=Math.min(100,Math.round((e.value1/GOAL)*100));
       const rc=i===0?'var(--gold)':i===1?'var(--silver)':i===2?'var(--bronze)':'var(--muted)';
-      const v2cell=ACTIVE.dual?`<div class="lb-val ${v2done?'done':''}">${e.value2}${ACTIVE.unit}${v2done?' ✓':''}</div>`:`<div class="lb-val" style="opacity:.2">—</div>`;
       const row=document.createElement('div');row.className='lb-row';
-      row.innerHTML=`<div class="lb-rank" style="color:${rc}">${medals[i]||'#'+(i+1)}</div><div class="lb-name">${e.name}</div><div class="lb-val ${v1done?'done':''}">${e.value1}${ACTIVE.unit}${v1done?' ✓':''}</div>${v2cell}<div class="lb-prog"><div class="lb-bar"><div class="lb-fill" style="width:${pct}%"></div></div><span class="lb-pct">${pct}%</span></div><div class="lb-status">${both?'🏆 Fertig!':e.value1>0||e.value2>0?'🔥 dabei':'—'}</div>`;
+      row.innerHTML=`<div class="lb-rank" style="color:${rc}">${medals[i]||'#'+(i+1)}</div><div class="lb-name">${e.name}</div><div class="lb-val ${done?'done':''}">${e.value1}${ACTIVE.unit}${done?' ✓':''}</div><div class="lb-prog"><div class="lb-bar"><div class="lb-fill" style="width:${pct}%"></div></div><span class="lb-pct">${pct}%</span></div><div class="lb-status">${done?'🏆 Fertig!':e.value1>0?'🔥 dabei':'—'}</div>`;
       table.appendChild(row);
     });
   }
@@ -262,15 +253,14 @@
     if(website)return; // honeypot triggered — silently drop, no feedback to bot
     const name=document.getElementById('fName').value.trim();
     const v1=Math.max(0,parseInt(document.getElementById('fLeft').value)||0);
-    const v2=ACTIVE.dual?Math.max(0,parseInt(document.getElementById('fRight').value)||0):0;
     const pin=document.getElementById('fPin').value.trim();
     const msg=document.getElementById('formMsg');
 
     if(Date.now()-pageLoadTime<1500){msg.textContent='⚠ Bitte kurz warten und erneut versuchen';msg.className='form-msg err';return}
     if(!name){msg.textContent='⚠ Bitte Namen eingeben';msg.className='form-msg err';return}
-    if(!v1&&!v2){msg.textContent='⚠ Mindestens einen Wert eingeben';msg.className='form-msg err';return}
+    if(!v1){msg.textContent='⚠ Bitte einen Wert eingeben';msg.className='form-msg err';return}
     if(!/^\d{4}$/.test(pin)){msg.textContent='⚠ PIN muss 4 Ziffern haben';msg.className='form-msg err';return}
-    if(v1>10000||v2>10000){msg.textContent='⚠ Wert außerhalb des möglichen Bereichs';msg.className='form-msg err';return}
+    if(v1>10000){msg.textContent='⚠ Wert außerhalb des möglichen Bereichs';msg.className='form-msg err';return}
 
     const btn=document.getElementById('submitBtn');
     btn.textContent='Speichern…';btn.disabled=true;
@@ -285,25 +275,24 @@
           msg.textContent='❌ Falsche PIN für diesen Namen!';msg.className='form-msg err';
           btn.textContent='Eintragen →';btn.disabled=false;return;
         }
-        const wasNotDone=ACTIVE.dual?!(prev.value1>=GOAL&&prev.value2>=GOAL):!(prev.value1>=GOAL);
+        const wasNotDone=!(prev.value1>=GOAL);
         const newV1=Math.min(GOAL,prev.value1+v1);
-        const newV2=ACTIVE.dual?Math.min(GOAL,prev.value2+v2):0;
-        const isDone=ACTIVE.dual?newV1>=GOAL&&newV2>=GOAL:newV1>=GOAL;
-        const patch={value1:newV1,value2:newV2,pin_hash:hashPin(pin)};
+        const isDone=newV1>=GOAL;
+        const patch={value1:newV1,pin_hash:hashPin(pin)};
         if(wasNotDone&&isDone)patch.completed_ts=Date.now();
         await sbFetch(`/rest/v1/challenge_entries?id=eq.${prev.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(patch)});
         const reactions=['💪 Aktualisiert! Schmerz ist temporär, Ruhm ist ewig.','🔥 Gespeichert! Das Ranking zittert.','😤 Update durch! Zeig ihnen was du drauf hast.','🏆 Eingetragen! Du bist auf dem richtigen Weg. Wahrscheinlich.','⚡ Gespeichert! Jemand im Ranking wird gerade nervös.'];
       msg.textContent=reactions[Math.floor(Math.random()*reactions.length)];msg.className='form-msg ok';
       } else {
-        const newV1=Math.min(GOAL,v1),newV2=ACTIVE.dual?Math.min(GOAL,v2):0;
-        const isDone=ACTIVE.dual?newV1>=GOAL&&newV2>=GOAL:newV1>=GOAL;
-        const entry={challenge:ACTIVE.id,name,value1:newV1,value2:newV2,pin_hash:hashPin(pin)};
+        const newV1=Math.min(GOAL,v1);
+        const isDone=newV1>=GOAL;
+        const entry={challenge:ACTIVE.id,name,value1:newV1,value2:0,pin_hash:hashPin(pin)};
         if(isDone)entry.completed_ts=Date.now();
         await sbFetch('/rest/v1/challenge_entries',{method:'POST',prefer:'return=minimal',body:JSON.stringify(entry)});
         const firstReactions=['🎉 Willkommen im Club der Leidenden!','💀 Eingetragen! Es gibt kein Zurück mehr.','🔥 Dabei! Dein PIN ist dein Schicksal.','😈 Erster Eintrag! Der Körper wird sich beschweren.','🏅 Eingetragen! PIN merken — oder leiden.'];
         msg.textContent=firstReactions[Math.floor(Math.random()*firstReactions.length)];msg.className='form-msg ok';
       }
-      document.getElementById('fName').value='';document.getElementById('fLeft').value='';document.getElementById('fRight').value='';document.getElementById('fPin').value='';
+      document.getElementById('fName').value='';document.getElementById('fLeft').value='';document.getElementById('fPin').value='';
       await renderLeaderboard();
     }catch(e){msg.textContent='❌ Fehler: '+e.message;msg.className='form-msg err'}
     btn.textContent='Eintragen →';btn.disabled=false;

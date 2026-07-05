@@ -234,7 +234,7 @@
       const data=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${challengeId}&select=*`);
       document.getElementById('ms-count').textContent=data?data.length:0;
       if(data&&data.length){
-        const sorted=[...data].sort((a,b)=>(b.value1+b.value2)-(a.value1+a.value2));
+        const sorted=[...data].sort((a,b)=>b.value1-a.value1);
         document.getElementById('ms-leader').textContent=sorted[0].name;
       } else document.getElementById('ms-leader').textContent='—';
     }catch(e){document.getElementById('ms-count').textContent='—'}
