@@ -13,13 +13,27 @@
     .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
     .cursor.big{width:36px;height:36px}
     [data-theme="light"] .cursor{mix-blend-mode:normal}
-    nav{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+    nav{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);position:relative}
     .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--body-text);text-decoration:none}
     .nav-links{display:flex;gap:20px;align-items:center}
     .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
     .nav-link:hover,.nav-link.active{color:var(--body-text)}
     .theme-toggle{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:transform .2s}
     .theme-toggle:hover{transform:scale(1.1)}
+    .hamburger-btn{display:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--card);align-items:center;justify-content:center;cursor:pointer;font-size:1rem;color:var(--body-text);transition:background .2s}
+    .hamburger-btn:hover{background:var(--card2)}
+    .mobile-menu{display:none;position:absolute;top:100%;right:40px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px;flex-direction:column;gap:2px;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:200}
+    [data-theme="light"] .mobile-menu{box-shadow:0 8px 24px rgba(42,36,32,.12)}
+    .mobile-menu.open{display:flex}
+    .mobile-menu .nav-link{padding:11px 14px;border-radius:8px;opacity:1;color:var(--muted)}
+    .mobile-menu .nav-link:hover{background:var(--card2);color:var(--body-text)}
+    .mobile-menu .nav-link.active{color:var(--orange);font-weight:600}
+    .mobile-theme-row{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-top:1px solid var(--border);margin-top:4px}
+    .mobile-theme-label{font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+    @media(max-width:640px){
+      .nav-links{display:none}
+      .hamburger-btn{display:flex}
+    }
 
     main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
     .page-title{font-family:'Bebas Neue';font-size:clamp(2.5rem,8vw,4.5rem);line-height:.95;text-align:center;margin-bottom:8px}
@@ -87,6 +101,17 @@
     <a class="nav-link" href="kalender.html">Kalender</a>
     <a class="nav-link active" href="uebungen.html">Übungen</a>
     <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
+  </div>
+  <button class="hamburger-btn" id="hamburgerBtn">☰</button>
+  <div class="mobile-menu" id="mobileMenu">
+    <a class="nav-link" href="challenge.html">Challenge</a>
+    <a class="nav-link" href="ranking.html">Ranking</a>
+    <a class="nav-link" href="kalender.html">Kalender</a>
+    <a class="nav-link active" href="uebungen.html">Übungen</a>
+    <div class="mobile-theme-row">
+      <span class="mobile-theme-label">Design</span>
+      <button class="theme-toggle" id="themeToggleMobile" title="Design wechseln">🌙</button>
+    </div>
   </div>
 </nav>
 
@@ -234,15 +259,37 @@
   const THEME_KEY='om_cf_theme';
   const html=document.documentElement;
   const themeToggle=document.getElementById('themeToggle');
+  const themeToggleMobile=document.getElementById('themeToggleMobile');
   function applyTheme(t){
     html.setAttribute('data-theme',t);
-    themeToggle.textContent=t==='dark'?'🌙':'☀️';
+    const icon=t==='dark'?'🌙':'☀️';
+    themeToggle.textContent=icon;
+    if(themeToggleMobile)themeToggleMobile.textContent=icon;
     localStorage.setItem(THEME_KEY,t);
   }
   applyTheme(localStorage.getItem(THEME_KEY)||'dark');
   themeToggle.addEventListener('click',()=>{
     applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark');
   });
+  if(themeToggleMobile){
+    themeToggleMobile.addEventListener('click',()=>{
+      applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark');
+    });
+  }
+
+  const hamburgerBtn=document.getElementById('hamburgerBtn');
+  const mobileMenu=document.getElementById('mobileMenu');
+  if(hamburgerBtn){
+    hamburgerBtn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      mobileMenu.classList.toggle('open');
+    });
+    document.addEventListener('click',(e)=>{
+      if(!mobileMenu.contains(e.target)&&!hamburgerBtn.contains(e.target)){
+        mobileMenu.classList.remove('open');
+      }
+    });
+  }
 
   (async function(){
     await loadActiveChallenge();
