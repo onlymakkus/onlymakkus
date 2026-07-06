@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>onlymakkus.de — CrossFit · Apple-Style Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;700;800&family=Inter:wght@400;500&family=Instrument+Serif:ital@1&display=swap');
+
+  :root{
+    --bg: #FAFAF8;
+    --panel: #FFFFFF;
+    --ink: #14120F;
+    --muted: #6E6A63;
+    --accent: #FF4E1A;
+    --accent-soft: #FFE7DC;
+    --line: rgba(20,18,15,0.08);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  h1,h2,h3{
+    font-family:'Manrope', sans-serif;
+    letter-spacing:-0.03em;
+    font-weight:800;
+  }
+
+  .accent-text{
+    font-family:'Instrument Serif', serif;
+    font-style:italic;
+    font-weight:400;
+    color:var(--accent);
+  }
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:fixed; top:0; left:0; right:0;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 40px;
+    z-index:100;
+    backdrop-filter:blur(12px);
+    background:rgba(250,250,248,0.7);
+    border-bottom:1px solid transparent;
+    transition:border-color .3s ease;
+  }
+  nav.scrolled{ border-bottom:1px solid var(--line); }
+  .logo{ font-family:'Manrope'; font-weight:800; font-size:15px; letter-spacing:-0.01em; }
+  .logo span{ color:var(--accent); }
+  .nav-links{ display:flex; gap:28px; font-size:13px; color:var(--muted); }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    padding:0 24px;
+    position:relative;
+  }
+  .eyebrow{
+    font-size:13px; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase;
+    margin-bottom:18px;
+    opacity:0; transform:translateY(12px);
+    animation:rise .8s ease forwards .1s;
+  }
+  .hero h1{
+    font-size:clamp(42px,8vw,96px);
+    line-height:0.98;
+    max-width:900px;
+    opacity:0; transform:translateY(20px);
+    animation:rise .9s ease forwards .25s;
+  }
+  .hero p{
+    margin-top:24px;
+    font-size:clamp(16px,2vw,20px);
+    color:var(--muted);
+    max-width:520px;
+    opacity:0; transform:translateY(20px);
+    animation:rise .9s ease forwards .45s;
+  }
+  .hero-cta{
+    margin-top:36px;
+    opacity:0; transform:translateY(20px);
+    animation:rise .9s ease forwards .6s;
+  }
+  .btn{
+    display:inline-block;
+    background:var(--ink);
+    color:var(--bg);
+    padding:14px 28px;
+    border-radius:100px;
+    font-size:14px;
+    font-weight:500;
+    text-decoration:none;
+    transition:transform .35s cubic-bezier(.2,.8,.2,1), background .3s ease;
+  }
+  .btn:hover{ background:var(--accent); transform:translateY(-2px); }
+
+  @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
+
+  .scroll-hint{
+    position:absolute; bottom:36px; left:50%; transform:translateX(-50%);
+    font-size:11px; color:var(--muted); letter-spacing:0.1em;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .scroll-hint .line{
+    width:1px; height:40px; background:var(--line);
+    position:relative; overflow:hidden;
+  }
+  .scroll-hint .line::after{
+    content:''; position:absolute; top:-40px; left:0; width:100%; height:100%;
+    background:var(--accent);
+    animation:hint 1.8s ease-in-out infinite;
+  }
+  @keyframes hint{ 50%{ top:0; } 100%{ top:40px; } }
+
+  /* ---------- REVEAL SECTIONS ---------- */
+  .reveal-section{
+    padding:160px 24px;
+    max-width:720px;
+    margin:0 auto;
+  }
+  .reveal-item{
+    opacity:0;
+    transform:translateY(40px);
+    transition:opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1);
+  }
+  .reveal-item.visible{ opacity:1; transform:translateY(0); }
+
+  .reveal-section h2{
+    font-size:clamp(30px,5vw,52px);
+    line-height:1.05;
+    margin-bottom:24px;
+  }
+  .reveal-section p{
+    font-size:18px;
+    line-height:1.6;
+    color:var(--muted);
+    max-width:520px;
+  }
+
+  .stat-row{
+    display:flex; gap:64px; margin-top:56px; flex-wrap:wrap;
+  }
+  .stat{ min-width:120px; }
+  .stat .num{
+    font-family:'Manrope'; font-weight:800; font-size:44px; color:var(--ink);
+  }
+  .stat .label{ font-size:13px; color:var(--muted); margin-top:4px; }
+
+  /* ---------- STICKY SWAP SECTION (signature) ---------- */
+  .sticky-section{
+    position:relative;
+  }
+  .sticky-wrap{
+    display:flex;
+    max-width:1200px;
+    margin:0 auto;
+    padding:0 24px;
+    gap:80px;
+  }
+  .sticky-media{
+    position:sticky;
+    top:0;
+    height:100vh;
+    flex:0 0 44%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .device{
+    width:280px;
+    aspect-ratio:9/18;
+    background:var(--ink);
+    border-radius:36px;
+    padding:12px;
+    box-shadow:0 40px 80px rgba(20,18,15,0.18);
+  }
+  .device-screen{
+    width:100%; height:100%;
+    background:var(--panel);
+    border-radius:26px;
+    overflow:hidden;
+    display:flex; flex-direction:column;
+    position:relative;
+  }
+  .device-screen .bar{
+    height:8px; width:60px; background:rgba(20,18,15,0.15);
+    border-radius:100px; margin:14px auto 0;
+  }
+  .device-panel{
+    flex:1;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:24px;
+    text-align:center;
+    opacity:0;
+    transition:opacity .5s ease;
+    position:absolute; inset:0;
+  }
+  .device-panel.active{ opacity:1; }
+  .device-panel .tag{
+    font-size:11px; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;
+  }
+  .device-panel .num-big{
+    font-family:'Manrope'; font-weight:800; font-size:52px;
+  }
+  .device-panel .desc{
+    font-size:13px; color:var(--muted); margin-top:8px;
+  }
+  .device-panel .dot{
+    width:8px; height:8px; border-radius:50%; background:var(--accent);
+    margin-bottom:10px;
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{ 50%{ opacity:0.3; transform:scale(0.8); } }
+
+  .sticky-track{
+    flex:1;
+    padding:20vh 0;
+  }
+  .track-step{
+    min-height:80vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    opacity:0.25;
+    transition:opacity .4s ease;
+  }
+  .track-step.active{ opacity:1; }
+  .track-step .step-eyebrow{
+    font-size:12px; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;
+    font-weight:500;
+  }
+  .track-step h3{
+    font-size:clamp(24px,3.5vw,38px);
+    margin-bottom:14px;
+    line-height:1.1;
+  }
+  .track-step p{
+    font-size:16px; color:var(--muted); line-height:1.6; max-width:400px;
+  }
+
+  /* ---------- MARQUEE (kept, restrained) ---------- */
+  .marquee{
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    padding:24px 0;
+    overflow:hidden;
+    white-space:nowrap;
+    margin:0;
+  }
+  .marquee-track{
+    display:inline-block;
+    animation:scroll-left 22s linear infinite;
+    font-family:'Manrope'; font-weight:700; font-size:15px;
+    color:var(--muted); letter-spacing:0.02em;
+  }
+  .marquee-track span{ margin:0 28px; }
+  .marquee-track span.hl{ color:var(--accent); }
+  @keyframes scroll-left{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+
+  /* ---------- CLOSING ---------- */
+  .closing{
+    min-height:70vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:80px 24px;
+  }
+  .closing h2{
+    font-size:clamp(32px,6vw,64px);
+    max-width:700px;
+    line-height:1.05;
+  }
+  .closing p{
+    margin-top:20px; color:var(--muted); font-size:17px;
+  }
+
+  footer{
+    text-align:center; padding:32px; font-size:12px; color:var(--muted);
+    border-top:1px solid var(--line);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+
+  @media (max-width:820px){
+    .sticky-wrap{ flex-direction:column; gap:0; }
+    .sticky-media{ position:relative; height:60vh; top:auto; margin-bottom:20px; }
+    .nav-links{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="logo">onlymakkus<span>.</span>cf</div>
+  <div class="nav-links">
+    <span>Hub</span><span>Challenge</span><span>Ranking</span><span>Kalender</span>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="eyebrow">CrossFit · Season 04</div>
+  <h1>Fortschritt,<br><span class="accent-text">sichtbar</span> gemacht.</h1>
+  <p>Ein ruhigeres Design-Konzept für den CrossFit-Bereich — weniger Terminal, mehr Klarheit. Zum Testen, nicht zum Ersetzen.</p>
+  <div class="hero-cta"><a href="#stats" class="btn">Runterscrollen</a></div>
+  <div class="scroll-hint"><div class="line"></div>SCROLL</div>
+</section>
+
+<section class="reveal-section" id="stats">
+  <div class="reveal-item">
+    <h2>Jede Wiederholung zählt. Jede Zahl auch.</h2>
+    <p>Statt lauter Terminal-Ästhetik: ruhige Flächen, viel Weißraum, und Zahlen, die für sich selbst sprechen.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="num">04</div><div class="label">Aktive Season</div></div>
+      <div class="stat"><div class="num">18</div><div class="label">Teilnehmer</div></div>
+      <div class="stat"><div class="num">92%</div><div class="label">Check-in-Rate</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="marquee">
+  <div class="marquee-track">
+    <span>ZONE 2</span><span class="hl">•</span><span>DOUBLE UNDERS</span><span class="hl">•</span><span>OLY LIFTS</span><span class="hl">•</span><span>ZONE 2</span><span class="hl">•</span><span>DOUBLE UNDERS</span><span class="hl">•</span><span>OLY LIFTS</span><span class="hl">•</span>
+  </div>
+</div>
+
+<section class="sticky-section">
+  <div class="sticky-wrap">
+    <div class="sticky-media">
+      <div class="device">
+        <div class="device-screen">
+          <div class="bar"></div>
+          <div class="device-panel active" data-step="0">
+            <div class="dot"></div>
+            <div class="tag">Live</div>
+            <div class="num-big">03</div>
+            <div class="desc">Aktive Challenges gerade jetzt</div>
+          </div>
+          <div class="device-panel" data-step="1">
+            <div class="tag">Ranking</div>
+            <div class="num-big">#2</div>
+            <div class="desc">Deine aktuelle Platzierung</div>
+          </div>
+          <div class="device-panel" data-step="2">
+            <div class="tag">Nächster Termin</div>
+            <div class="num-big">Do</div>
+            <div class="desc">Team-WOD, 18:00 Uhr</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sticky-track">
+      <div class="track-step active" data-step="0">
+        <div class="step-eyebrow">01 — Live-Status</div>
+        <h3>Alles auf einen Blick.</h3>
+        <p>Aktuelle Challenge, Teilnehmerzahl und Anführer live aus Supabase — ohne dass du irgendwo klicken musst.</p>
+      </div>
+      <div class="track-step" data-step="1">
+        <div class="step-eyebrow">02 — Ranking</div>
+        <h3>Wissen, wo du stehst.</h3>
+        <p>Das Gruppenranking aktualisiert sich in Echtzeit. Peinlichkeit im Ranking ist bekanntlich für immer.</p>
+      </div>
+      <div class="track-step" data-step="2">
+        <div class="step-eyebrow">03 — Kalender</div>
+        <h3>Nichts verpassen.</h3>
+        <p>Der nächste Termin ist immer sichtbar, direkt eingebettet — kein Wechsel in eine andere App nötig.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="closing">
+  <h2>Zwei Sprachen, <span class="accent-text">eine Seite.</span></h2>
+  <p>Testlauf abgeschlossen — bereit für Feedback und den nächsten Schritt.</p>
+</section>
+
+<footer>onlymakkus.de — Design-Testseite, nicht live</footer>
+
+<script>
+  // Nav shadow on scroll
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  // Reveal-on-scroll for generic items
+  const revealItems = document.querySelectorAll('.reveal-item');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  revealItems.forEach(item => revealObserver.observe(item));
+
+  // Sticky-swap device panel logic
+  const steps = document.querySelectorAll('.track-step');
+  const panels = document.querySelectorAll('.device-panel');
+
+  const stepObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const idx = entry.target.getAttribute('data-step');
+      if (entry.isIntersecting) {
+        steps.forEach(s => s.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+        entry.target.classList.add('active');
+        document.querySelector(`.device-panel[data-step="${idx}"]`).classList.add('active');
+      }
+    });
+  }, { threshold: 0.6 });
+  steps.forEach(step => stepObserver.observe(step));
+</script>
+
+</body>
+</html>
