@@ -28,10 +28,6 @@
     .mobile-menu .nav-link.active{color:var(--orange);font-weight:600}
     .mobile-theme-row{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-top:1px solid var(--border);margin-top:4px}
     .mobile-theme-label{font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
-    @media(max-width:640px){
-      .nav-links{display:none}
-      .hamburger-btn{display:flex}
-    }
     .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--body-text);text-decoration:none}
     .nav-links{display:flex;gap:20px;align-items:center}
     .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
@@ -104,6 +100,10 @@
     footer{padding:32px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
     footer a{color:var(--muted);text-decoration:none}
     @media(max-width:600px){.lb-row{grid-template-columns:36px 1fr 56px}.lb-prog,.lb-status{display:none}}
+    @media(max-width:640px){
+      .nav-links{display:none}
+      .hamburger-btn{display:flex}
+    }
   </style>
 </head>
 <body>
