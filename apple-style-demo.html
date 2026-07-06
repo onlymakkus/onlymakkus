@@ -125,7 +125,7 @@
 
   /* ---------- REVEAL SECTIONS ---------- */
   .reveal-section{
-    padding:160px 24px;
+    padding:90px 24px;
     max-width:720px;
     margin:0 auto;
   }
@@ -225,10 +225,10 @@
 
   .sticky-track{
     flex:1;
-    padding:20vh 0;
+    padding:8vh 0;
   }
   .track-step{
-    min-height:80vh;
+    min-height:50vh;
     display:flex;
     flex-direction:column;
     justify-content:center;
@@ -270,7 +270,7 @@
 
   /* ---------- CLOSING ---------- */
   .closing{
-    min-height:70vh;
+    min-height:50vh;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     text-align:center; padding:80px 24px;
   }
@@ -419,7 +419,7 @@
         document.querySelector(`.device-panel[data-step="${idx}"]`).classList.add('active');
       }
     });
-  }, { threshold: 0.6 });
+  }, { threshold: 0.5 });
   steps.forEach(step => stepObserver.observe(step));
 </script>
 
