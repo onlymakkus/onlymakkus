@@ -157,13 +157,16 @@
       <p style="font-size:.68rem;color:var(--muted);margin-bottom:16px;">Punkte und Siege manuell anpassen — z.B. um Fehler bei der automatischen Berechnung zu korrigieren.</p>
       <div id="seasonTableWrap"><div class="empty">Lädt…</div></div>
       <div style="margin-top:20px;padding:16px;background:var(--card);border:1px solid var(--border);">
-        <div style="font-size:.65rem;color:var(--muted);margin-bottom:10px;">Neuen Eintrag hinzufügen:</div>
+        <div style="font-size:.65rem;color:var(--muted);margin-bottom:10px;">Neuen Eintrag hinzufügen — wähle ein bestehendes Profil, damit die Punkte eindeutig zugeordnet werden:</div>
         <div class="select-row">
-          <input type="text" id="newRankName" placeholder="Name">
+          <select id="newRankProfile" style="min-width:180px">
+            <option value="">— Profil wählen —</option>
+          </select>
           <input type="number" id="newRankPts" placeholder="Punkte" style="width:90px">
           <input type="number" id="newRankWins" placeholder="Siege" style="width:80px">
           <button class="btn" id="addRankBtn">+ Hinzufügen</button>
         </div>
+        <p style="font-size:.58rem;color:var(--muted);margin-top:8px;">Kein passendes Profil dabei? Die Person muss sich zuerst unter <code>profile.html</code> registrieren.</p>
       </div>
     </div>
 
@@ -549,8 +552,9 @@
       if(!data||!data.length){wrap.innerHTML='<div class="empty">Noch keine Saison-Punkte vorhanden.</div>';return}
       let html='<table><tr><th>Name</th><th>Punkte</th><th>Siege</th><th>Aktionen</th></tr>';
       data.forEach(e=>{
+        const linkIcon = e.profile_id ? '👤' : '⚠️';
         html+=`<tr data-id="${e.id}">
-          <td>${e.name}</td>
+          <td>${linkIcon} ${e.name}</td>
           <td><input type="number" value="${e.total_points}" class="edit-pts"></td>
           <td><input type="number" value="${e.wins}" class="edit-wins"></td>
           <td class="row-actions">
@@ -561,7 +565,22 @@
       });
       html+='</table>';
       wrap.innerHTML=html;
+      loadProfileDropdownForRanking();
     }catch(e){wrap.innerHTML='<div class="empty">Fehler beim Laden.</div>'}
+  }
+
+  async function loadProfileDropdownForRanking(){
+    const sel=document.getElementById('newRankProfile');
+    try{
+      const [profiles, existingRanks] = await Promise.all([
+        sbFetch('/rest/v1/profiles?select=id,name&order=name.asc'),
+        sbFetch('/rest/v1/season_ranking?select=profile_id')
+      ]);
+      const usedProfileIds = new Set((existingRanks||[]).map(r=>r.profile_id).filter(Boolean));
+      const available = (profiles||[]).filter(p=>!usedProfileIds.has(p.id));
+      sel.innerHTML = '<option value="">— Profil wählen —</option>' +
+        available.map(p=>`<option value="${p.id}" data-name="${p.name}">${p.name}</option>`).join('');
+    }catch(e){ sel.innerHTML='<option value="">Fehler beim Laden der Profile</option>'; }
   }
 
   window.saveRank=async(id)=>{
@@ -585,16 +604,18 @@
   };
 
   document.getElementById('addRankBtn').addEventListener('click',async()=>{
-    const name=document.getElementById('newRankName').value.trim();
+    const sel=document.getElementById('newRankProfile');
+    const profileId=sel.value;
+    const profileName=sel.options[sel.selectedIndex]?.dataset.name;
     const pts=parseInt(document.getElementById('newRankPts').value)||0;
     const wins=parseInt(document.getElementById('newRankWins').value)||0;
-    if(!name){showMsg('⚠ Name eingeben','err');return}
+    if(!profileId){showMsg('⚠ Bitte ein Profil auswählen','err');return}
     try{
-      await sbFetch('/rest/v1/season_ranking',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name,total_points:pts,wins})});
+      await sbFetch('/rest/v1/season_ranking',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name:profileName,profile_id:parseInt(profileId),total_points:pts,wins})});
       showMsg('✓ Hinzugefügt','ok');
-      document.getElementById('newRankName').value='';document.getElementById('newRankPts').value='';document.getElementById('newRankWins').value='';
+      document.getElementById('newRankPts').value='';document.getElementById('newRankWins').value='';
       loadSeasonRanking();
-    }catch(e){showMsg('❌ Fehler — existiert der Name schon?','err')}
+    }catch(e){showMsg('❌ Fehler — hat dieses Profil schon einen Eintrag?','err')}
   });
 
   // ── HALL OF FAME ──
