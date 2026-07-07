@@ -202,13 +202,22 @@
         if(i<PLACEMENT_BONUS.length)pts+=PLACEMENT_BONUS[i];
         if(isDecChallenge)pts*=DEC_MULTIPLIER;
         const rank=i+1;
-        await sbFetch('/rest/v1/season_results',{method:'POST',prefer:'return=minimal',body:JSON.stringify({challenge:challengeId,name:e.name,rank,points:pts})});
-        const exr=await sbFetch(`/rest/v1/season_ranking?name=eq.${encodeURIComponent(e.name)}&select=*`);
+        await sbFetch('/rest/v1/season_results',{method:'POST',prefer:'return=minimal',body:JSON.stringify({challenge:challengeId,name:e.name,profile_id:e.profile_id||null,rank,points:pts})});
+
+        // Eindeutiger Abgleich: bevorzugt über profile_id (fälschungssicher),
+        // fällt nur bei alten, noch nicht-migrierten Einträgen auf Namen zurück
+        let exr;
+        if(e.profile_id){
+          exr=await sbFetch(`/rest/v1/season_ranking?profile_id=eq.${e.profile_id}&select=*`);
+        } else {
+          exr=await sbFetch(`/rest/v1/season_ranking?name=eq.${encodeURIComponent(e.name)}&profile_id=is.null&select=*`);
+        }
+
         if(exr&&exr.length>0){
           const prev=exr[0];
           await sbFetch(`/rest/v1/season_ranking?id=eq.${prev.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({total_points:prev.total_points+pts,wins:prev.wins+(rank===1?1:0),updated_at:new Date().toISOString()})});
         } else {
-          await sbFetch('/rest/v1/season_ranking',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name:e.name,total_points:pts,wins:rank===1?1:0})});
+          await sbFetch('/rest/v1/season_ranking',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name:e.name,profile_id:e.profile_id||null,total_points:pts,wins:rank===1?1:0})});
         }
       }
     }catch(e){console.error('Finalize error:',e)}
