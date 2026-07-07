@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin — onlymakkus</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08);--red:#ff4444;--green:#22c55e}
@@ -76,6 +77,7 @@
   <main>
     <div class="tabs">
       <button class="tab active" data-tab="entries">Einträge</button>
+      <button class="tab" data-tab="profiles">Profile</button>
       <button class="tab" data-tab="seasonplan">Saison-Planung</button>
       <button class="tab" data-tab="exercises">Übungskatalog</button>
       <button class="tab" data-tab="season">Saison-Punkte</button>
@@ -173,6 +175,13 @@
     </div>
 
     <!-- INFO TAB -->
+    <!-- PROFILES TAB -->
+    <div class="tab-panel" id="panel-profiles">
+      <h2 class="panel-title">Profile verwalten</h2>
+      <p style="font-size:.68rem;color:var(--muted);margin-bottom:16px;">Übersicht aller registrierten Profile. Bei vergessenem Passwort kannst du hier ein neues Passwort setzen (der Person mitteilen, damit sie es sich merken/ändern kann).</p>
+      <div id="profilesTableWrap"><div class="empty">Lädt…</div></div>
+    </div>
+
     <div class="tab-panel" id="panel-info">
       <h2 class="panel-title">System-Info</h2>
       <div class="grid2">
@@ -240,12 +249,59 @@
 
   function initAdmin(){
     loadChallengeSelectOptions();
+    loadProfilesTable();
     loadSeasonYearOptions();
     loadSeasonRanking();
     loadHallOfFame();
     loadExercisesTable();
     loadInfo();
   }
+
+  // ── PROFILES ──
+  async function loadProfilesTable(){
+    const wrap=document.getElementById('profilesTableWrap');
+    wrap.innerHTML='<div class="empty">Lädt…</div>';
+    try{
+      const data=await sbFetch('/rest/v1/profiles?select=id,name,created_at&order=created_at.asc');
+      if(!data||!data.length){wrap.innerHTML='<div class="empty">Noch keine Profile registriert.</div>';return}
+      let html='<table><tr><th>Name</th><th>Registriert am</th><th>Neues Passwort</th><th>Aktionen</th></tr>';
+      data.forEach(p=>{
+        const date=new Date(p.created_at).toLocaleDateString('de-DE');
+        html+=`<tr data-id="${p.id}">
+          <td>${p.name}</td>
+          <td>${date}</td>
+          <td><input type="text" class="new-password" placeholder="neues Passwort" style="width:140px"></td>
+          <td class="row-actions">
+            <button class="btn" onclick="resetPassword(${p.id})">Passwort setzen</button>
+            <button class="btn danger" onclick="deleteProfile(${p.id})">Löschen</button>
+          </td>
+        </tr>`;
+      });
+      html+='</table>';
+      wrap.innerHTML=html;
+    }catch(e){wrap.innerHTML='<div class="empty">Fehler beim Laden.</div>'}
+  }
+
+  window.resetPassword=async(id)=>{
+    const row=document.querySelector(`#profilesTableWrap tr[data-id="${id}"]`);
+    const newPw=row.querySelector('.new-password').value.trim();
+    if(newPw.length<6){showMsg('⚠ Passwort muss mind. 6 Zeichen haben','err');return}
+    try{
+      const hash=dcodeIO.bcrypt.hashSync(newPw,10);
+      await sbFetch(`/rest/v1/profiles?id=eq.${id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({password_hash:hash})});
+      showMsg('✓ Passwort aktualisiert — der Person mitteilen','ok');
+      loadProfilesTable();
+    }catch(e){showMsg('❌ Fehler beim Setzen','err')}
+  };
+
+  window.deleteProfile=async(id)=>{
+    if(!confirm('Dieses Profil wirklich löschen? Verknüpfte Challenge-Einträge bleiben bestehen, verlieren aber den Profil-Bezug.'))return;
+    try{
+      await sbFetch(`/rest/v1/profiles?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
+      showMsg('✓ Profil gelöscht','ok');
+      loadProfilesTable();
+    }catch(e){showMsg('❌ Fehler beim Löschen','err')}
+  };
 
   // ── ENTRIES ──
   async function loadChallengeSelectOptions(){
@@ -266,15 +322,16 @@
     try{
       const data=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${challenge}&select=*&order=value1.desc`);
       if(!data||!data.length){wrap.innerHTML='<div class="empty">Keine Einträge für diese Challenge.</div>';return}
-      let html='<table><tr><th>Name</th><th>Wert</th><th>PIN gesetzt</th><th>Aktionen</th></tr>';
+      let html='<table><tr><th>Name</th><th>Wert</th><th>Auth</th><th>Aktionen</th></tr>';
       data.forEach(e=>{
+        const authInfo = e.profile_id ? '👤 Profil' : (e.pin_hash ? '🔑 Alt-PIN' : '— keine');
         html+=`<tr data-id="${e.id}">
           <td>${e.name}</td>
           <td><input type="number" value="${e.value1}" class="edit-v1"></td>
-          <td>${e.pin_hash?'✓ ja':'— nein'}</td>
+          <td>${authInfo}</td>
           <td class="row-actions">
             <button class="btn" onclick="saveEntry(${e.id})">Speichern</button>
-            ${e.pin_hash?`<button class="btn ghost" onclick="resetPin(${e.id})">PIN reset</button>`:''}
+            ${e.pin_hash&&!e.profile_id?`<button class="btn ghost" onclick="resetPin(${e.id})">PIN reset</button>`:''}
             <button class="btn danger" onclick="deleteEntry(${e.id})">Löschen</button>
           </td>
         </tr>`;

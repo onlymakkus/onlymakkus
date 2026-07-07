@@ -73,7 +73,12 @@
     .lb-empty{padding:40px;text-align:center;font-size:.72rem;color:#444;font-style:italic;background:var(--card2)}
     [data-theme="light"] .lb-empty{color:#B0A99C}
 
-    .pin-info{background:var(--card);border:1px solid var(--border);padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:center}
+    .login-gate{background:var(--card);border:1px solid var(--border);padding:32px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:16px}
+    .login-gate-icon{font-size:1.8rem}
+    .login-gate-text{font-size:.78rem;color:var(--muted)}
+    .login-gate-btn{display:inline-block;padding:12px 24px;background:var(--orange);color:#fff;font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border-radius:6px;transition:background .2s}
+    [data-theme="dark"] .login-gate-btn{color:var(--black)}
+    .login-gate-btn:hover{background:var(--orange2)}
     .points-info{background:var(--card);border:1px solid var(--border);padding:12px 16px;margin-top:16px;display:flex;gap:10px;align-items:flex-start}
     .points-info-icon{font-size:1rem;flex-shrink:0}
     .points-info-text{font-size:.62rem;color:var(--muted);line-height:1.6}
@@ -117,6 +122,7 @@
       <a class="nav-link" href="ranking.html">Ranking</a>
       <a class="nav-link" href="kalender.html">Kalender</a>
       <a class="nav-link" href="uebungen.html">Übungen</a>
+      <a class="nav-link" href="profile.html">Profil</a>
       <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
     </div>
     <button class="hamburger-btn" id="hamburgerBtn">☰</button>
@@ -125,6 +131,7 @@
       <a class="nav-link" href="ranking.html">Ranking</a>
       <a class="nav-link" href="kalender.html">Kalender</a>
       <a class="nav-link" href="uebungen.html">Übungen</a>
+      <a class="nav-link" href="profile.html">Profil</a>
       <div class="mobile-theme-row">
         <span class="mobile-theme-label">Design</span>
         <button class="theme-toggle" id="themeToggleMobile" title="Design wechseln">🌙</button>
@@ -150,22 +157,22 @@
       </div>
     </div>
 
-    <div class="pin-info">
-      <span class="pin-info-icon">🔐</span>
-      <div class="pin-info-text"><strong>Warum ein PIN?</strong> Schützt deinen Eintrag davor, dass jemand mit gleichem Namen ihn überschreibt. Beim ersten Eintrag legst du die PIN fest, danach brauchst du sie für jede Änderung.</div>
+    <!-- LOGGED OUT: gate to login -->
+    <div class="login-gate" id="loginGate">
+      <span class="login-gate-icon">🔒</span>
+      <div class="login-gate-text">Um Zeit einzutragen, brauchst du ein Profil.</div>
+      <a href="profile.html" class="login-gate-btn">Zum Login / Profil erstellen →</a>
     </div>
 
-    <div class="entry-form">
-      <p class="form-title">// Zeit eintragen</p>
+    <!-- LOGGED IN: entry form -->
+    <div class="entry-form" id="entryForm" style="display:none;">
+      <p class="form-title">// Zeit eintragen als <span id="loggedInName" style="color:var(--orange)"></span></p>
       <div class="form-row">
-        <div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="fName" placeholder="Dein Name"></div>
         <div class="form-group"><label class="form-label" id="fl1Label">Wert</label><input type="number" class="form-input" id="fLeft" placeholder="10" min="0"></div>
-        <div class="form-group"><label class="form-label">PIN</label><input type="password" class="form-input" id="fPin" placeholder="••••" maxlength="4" inputmode="numeric" pattern="[0-9]*"></div>
         <div class="form-group"><label class="form-label">&nbsp;</label><button class="form-btn" id="submitBtn">Eintragen →</button></div>
       </div>
       <input type="text" id="fWebsite" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
       <p class="form-msg" id="formMsg"></p>
-      <p style="margin-top:8px;font-size:.58rem;color:var(--muted)">Neuer Name → PIN wird neu festgelegt. Bestehender Name → richtige PIN nötig.</p>
     </div>
     <div class="points-info">
       <span class="points-info-icon">💡</span>
@@ -238,7 +245,23 @@
     }
   }
 
+  const SESSION_KEY='om_profile_session';
+  let currentProfile=null;
+
+  function checkLoginState(){
+    const saved=localStorage.getItem(SESSION_KEY);
+    if(saved){
+      try{
+        currentProfile=JSON.parse(saved);
+        document.getElementById('loginGate').style.display='none';
+        document.getElementById('entryForm').style.display='block';
+        document.getElementById('loggedInName').textContent=currentProfile.name;
+      }catch(e){currentProfile=null}
+    }
+  }
+
   async function init(){
+    checkLoginState();
     const ok=await loadActiveChallenge();
     if(!ok)return;
     document.getElementById('pageTitle').innerHTML=ACTIVE.label.toUpperCase();
@@ -276,41 +299,30 @@
     });
   }
 
-  // Simple hash for PIN (not cryptographically secure, just obfuscation)
-  function hashPin(pin){let h=0;for(let i=0;i<pin.length;i++){h=((h<<5)-h+pin.charCodeAt(i))|0}return h.toString()}
-
   document.getElementById('submitBtn').addEventListener('click',async()=>{
     if(!ACTIVE){alert('Für diesen Monat ist keine Challenge aktiv.');return}
+    if(!currentProfile){alert('Bitte zuerst einloggen.');return}
     const website=document.getElementById('fWebsite').value;
     if(website)return; // honeypot triggered — silently drop, no feedback to bot
-    const name=document.getElementById('fName').value.trim();
     const v1=Math.max(0,parseInt(document.getElementById('fLeft').value)||0);
-    const pin=document.getElementById('fPin').value.trim();
     const msg=document.getElementById('formMsg');
 
     if(Date.now()-pageLoadTime<1500){msg.textContent='⚠ Bitte kurz warten und erneut versuchen';msg.className='form-msg err';return}
-    if(!name){msg.textContent='⚠ Bitte Namen eingeben';msg.className='form-msg err';return}
     if(!v1){msg.textContent='⚠ Bitte einen Wert eingeben';msg.className='form-msg err';return}
-    if(!/^\d{4}$/.test(pin)){msg.textContent='⚠ PIN muss 4 Ziffern haben';msg.className='form-msg err';return}
     if(v1>10000){msg.textContent='⚠ Wert außerhalb des möglichen Bereichs';msg.className='form-msg err';return}
 
     const btn=document.getElementById('submitBtn');
     btn.textContent='Speichern…';btn.disabled=true;
 
     try{
-      const existing=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${ACTIVE.id}&name=eq.${encodeURIComponent(name)}&select=*`);
+      const existing=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${ACTIVE.id}&profile_id=eq.${currentProfile.id}&select=*`);
 
       if(existing&&existing.length>0){
         const prev=existing[0];
-        // Check PIN if one is set
-        if(prev.pin_hash&&prev.pin_hash!==hashPin(pin)){
-          msg.textContent='❌ Falsche PIN für diesen Namen!';msg.className='form-msg err';
-          btn.textContent='Eintragen →';btn.disabled=false;return;
-        }
         const wasNotDone=!(prev.value1>=GOAL);
         const newV1=Math.min(GOAL,prev.value1+v1);
         const isDone=newV1>=GOAL;
-        const patch={value1:newV1,pin_hash:hashPin(pin)};
+        const patch={value1:newV1};
         if(wasNotDone&&isDone)patch.completed_ts=Date.now();
         await sbFetch(`/rest/v1/challenge_entries?id=eq.${prev.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(patch)});
         const reactions=['💪 Aktualisiert! Schmerz ist temporär, Ruhm ist ewig.','🔥 Gespeichert! Das Ranking zittert.','😤 Update durch! Zeig ihnen was du drauf hast.','🏆 Eingetragen! Du bist auf dem richtigen Weg. Wahrscheinlich.','⚡ Gespeichert! Jemand im Ranking wird gerade nervös.'];
@@ -318,13 +330,13 @@
       } else {
         const newV1=Math.min(GOAL,v1);
         const isDone=newV1>=GOAL;
-        const entry={challenge:ACTIVE.id,name,value1:newV1,value2:0,pin_hash:hashPin(pin)};
+        const entry={challenge:ACTIVE.id,name:currentProfile.name,profile_id:currentProfile.id,value1:newV1,value2:0};
         if(isDone)entry.completed_ts=Date.now();
         await sbFetch('/rest/v1/challenge_entries',{method:'POST',prefer:'return=minimal',body:JSON.stringify(entry)});
-        const firstReactions=['🎉 Willkommen im Club der Leidenden!','💀 Eingetragen! Es gibt kein Zurück mehr.','🔥 Dabei! Dein PIN ist dein Schicksal.','😈 Erster Eintrag! Der Körper wird sich beschweren.','🏅 Eingetragen! PIN merken — oder leiden.'];
+        const firstReactions=['🎉 Willkommen im Club der Leidenden!','💀 Eingetragen! Es gibt kein Zurück mehr.','🔥 Dabei! Willkommen im Leiden.','😈 Erster Eintrag! Der Körper wird sich beschweren.','🏅 Eingetragen! Ab jetzt zählt jede Minute.'];
         msg.textContent=firstReactions[Math.floor(Math.random()*firstReactions.length)];msg.className='form-msg ok';
       }
-      document.getElementById('fName').value='';document.getElementById('fLeft').value='';document.getElementById('fPin').value='';
+      document.getElementById('fLeft').value='';
       await renderLeaderboard();
     }catch(e){msg.textContent='❌ Fehler: '+e.message;msg.className='form-msg err'}
     btn.textContent='Eintragen →';btn.disabled=false;

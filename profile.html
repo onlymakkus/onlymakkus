@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil — onlymakkus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root, [data-theme="dark"]{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--orange2:#ff6b3d;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08);--green:#22c55e;--body-bg:var(--black);--body-text:var(--cream);color-scheme:dark}
+    [data-theme="light"]{--black:#2A2420;--cream:#2A2420;--orange:#FF6E35;--orange2:#e85a1f;--muted:#8A8078;--card:#FFFFFF;--card2:#FFF6EE;--border:rgba(42,36,32,0.1);--green:#1a9c53;--body-bg:#FBF6EE;--body-text:#2A2420;color-scheme:light}
+    body{background:var(--body-bg);color:var(--body-text);font-family:'DM Mono',monospace;cursor:none;overflow-x:hidden;transition:background .3s,color .3s;min-height:100vh;display:flex;flex-direction:column}
+    .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
+    .cursor.big{width:36px;height:36px}
+    [data-theme="light"] .cursor{mix-blend-mode:normal}
+
+    nav{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--body-text);text-decoration:none}
+    .theme-toggle{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:transform .2s}
+    .theme-toggle:hover{transform:scale(1.1)}
+
+    main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px}
+    .auth-box{width:100%;max-width:400px}
+    .auth-title{font-family:'Bebas Neue';font-size:2.6rem;text-align:center;margin-bottom:8px;line-height:1}
+    .auth-title span{color:var(--orange)}
+    .auth-sub{text-align:center;font-size:.72rem;color:var(--muted);margin-bottom:32px;line-height:1.7}
+
+    .auth-tabs{display:flex;gap:2px;margin-bottom:24px;background:var(--card2);padding:3px;border-radius:8px}
+    .auth-tab{flex:1;padding:10px;text-align:center;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:6px;transition:all .2s;font-family:'DM Mono'}
+    .auth-tab.active{background:var(--orange);color:#fff}
+    [data-theme="dark"] .auth-tab.active{color:var(--black)}
+
+    .auth-form{display:none;flex-direction:column;gap:12px}
+    .auth-form.active{display:flex}
+    .form-group{display:flex;flex-direction:column;gap:6px}
+    .form-label{font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+    .form-input{background:var(--card);border:1px solid var(--border);color:var(--body-text);font-family:'DM Mono';font-size:.85rem;padding:13px 16px;outline:none;width:100%;border-radius:8px}
+    .form-input:focus{border-color:var(--orange)}
+    .form-hint{font-size:.6rem;color:var(--muted);line-height:1.6}
+    .auth-btn{padding:14px;background:var(--orange);color:#fff;border:none;font-family:'DM Mono';font-size:.72rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;border-radius:8px;margin-top:8px;transition:background .2s}
+    [data-theme="dark"] .auth-btn{color:var(--black)}
+    .auth-btn:hover{background:var(--orange2)}
+    .auth-btn:disabled{opacity:.5;cursor:not-allowed}
+    .auth-msg{font-size:.68rem;text-align:center;min-height:18px;margin-top:4px}
+    .auth-msg.err{color:#ff4444}
+    .auth-msg.ok{color:var(--green)}
+
+    .profile-view{display:none;flex-direction:column;gap:20px}
+    .profile-view.active{display:flex}
+    .profile-header{text-align:center}
+    .profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:1.8rem;margin:0 auto 12px}
+    [data-theme="dark"] .profile-avatar{color:var(--black)}
+    .profile-name{font-family:'Bebas Neue';font-size:1.6rem}
+    .profile-since{font-size:.62rem;color:var(--muted);margin-top:4px}
+    .logout-btn{padding:12px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono';font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:8px}
+    .logout-btn:hover{border-color:#ff4444;color:#ff4444}
+
+    footer{padding:24px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:24px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
+    footer a{color:var(--muted);text-decoration:none}
+  </style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+
+<nav>
+  <a class="nav-logo" href="crossfit.html">← CrossFit</a>
+  <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
+</nav>
+
+<main>
+  <div class="auth-box">
+
+    <!-- LOGGED OUT VIEW -->
+    <div id="authView">
+      <h1 class="auth-title">DEIN <span>PROFIL</span></h1>
+      <p class="auth-sub">Ein Profil für alle Challenges — merk dir dein Passwort, es gilt für die ganze Saison.</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Login</button>
+        <button class="auth-tab" data-tab="register">Registrieren</button>
+      </div>
+
+      <div class="auth-form active" id="loginForm">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input type="text" class="form-input" id="loginName" placeholder="Dein Name" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Passwort</label>
+          <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button class="auth-btn" id="loginBtn">Einloggen →</button>
+        <p class="auth-msg" id="loginMsg"></p>
+      </div>
+
+      <div class="auth-form" id="registerForm">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input type="text" class="form-input" id="regName" placeholder="Dein Name" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Passwort</label>
+          <input type="password" class="form-input" id="regPassword" placeholder="Mindestens 6 Zeichen" autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Passwort wiederholen</label>
+          <input type="password" class="form-input" id="regPasswordConfirm" placeholder="••••••••" autocomplete="new-password">
+        </div>
+        <p class="form-hint">Merk dir Name + Passwort gut — es gibt aktuell keinen automatischen "Passwort vergessen"-Weg. Bei Problemen wende dich an den Admin.</p>
+        <button class="auth-btn" id="registerBtn">Profil erstellen →</button>
+        <p class="auth-msg" id="registerMsg"></p>
+      </div>
+    </div>
+
+    <!-- LOGGED IN VIEW -->
+    <div class="profile-view" id="profileView">
+      <div class="profile-header">
+        <div class="profile-avatar" id="profileAvatar">?</div>
+        <div class="profile-name" id="profileName">—</div>
+        <div class="profile-since" id="profileSince">—</div>
+      </div>
+      <a href="challenge.html" class="auth-btn" style="text-align:center;text-decoration:none;">Zur Challenge →</a>
+      <button class="logout-btn" id="logoutBtn">Ausloggen</button>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <span>© 2026 onlymakkus.de</span>
+  <a href="impressum.html">Impressum</a>
+  <a href="datenschutz.html">Datenschutz</a>
+</footer>
+
+<script>
+  const cursor=document.getElementById('cursor');
+  document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
+  document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
+
+  const THEME_KEY='om_cf_theme';
+  const html=document.documentElement;
+  const themeToggle=document.getElementById('themeToggle');
+  function applyTheme(t){html.setAttribute('data-theme',t);themeToggle.textContent=t==='dark'?'🌙':'☀️';localStorage.setItem(THEME_KEY,t)}
+  applyTheme(localStorage.getItem(THEME_KEY)||'dark');
+  themeToggle.addEventListener('click',()=>applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
+
+  const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co';
+  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
+  async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
+
+  const SESSION_KEY='om_profile_session'; // stores {id, name}
+
+  // ── Tab switching ──
+  document.querySelectorAll('.auth-tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab+'Form').classList.add('active');
+    });
+  });
+
+  // ── Registration ──
+  document.getElementById('registerBtn').addEventListener('click', async ()=>{
+    const name=document.getElementById('regName').value.trim();
+    const pw=document.getElementById('regPassword').value;
+    const pwConfirm=document.getElementById('regPasswordConfirm').value;
+    const msg=document.getElementById('registerMsg');
+    const btn=document.getElementById('registerBtn');
+
+    if(!name){msg.textContent='⚠ Bitte Namen eingeben';msg.className='auth-msg err';return}
+    if(pw.length<6){msg.textContent='⚠ Passwort muss mind. 6 Zeichen haben';msg.className='auth-msg err';return}
+    if(pw!==pwConfirm){msg.textContent='⚠ Passwörter stimmen nicht überein';msg.className='auth-msg err';return}
+
+    btn.disabled=true;btn.textContent='…';
+
+    try{
+      const existing=await sbFetch(`/rest/v1/profiles?name=eq.${encodeURIComponent(name)}&select=id`);
+      if(existing && existing.length>0){
+        msg.textContent='❌ Dieser Name ist schon vergeben';msg.className='auth-msg err';
+        btn.disabled=false;btn.textContent='Profil erstellen →';return;
+      }
+      const hash=dcodeIO.bcrypt.hashSync(pw,10);
+      await sbFetch('/rest/v1/profiles',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name,password_hash:hash})});
+      const created=await sbFetch(`/rest/v1/profiles?name=eq.${encodeURIComponent(name)}&select=id,name,created_at`);
+      const profile=created[0];
+      localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name}));
+      msg.textContent='✓ Profil erstellt!';msg.className='auth-msg ok';
+      setTimeout(()=>showProfile(profile),500);
+    }catch(e){
+      msg.textContent='❌ Fehler beim Erstellen';msg.className='auth-msg err';
+    }
+    btn.disabled=false;btn.textContent='Profil erstellen →';
+  });
+
+  // ── Login ──
+  document.getElementById('loginBtn').addEventListener('click', async ()=>{
+    const name=document.getElementById('loginName').value.trim();
+    const pw=document.getElementById('loginPassword').value;
+    const msg=document.getElementById('loginMsg');
+    const btn=document.getElementById('loginBtn');
+
+    if(!name||!pw){msg.textContent='⚠ Name und Passwort eingeben';msg.className='auth-msg err';return}
+
+    btn.disabled=true;btn.textContent='…';
+
+    try{
+      const rows=await sbFetch(`/rest/v1/profiles?name=eq.${encodeURIComponent(name)}&select=*`);
+      if(!rows || rows.length===0){
+        msg.textContent='❌ Kein Profil mit diesem Namen gefunden';msg.className='auth-msg err';
+        btn.disabled=false;btn.textContent='Einloggen →';return;
+      }
+      const profile=rows[0];
+      const valid=dcodeIO.bcrypt.compareSync(pw,profile.password_hash);
+      if(!valid){
+        msg.textContent='❌ Falsches Passwort';msg.className='auth-msg err';
+        btn.disabled=false;btn.textContent='Einloggen →';return;
+      }
+      localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name}));
+      msg.textContent='✓ Eingeloggt!';msg.className='auth-msg ok';
+      setTimeout(()=>showProfile(profile),400);
+    }catch(e){
+      msg.textContent='❌ Fehler beim Einloggen';msg.className='auth-msg err';
+    }
+    btn.disabled=false;btn.textContent='Einloggen →';
+  });
+
+  // ── Logout ──
+  document.getElementById('logoutBtn').addEventListener('click',()=>{
+    localStorage.removeItem(SESSION_KEY);
+    document.getElementById('authView').style.display='block';
+    document.getElementById('profileView').classList.remove('active');
+  });
+
+  function showProfile(profile){
+    document.getElementById('authView').style.display='none';
+    document.getElementById('profileView').classList.add('active');
+    document.getElementById('profileAvatar').textContent=profile.name.charAt(0).toUpperCase();
+    document.getElementById('profileName').textContent=profile.name;
+    if(profile.created_at){
+      const date=new Date(profile.created_at);
+      document.getElementById('profileSince').textContent='Profil seit '+date.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+    }
+  }
+
+  // ── Auto-login from session ──
+  (async function checkSession(){
+    const saved=localStorage.getItem(SESSION_KEY);
+    if(!saved)return;
+    try{
+      const session=JSON.parse(saved);
+      const rows=await sbFetch(`/rest/v1/profiles?id=eq.${session.id}&select=*`);
+      if(rows && rows.length>0){
+        showProfile(rows[0]);
+      } else {
+        localStorage.removeItem(SESSION_KEY);
+      }
+    }catch(e){}
+  })();
+</script>
+</body>
+</html>
