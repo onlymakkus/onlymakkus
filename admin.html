@@ -229,7 +229,13 @@
   const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
   async function sbFetch(p,o={}){
     const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});
-    const t=await r.text();return t?JSON.parse(t):null;
+    const t=await r.text();
+    const data=t?JSON.parse(t):null;
+    if(!r.ok){
+      const errMsg=(data&&(data.message||data.hint||data.details))||`HTTP ${r.status}`;
+      throw new Error(errMsg);
+    }
+    return data;
   }
 
   function showMsg(text,type='ok'){
@@ -591,7 +597,7 @@
       await sbFetch(`/rest/v1/season_ranking?id=eq.${id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({total_points:pts,wins,updated_at:new Date().toISOString()})});
       showMsg('✓ Ranking aktualisiert','ok');
       loadSeasonRanking();
-    }catch(e){showMsg('❌ Fehler','err')}
+    }catch(e){showMsg('❌ Fehler: '+e.message,'err')}
   };
 
   window.deleteRank=async(id)=>{
@@ -600,7 +606,7 @@
       await sbFetch(`/rest/v1/season_ranking?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
       showMsg('✓ Gelöscht','ok');
       loadSeasonRanking();
-    }catch(e){showMsg('❌ Fehler','err')}
+    }catch(e){showMsg('❌ Fehler: '+e.message,'err')}
   };
 
   document.getElementById('addRankBtn').addEventListener('click',async()=>{
