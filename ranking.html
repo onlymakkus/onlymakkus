@@ -138,12 +138,8 @@
       <div class="dec-title">🗳️ Dezember Voting</div>
       <p class="dec-desc">Welche Challenge soll als finaler Bosskampf zurückkommen — mit doppelten Punkten?</p>
       <div class="vote-gate" id="voteGate">
-        <p class="vote-gate-text">Um abzustimmen, gib Name + PIN ein (wie beim Challenge-Eintragen) — mehrere Leute haben denselben Namen, der PIN bestätigt dass du es wirklich bist:</p>
-        <div class="vote-gate-form">
-          <input type="text" class="vote-gate-input" id="voteName" placeholder="Dein Name">
-          <input type="password" class="vote-gate-input" id="votePin" placeholder="PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*" style="max-width:80px">
-          <button class="vote-gate-btn" id="voteNameCheck">Prüfen →</button>
-        </div>
+        <p class="vote-gate-text">Um abzustimmen, logge dich mit deinem Profil ein — nur wer schon mal an einer Challenge teilgenommen hat, darf mitstimmen.</p>
+        <a href="profile.html" class="vote-gate-btn" style="display:inline-block;text-decoration:none;">Zum Profil / Login →</a>
         <p class="vote-gate-msg" id="voteGateMsg"></p>
       </div>
       <div class="vote-grid" id="voteGrid" style="display:none;"></div>
@@ -255,57 +251,40 @@
   }
 
   const CHALLENGES=['Side Plank','Plank','Push-Ups','Burpees','Hollow Body Hold','Bear Plank Hold'];
-  const VOTED_NAME_KEY='om_voter_name',VOTED_PIN_KEY='om_voter_pin';
-  let verifiedVoterName=null, verifiedVoterId=null;
+  const SESSION_KEY='om_profile_session';
+  let currentProfile=null;
 
   function currentSeasonYear(){ return new Date().getFullYear(); }
-  function hashPin(pin){let h=0;for(let i=0;i<pin.length;i++){h=((h<<5)-h+pin.charCodeAt(i))|0}return h.toString()}
-  function voterIdFor(name, pin){ return hashPin(name.toLowerCase()+'::'+pin); }
 
-  async function verifyNamePin(name, pin){
-    // Check if any challenge_entries row matches this name (case-insensitive) AND has a matching pin_hash
+  async function profileHasEverParticipated(profileId){
+    // Prüft ob dieses Profil jemals irgendeinen Challenge-Eintrag hatte (egal welcher Monat)
     try{
-      const data=await sbFetch(`/rest/v1/challenge_entries?name=ilike.${encodeURIComponent(name)}&select=name,pin_hash`);
-      if(!data || !data.length) return false;
-      const targetHash = hashPin(pin);
-      return data.some(row => row.pin_hash === targetHash);
+      const data=await sbFetch(`/rest/v1/challenge_entries?profile_id=eq.${profileId}&select=id&limit=1`);
+      return data && data.length > 0;
     }catch(e){ return false; }
   }
 
-  async function checkVoterName(){
-    const nameInput=document.getElementById('voteName');
-    const pinInput=document.getElementById('votePin');
+  async function checkVoterEligibility(){
+    const saved=localStorage.getItem(SESSION_KEY);
     const msg=document.getElementById('voteGateMsg');
-    const name=nameInput.value.trim();
-    const pin=pinInput.value.trim();
+    if(!saved){
+      return; // not logged in, gate stays visible with login button
+    }
+    try{
+      currentProfile=JSON.parse(saved);
+    }catch(e){ return; }
 
-    if(!name){msg.textContent='⚠ Bitte Namen eingeben';msg.className='vote-gate-msg err';return}
-    if(!/^\d{4}$/.test(pin)){msg.textContent='⚠ PIN muss 4 Ziffern haben';msg.className='vote-gate-msg err';return}
-
-    document.getElementById('voteNameCheck').textContent='…';
-    const verified=await verifyNamePin(name, pin);
-    document.getElementById('voteNameCheck').textContent='Prüfen →';
-
-    if(!verified){
-      msg.textContent='❌ Name + PIN passen nicht zu einem Challenge-Eintrag.';
+    const eligible=await profileHasEverParticipated(currentProfile.id);
+    if(!eligible){
+      msg.textContent='⚠ Du bist eingeloggt als '+currentProfile.name+', hast aber noch nie an einer Challenge teilgenommen. Erst mitmachen, dann abstimmen!';
       msg.className='vote-gate-msg err';
       return;
     }
 
-    verifiedVoterName=name;
-    verifiedVoterId=voterIdFor(name, pin);
-    localStorage.setItem(VOTED_NAME_KEY, name);
-    localStorage.setItem(VOTED_PIN_KEY, pin);
-    msg.textContent='✓ Verifiziert als '+name;
-    msg.className='vote-gate-msg ok';
     document.getElementById('voteGate').style.display='none';
     document.getElementById('voteGrid').style.display='grid';
     renderVoting();
   }
-
-  document.getElementById('voteNameCheck').addEventListener('click', checkVoterName);
-  document.getElementById('voteName').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('votePin').focus(); });
-  document.getElementById('votePin').addEventListener('keydown', e=>{ if(e.key==='Enter') checkVoterName(); });
 
   async function renderVoting(){
     const grid=document.getElementById('voteGrid');
@@ -313,7 +292,7 @@
     try{
       const year=currentSeasonYear();
       const allVotes=await sbFetch(`/rest/v1/december_votes?season_year=eq.${year}&select=*`);
-      const myVote=allVotes?.find(v=>v.voter_id===verifiedVoterId);
+      const myVote=allVotes?.find(v=>v.profile_id===currentProfile.id);
       const counts={};
       CHALLENGES.forEach(ch=>counts[ch]=0);
       (allVotes||[]).forEach(v=>{ if(counts[v.choice]!==undefined) counts[v.choice]++; });
@@ -330,11 +309,11 @@
           const ch=btn.dataset.ch;
           btn.textContent='…';
           try{
-            const existing=await sbFetch(`/rest/v1/december_votes?season_year=eq.${year}&voter_id=eq.${encodeURIComponent(verifiedVoterId)}&select=id`);
+            const existing=await sbFetch(`/rest/v1/december_votes?season_year=eq.${year}&profile_id=eq.${currentProfile.id}&select=id`);
             if(existing && existing.length>0){
               await sbFetch(`/rest/v1/december_votes?id=eq.${existing[0].id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({choice:ch})});
             } else {
-              await sbFetch('/rest/v1/december_votes',{method:'POST',prefer:'return=minimal',body:JSON.stringify({season_year:year,voter_name:verifiedVoterName,voter_id:verifiedVoterId,choice:ch})});
+              await sbFetch('/rest/v1/december_votes',{method:'POST',prefer:'return=minimal',body:JSON.stringify({season_year:year,voter_name:currentProfile.name,profile_id:currentProfile.id,choice:ch})});
             }
             renderVoting();
           }catch(e){ btn.textContent='Fehler ✕'; }
@@ -343,21 +322,7 @@
     }catch(e){ grid.innerHTML='<div class="ov-empty">Fehler beim Laden der Stimmen.</div>'; }
   }
 
-  // Auto-restore verified voter from previous session (still requires name+PIN to match a real entry)
-  (async function restoreVoter(){
-    const savedName=localStorage.getItem(VOTED_NAME_KEY);
-    const savedPin=localStorage.getItem(VOTED_PIN_KEY);
-    if(savedName && savedPin){
-      const verified=await verifyNamePin(savedName, savedPin);
-      if(verified){
-        verifiedVoterName=savedName;
-        verifiedVoterId=voterIdFor(savedName, savedPin);
-        document.getElementById('voteGate').style.display='none';
-        document.getElementById('voteGrid').style.display='grid';
-        renderVoting();
-      }
-    }
-  })();
+  checkVoterEligibility();
 
   const THEME_KEY='om_cf_theme';
   const html=document.documentElement;
