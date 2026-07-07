@@ -282,9 +282,60 @@ function buildAudioGraph(){
     scenes.wind = buildWindScene();
     scenes.fire = buildFireScene();
     scenes.silence = buildSilenceScene();
+    musicGain = audioCtx.createGain();
+    musicGain.gain.value = 0;
+    musicGain.connect(masterGain);
     audioBuilt = true;
     if(pendingScene) setScene(pendingScene);
+    if(pendingMusic) playMusic(pendingMusic);
   }catch(e){ /* Web Audio nicht verfügbar — Spiel läuft trotzdem normal weiter */ }
+}
+
+/* ── Musik-Ebene: echte Audiodateien (z.B. Suno-Tracks), separat von den
+   prozeduralen Ambient-Szenen. Läuft über denselben masterGain, respektiert
+   also Mute-Button und Lautstärke automatisch. ── */
+let musicGain = null, pendingMusic = null, currentMusicSource = null, currentMusicTrack = null;
+const musicBufferCache = {};
+const MUSIC_VOLUME = 0.55;
+const MUSIC_TRACKS = {
+  title: 'audio/hauptmenue.mp3'
+};
+
+async function playMusic(trackKey){
+  if(!audioBuilt){ pendingMusic = trackKey; return; }
+  if(currentMusicTrack === trackKey) return;
+  currentMusicTrack = trackKey;
+  const url = MUSIC_TRACKS[trackKey];
+  if(!url) return stopMusic();
+
+  try{
+    if(!musicBufferCache[trackKey]){
+      const res = await fetch(url);
+      const arrBuf = await res.arrayBuffer();
+      musicBufferCache[trackKey] = await audioCtx.decodeAudioData(arrBuf);
+    }
+    // falls der Track inzwischen gewechselt hat, während wir geladen haben
+    if(currentMusicTrack !== trackKey) return;
+
+    if(currentMusicSource){ try{ currentMusicSource.stop(); }catch(e){} }
+    const source = audioCtx.createBufferSource();
+    source.buffer = musicBufferCache[trackKey];
+    source.loop = true;
+    source.connect(musicGain);
+    source.start();
+    currentMusicSource = source;
+    musicGain.gain.setTargetAtTime(MUSIC_VOLUME, audioCtx.currentTime, 1.2);
+  }catch(e){ /* Track nicht ladbar (z.B. Datei fehlt) — kein Absturz, nur kein Musik-Layer */ }
+}
+
+function stopMusic(){
+  currentMusicTrack = null;
+  pendingMusic = null;
+  if(!audioBuilt || !musicGain) return;
+  musicGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.8);
+  const src = currentMusicSource;
+  currentMusicSource = null;
+  if(src) setTimeout(()=>{ try{ src.stop(); }catch(e){} }, 1500);
 }
 
 function setScene(name){
@@ -442,6 +493,9 @@ function renderNode(nodeId, skipAnim){
 
   // Sound-Szene wechseln, falls der Node eine eigene definiert (sonst bleibt die aktuelle bestehen)
   if(node.sound) setScene(node.sound);
+
+  // Musik-Ebene: nur am Titelbildschirm, sonst aus
+  if(node.type === 'title'){ playMusic('title'); } else { stopMusic(); }
 
   if(node.type === 'title'){ renderTitle(); return; }
   if(node.type === 'end'){ renderEnd(node); return; }
