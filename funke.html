@@ -174,7 +174,9 @@ let state = {
    ══════════════════════════════════════════════════════════════ */
 
 let audioCtx = null, masterGain = null, audioBuilt = false;
-let soundMuted = localStorage.getItem(MUTE_KEY) === '1';
+/* Sound ist standardmäßig AUS, bis die Szenen-Tags über alle 11 Kapitel integriert sind
+   (aktuell nur Kapitel 1-3 getaggt). Wer will, kann ihn über den Topbar-Button aktivieren. */
+let soundMuted = localStorage.getItem(MUTE_KEY) !== '0';
 const scenes = {};
 let pendingScene = null, currentSceneName = null;
 
@@ -367,6 +369,7 @@ function checkCondition(cond){
     if(cond.invert && flagState) return false;
     if(!cond.invert && !flagState) return false;
   }
+  if(cond.allFlags && !cond.allFlags.every(f=>getFlag(f))) return false;
   if(cond.notFlag && getFlag(cond.notFlag)) return false;
   return true;
 }
@@ -2373,8 +2376,8 @@ const STORY = {
       { narrator: 'Die letzte Nacht vor den Hügeln. Das Feuer ist klein und gut versteckt, und niemand redet laut — die Nähe des Ziels macht aus jedem Geräusch eine Frage.' },
       { speaker: 'Rosa', line: '"Weißt du noch, wie du an meine Tür geklopft hast? Ich hab durch den Spion geschaut und gedacht: Der da bringt Ärger mit. Ich lag richtig. Ich hab nur die Sorte Ärger unterschätzt."', showIf: { flag: 'rosa_companion' } },
       { narrator: 'Sie sagt es mit diesem fast unsichtbaren Lächeln, das man sich bei ihr über Wochen verdienen muss.', showIf: { flag: 'rosa_companion' } },
-      { speaker: 'Mira', line: '"Falls das Ding da drin wirklich funktioniert — hast du dir überlegt, was du sagst? Beim ersten Mal, meine ich. Beim Turm hast du es miterlebt: Der erste Satz zählt."', showIf: { flag: 'broadcast_sent' } },
-      { speaker: 'Mira', line: '"Falls das Ding da drin wirklich funktioniert: Diesmal bleibst du für die Übertragung. Beim Turm bist du gegangen, bevor es losging. Ich hab\'s dir nie übel genommen — aber diesmal will ich dein Gesicht dabei sehen."', showIf: { flag: 'broadcast_sent', invert: true } },
+      { speaker: 'Mira', line: '"Falls das Ding da drin wirklich funktioniert — hast du dir überlegt, was du sagst? Beim ersten Mal, meine ich. Beim Turm hast du es miterlebt: Der erste Satz zählt."', showIf: { allFlags: ['tobias_joined', 'broadcast_sent'] } },
+      { speaker: 'Mira', line: '"Falls das Ding da drin wirklich funktioniert: Diesmal bleibst du für die Übertragung. Beim Turm bist du gegangen, bevor es losging. Ich hab\'s dir nie übel genommen — aber diesmal will ich dein Gesicht dabei sehen."', showIf: { flag: 'tobias_joined', notFlag: 'broadcast_sent' } },
       { narrator: 'Kurz vor Mitternacht knackt das Handfunkgerät — schwach, verrauscht, aber unverkennbar.' },
       { speaker: 'Shini', line: '"...falls ihr das hört: Die Fremden von neulich sind nicht mehr allein unterwegs, ich fange seit gestern kurze Sprüche auf einer Sammler-Frequenz auf. Führungsstimme nennt sich <span class=\'hl\'>Jarik</span>. Sie reden über eine Tür, die nicht aufgeht. Ich wiederhole: eine Tür, die nicht aufgeht. Macht was draus. Ende."' }
     ],
@@ -2421,7 +2424,7 @@ const STORY = {
     chapter: 'KAPITEL 11 — DER LETZTE FUNKE',
     text: [
       { narrator: 'Ihr habt einen halben Tag Vorsprung — genug, um das Gelände zu kennen, als am Nachmittag sieben Gestalten den Hang heraufkommen. Sie sehen euch, bleiben stehen, und für einen langen Moment steht die Welt still. Dann löst sich einer aus der Gruppe und kommt allein weiter. Jarik.', showIf: { flag: 'ch10_ahead' } },
-      { narrator: 'Ihr geht offen den Hang hinauf, Hände sichtbar — bei sieben frustrierten Leuten mit einer Stahltür im Rücken ist Überraschung das Letzte, was man wollen sollte. Einer löst sich aus der Gruppe und kommt euch entgegen. Jarik.', showIf: { flag: 'ch10_ahead', invert: true } },
+      { narrator: 'Sie haben euch natürlich längst gesehen — man erreicht diese Tür nicht, ohne an ihrem Lager vorbeizukommen. Sieben Gestalten setzen sich in Bewegung, den Hang herauf, ohne Hast: Wer vier Tage gegen eine Tür verloren hat, rennt nicht mehr. Einer geht voraus. Jarik.', showIf: { flag: 'ch10_ahead', invert: true } },
       { narrator: 'Er ist jünger, als die Führungsstimme im Funk klang — Ende zwanzig vielleicht, mit dem wachen, rastlosen Blick von jemandem, der zu lange auf den Moment gewartet hat, in dem er endlich selbst entscheidet.' },
       { speaker: 'Jarik', line: '"Ich weiß, wer ihr seid. Die Bauern, die Henrik weich geklopft haben." Er spuckt das Wort aus wie einen Kirschkern. "Drei Jahre haben wir genommen, was wir brauchten, und es hat funktioniert. Und dann kommt ihr mit eurer Mathematik, und plötzlich soll ich Rüben ernten."', showIf: { flag: 'sammler_deal' } },
       { speaker: 'Jarik', line: '"Ich weiß, wer ihr seid. Die mit dem Zaun, der gehalten hat." Er sagt es ohne Groll, fast anerkennend. "Henrik ist nach der Nacht nach Norden, den Schwanz eingezogen. Ich nicht. Wer das hier kontrolliert—" er nickt zur Tür, "—kontrolliert, wer mit wem redet. Das ist mehr wert als jede Ernte."', showIf: { flag: 'sammler_deal', invert: true } },
@@ -2441,7 +2444,7 @@ const STORY = {
       { speaker: 'Jarik', line: '"Gehört niemandem. Klar. Und Rüben wachsen von allein. Warum sollte ich einem Wort davon glauben?"' },
       { speaker: 'Finn', line: '"Weil ich hier stehe." Finn tritt vor, und Jariks Gesicht ändert sich — er kennt ihn. Natürlich kennt er ihn. "Halb verblutet haben sie mich aufgenommen, Jarik. Keine Bedingungen. Frag deine Leute, wie oft ihnen das bei uns passiert wäre."', showIf: { flag: 'helped_finn' } },
       { narrator: 'Und dann, über das Handfunkgerät, das du wortlos aufdrehst, die Stimme, die den Ausschlag gibt — blechern, weit weg, und trotzdem im Raum: Elenas Abendmeldung, mitten im Satz, Alltagskram — Erntemengen, eine reparierte Pumpe, Grüße an die Expedition. Kein Befehl, keine Drohung. Nur der Klang von einem Ort, an dem Menschen leben statt nehmen.', showIf: { flag: 'expedition_full_backing' } },
-      { narrator: 'Die junge Frau hinter Jarik — dieselbe, die damals am Tor die Kapuze zurückschlug — sagt leise etwas, das ihr nicht hört. Aber Jarik hört es. Und seine Schultern sinken um genau den Zentimeter, der zwischen Sturheit und Erschöpfung liegt.', showIf: { flag: 'sammler_deal' } },
+      { narrator: 'Eine Frau in Jariks Gruppe sagt leise etwas, das ihr nicht hört. Aber Jarik hört es. Und seine Schultern sinken um genau den Zentimeter, der zwischen Sturheit und Erschöpfung liegt.' },
       { speaker: 'Jarik', line: '"...Vier Tage vor einer Tür, die nicht aufgeht. Wisst ihr, was das mit einem macht? Man fängt an zu verstehen, dass Nehmen nur funktioniert, wenn irgendwer baut." Er schaut zu seinen Leuten, dann zur Tür, dann zu dir. "Also gut. Zeig mir, was Rüben können."' }
     ],
     onEnter: { flags: ['jarik_included'] },
@@ -2488,7 +2491,7 @@ const STORY = {
     location: 'KONTROLLRAUM',
     text: [
       { narrator: 'Mit dem Netzhandbuch aus Station 9 ist die Inbetriebnahme fast unheimlich unspektakulär: Seite 12, "Wiederanlauf nach Totalausfall", vierzehn nummerierte Schritte. Ihr arbeitet sie ab wie ein Rezept, und mit jedem Schritt erwacht ein weiteres Pult aus dem Staub.', showIf: { item: 'netzhandbuch' } },
-      { narrator: 'Ohne Anleitung wird die Inbetriebnahme zu einem langen Abend aus Versuch, Irrtum und Tobias\' Lieblingssatz: "Das würde ich jetzt nicht drücken." Dreimal fliegt eine Sicherung, einmal riecht es kurz beunruhigend — aber gegen Mitternacht erwacht das letzte Pult, und niemand gibt zu, wie knapp es war.', showIf: { item: 'netzhandbuch', invert: true } },
+      { narrator: 'Ohne Anleitung wird die Inbetriebnahme zu einem langen Abend aus Versuch, Irrtum und dem Satz "Das würde ich jetzt nicht drücken", der in wechselnden Stimmlagen durch den Kontrollraum geht. Dreimal fliegt eine Sicherung, einmal riecht es kurz beunruhigend — aber gegen Mitternacht erwacht das letzte Pult, und niemand gibt zu, wie knapp es war.', showIf: { item: 'netzhandbuch', invert: true } },
       { narrator: 'Und dann steht ihr davor: das Hauptpult. Drei Betriebsarten, sauber beschriftet, als hätte jemand gewusst, dass eines Tages Leute ohne Einweisung hier stehen würden. Vielleicht hat das jemand.' },
       { narrator: '<span class="hl">VOLLBETRIEB</span> — alle Stationen, Dauersendung, offene Frequenzen. Das Netz weckt jeden Empfänger im Land.' },
       { narrator: '<span class="hl">TEILBETRIEB</span> — ausgewählte Stationen, gerichtete Verbindungen. Ein Netz für die, die sich kennen.' },
@@ -2521,7 +2524,7 @@ const STORY = {
       { speaker: 'Rosa', line: '"Hier spricht... ach, wisst ihr was: Hier spricht einfach jemand, der drei Jahre gewartet hat. Ihr seid nicht allein da draußen. Ihr wart es nie. Wir haben uns nur alle nicht gehört."', showIf: { flag: 'rosa_companion' } },
       { narrator: 'Du sprichst die ersten Worte selbst — kein großer Satz, keine Rede. Nur eine Ortsangabe, eine Frequenz und die älteste Nachricht der Welt: Wir sind hier. Meldet euch.', showIf: { flag: 'rosa_companion', invert: true } },
       { narrator: 'Die erste Antwort kommt nach elf Minuten. Eine zittrige Stimme von irgendwo weit im Norden, die dreimal fragt, ob das echt ist. Die zweite Antwort ist Shini, der der zittrigen Stimme geduldig versichert, dass ja, das echt ist, und nein, das keine Falle ist, und ob sie zufällig Kaffee haben.' },
-      { speaker: 'Shini', line: '"Station zwölf an Leitstelle: Ich protokolliere den offiziellen Neustart der Zivilisation. Zeitstempel: mitten in der Nacht, wie sich das gehört. Und an die da unten am Pult — ich hab drei Jahre jede Frequenz abgehört, die es gibt. Das hier ist die erste, bei der ich froh bin, dass jemand zugehört hat."' },
+      { speaker: 'Shini', line: '"Station zwölf an Leitstelle: Ich protokolliere den offiziellen Neustart der Zivilisation. Zeitstempel: mitten in der Nacht, wie sich das gehört. Und an die Leute da unten am Pult — ich hab drei Jahre jede Frequenz abgehört, die es gibt. Das hier ist die erste, bei der ich froh bin, dass jemand zugehört hat."' },
       { narrator: 'Jariks Leute stehen im Kontrollraum verteilt und starren auf die Wandkarte wie auf ein Lagerfeuer. Einer von ihnen fragt leise, ob das Dreieck da im Osten in der Nähe seines Heimatdorfs liegt. Es liegt in der Nähe seines Heimatdorfs.', showIf: { flag: 'jarik_included' } },
       { narrator: 'Irgendwo im Westen, ein paar Tagesmärsche entfernt, ziehen sieben Gestalten durch die Nacht — und über ihnen, unsichtbar, füllt sich der Äther mit Stimmen. Vielleicht hören sie es auf irgendeinem Empfänger. Vielleicht drehen sie um. Die Tür wäre jetzt offen.', showIf: { flag: 'jarik_locked_out' } },
       { narrator: 'In Königsmühle, das erfahrt ihr später, hat Elena die halbe Nacht am Funkgerät gesessen und Neuankömmlinge sortiert wie früher Wachpläne. Der lange Tisch wird wieder zu kurz werden. Diesmal ist das ein schönes Problem.', showIf: { flag: 'network_alive' } },
