@@ -325,6 +325,7 @@
         const patch={value1:newV1};
         if(wasNotDone&&isDone)patch.completed_ts=Date.now();
         await sbFetch(`/rest/v1/challenge_entries?id=eq.${prev.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(patch)});
+        sbFetch('/rest/v1/challenge_entry_history',{method:'POST',prefer:'return=minimal',body:JSON.stringify({entry_id:prev.id,profile_id:currentProfile.id,name:currentProfile.name,challenge:ACTIVE.id,old_value1:prev.value1,new_value1:newV1,change_amount:v1})}).catch(()=>{});
         const reactions=['💪 Aktualisiert! Schmerz ist temporär, Ruhm ist ewig.','🔥 Gespeichert! Das Ranking zittert.','😤 Update durch! Zeig ihnen was du drauf hast.','🏆 Eingetragen! Du bist auf dem richtigen Weg. Wahrscheinlich.','⚡ Gespeichert! Jemand im Ranking wird gerade nervös.'];
       msg.textContent=reactions[Math.floor(Math.random()*reactions.length)];msg.className='form-msg ok';
       } else {
@@ -332,7 +333,9 @@
         const isDone=newV1>=GOAL;
         const entry={challenge:ACTIVE.id,name:currentProfile.name,profile_id:currentProfile.id,value1:newV1,value2:0};
         if(isDone)entry.completed_ts=Date.now();
-        await sbFetch('/rest/v1/challenge_entries',{method:'POST',prefer:'return=minimal',body:JSON.stringify(entry)});
+        const created=await sbFetch('/rest/v1/challenge_entries',{method:'POST',prefer:'return=representation',body:JSON.stringify(entry)});
+        const newId=created&&created[0]?created[0].id:null;
+        sbFetch('/rest/v1/challenge_entry_history',{method:'POST',prefer:'return=minimal',body:JSON.stringify({entry_id:newId,profile_id:currentProfile.id,name:currentProfile.name,challenge:ACTIVE.id,old_value1:0,new_value1:newV1,change_amount:v1})}).catch(()=>{});
         const firstReactions=['🎉 Willkommen im Club der Leidenden!','💀 Eingetragen! Es gibt kein Zurück mehr.','🔥 Dabei! Willkommen im Leiden.','😈 Erster Eintrag! Der Körper wird sich beschweren.','🏅 Eingetragen! Ab jetzt zählt jede Minute.'];
         msg.textContent=firstReactions[Math.floor(Math.random()*firstReactions.length)];msg.className='form-msg ok';
       }

@@ -78,6 +78,7 @@
     <div class="tabs">
       <button class="tab active" data-tab="entries">Einträge</button>
       <button class="tab" data-tab="profiles">Profile</button>
+      <button class="tab" data-tab="history">Verlauf</button>
       <button class="tab" data-tab="seasonplan">Saison-Planung</button>
       <button class="tab" data-tab="exercises">Übungskatalog</button>
       <button class="tab" data-tab="season">Saison-Punkte</button>
@@ -185,6 +186,17 @@
       <div id="profilesTableWrap"><div class="empty">Lädt…</div></div>
     </div>
 
+    <div class="tab-panel" id="panel-history">
+      <h2 class="panel-title">Eintrags-Verlauf</h2>
+      <p style="font-size:.68rem;color:var(--muted);margin-bottom:16px;">Chronologischer Verlauf aller Challenge-Einträge — jede Änderung wird protokolliert. Praktisch um verdächtige oder unrealistische Sprünge nachzuvollziehen.</p>
+      <div class="select-row" style="margin-bottom:16px;">
+        <label style="font-size:.65rem;color:var(--muted);">Filter:</label>
+        <select id="historyFilterChallenge"><option value="">Alle Challenges</option></select>
+        <button class="btn ghost" id="reloadHistory">🔄 Aktualisieren</button>
+      </div>
+      <div id="historyTableWrap"><div class="empty">Lädt…</div></div>
+    </div>
+
     <div class="tab-panel" id="panel-info">
       <h2 class="panel-title">System-Info</h2>
       <div class="grid2">
@@ -259,12 +271,55 @@
   function initAdmin(){
     loadChallengeSelectOptions();
     loadProfilesTable();
+    loadHistoryTable();
     loadSeasonYearOptions();
     loadSeasonRanking();
     loadHallOfFame();
     loadExercisesTable();
     loadInfo();
   }
+
+  // ── HISTORY ──
+  async function loadHistoryFilterOptions(){
+    const sel=document.getElementById('historyFilterChallenge');
+    try{
+      const exercises=await sbFetch('/rest/v1/exercises?select=id,name&order=name.asc');
+      const opts=(exercises||[]).map(ex=>`<option value="${slugify(ex.name)}">${ex.name}</option>`).join('');
+      sel.innerHTML='<option value="">Alle Challenges</option>'+opts;
+    }catch(e){}
+  }
+
+  async function loadHistoryTable(){
+    await loadHistoryFilterOptions();
+    const wrap=document.getElementById('historyTableWrap');
+    wrap.innerHTML='<div class="empty">Lädt…</div>';
+    const filterChallenge=document.getElementById('historyFilterChallenge').value;
+    try{
+      let url='/rest/v1/challenge_entry_history?select=*&order=changed_at.desc&limit=200';
+      if(filterChallenge)url+=`&challenge=eq.${filterChallenge}`;
+      const data=await sbFetch(url);
+      if(!data||!data.length){wrap.innerHTML='<div class="empty">Noch keine Verlaufseinträge vorhanden.</div>';return}
+      let html='<table><tr><th>Zeitpunkt</th><th>Name</th><th>Challenge</th><th>Vorher</th><th>Nachher</th><th>Änderung</th></tr>';
+      data.forEach(h=>{
+        const date=new Date(h.changed_at);
+        const dateStr=date.toLocaleDateString('de-DE')+' '+date.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+        const suspiciouslyHigh=h.change_amount>500;
+        html+=`<tr${suspiciouslyHigh?' style="background:rgba(255,68,68,.08);"':''}>
+          <td style="font-size:.62rem;">${dateStr}</td>
+          <td>${h.name}</td>
+          <td>${h.challenge}</td>
+          <td>${h.old_value1}</td>
+          <td>${h.new_value1}</td>
+          <td style="color:${suspiciouslyHigh?'var(--red)':'var(--green)'}">+${h.change_amount}</td>
+        </tr>`;
+      });
+      html+='</table>';
+      wrap.innerHTML=html;
+    }catch(e){wrap.innerHTML='<div class="empty">Fehler beim Laden.</div>'}
+  }
+
+  document.getElementById('reloadHistory').addEventListener('click',loadHistoryTable);
+  document.getElementById('historyFilterChallenge').addEventListener('change',loadHistoryTable);
 
   // ── PROFILES ──
   async function loadProfilesTable(){
