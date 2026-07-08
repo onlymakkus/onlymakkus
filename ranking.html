@@ -250,11 +250,27 @@
     }catch(e){overallList.innerHTML='<div class="ov-empty">Fehler beim Laden.</div>'}
   }
 
-  const CHALLENGES=['Side Plank','Plank','Push-Ups','Burpees','Hollow Body Hold','Bear Plank Hold'];
+  let CHALLENGES=[]; // wird dynamisch aus der aktuellen Saison geladen
   const SESSION_KEY='om_profile_session';
   let currentProfile=null;
 
   function currentSeasonYear(){ return new Date().getFullYear(); }
+
+  async function loadChallengeOptionsForVoting(){
+    try{
+      const year=currentSeasonYear();
+      const rows=await sbFetch(`/rest/v1/season_months?season_year=eq.${year}&is_december_vote=eq.false&select=*,exercises(name)&order=month.asc`);
+      const names=(rows||[]).map(r=>r.exercises?.name).filter(Boolean);
+      // Duplikate entfernen (falls z.B. dieselbe Übung mehrfach im Jahr vorkommt)
+      CHALLENGES=[...new Set(names)];
+      if(CHALLENGES.length===0){
+        // Fallback falls noch keine Saison-Planung existiert
+        CHALLENGES=['Side Plank','Plank','Push-Ups','Burpees','Hollow Body Hold','Bear Plank Hold'];
+      }
+    }catch(e){
+      CHALLENGES=['Side Plank','Plank','Push-Ups','Burpees','Hollow Body Hold','Bear Plank Hold'];
+    }
+  }
 
   async function profileHasEverParticipated(profileId){
     // Prüft ob dieses Profil jemals irgendeinen Challenge-Eintrag hatte (egal welcher Monat)
@@ -322,7 +338,10 @@
     }catch(e){ grid.innerHTML='<div class="ov-empty">Fehler beim Laden der Stimmen.</div>'; }
   }
 
-  checkVoterEligibility();
+  (async function initVoting(){
+    await loadChallengeOptionsForVoting();
+    checkVoterEligibility();
+  })();
 
   const THEME_KEY='om_cf_theme';
   const html=document.documentElement;
