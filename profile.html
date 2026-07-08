@@ -97,7 +97,7 @@
       <div class="auth-form active" id="loginForm">
         <div class="form-group">
           <label class="form-label">Name</label>
-          <input type="text" class="form-input" id="loginName" placeholder="Dein Name" autocomplete="username">
+          <input type="text" class="form-input" id="loginName" placeholder="Dein Name (z.B. Laura oder Laura#4471)" autocomplete="username">
         </div>
         <div class="form-group">
           <label class="form-label">Passwort</label>
@@ -121,7 +121,7 @@
           <label class="form-label">Passwort wiederholen</label>
           <input type="password" class="form-input" id="regPasswordConfirm" placeholder="••••••••" autocomplete="new-password">
         </div>
-        <p class="form-hint">Nach dem Erstellen bekommst du einen Wiederherstellungscode — damit kannst du dein Passwort später selbst zurücksetzen, ohne den Admin zu brauchen.</p>
+        <p class="form-hint">Nach dem Erstellen bekommst du einen Wiederherstellungscode — damit kannst du dein Passwort später selbst zurücksetzen, ohne den Admin zu brauchen. Falls dein Name schon vergeben ist, bekommst du automatisch ein Kürzel wie <b>Laura#4471</b> zur Unterscheidung.</p>
         <button class="auth-btn" id="registerBtn">Profil erstellen →</button>
         <p class="auth-msg" id="registerMsg"></p>
       </div>
@@ -129,7 +129,7 @@
       <div class="auth-form" id="forgotForm">
         <div class="form-group">
           <label class="form-label">Name</label>
-          <input type="text" class="form-input" id="fpName" placeholder="Dein Name" autocomplete="username">
+          <input type="text" class="form-input" id="fpName" placeholder="Dein Name (z.B. Laura oder Laura#4471)" autocomplete="username">
         </div>
         <div class="form-group">
           <label class="form-label">Wiederherstellungscode</label>
@@ -173,6 +173,7 @@
 <div class="modal-overlay" id="recoveryModal">
   <div class="modal-box">
     <h3 class="modal-title">DEIN <span>WIEDERHERSTELLUNGSCODE</span></h3>
+    <p class="modal-warn" id="handleNotice" style="display:none;color:var(--orange);font-weight:600;"></p>
     <p class="modal-warn">Speichere diesen Code jetzt gut sichtbar (Notiz-App, Passwort-Manager). Er wird nur dieses eine Mal angezeigt und ist dein einziger Weg, das Passwort ohne Admin-Hilfe zurückzusetzen.</p>
     <div class="modal-code" id="recoveryCodeDisplay">—</div>
     <button class="auth-btn" id="recoveryModalCloseBtn">Gespeichert, weiter →</button>
@@ -207,13 +208,43 @@
     }
     return code;
   }
-  function showRecoveryModal(code,onClose){
+  function showRecoveryModal(code,onClose,handle){
+    const notice=document.getElementById('handleNotice');
+    if(handle){
+      notice.textContent=`Dein Name war schon vergeben — dein Login-Handle ist jetzt: ${handle}`;
+      notice.style.display='block';
+    } else {
+      notice.style.display='none';
+    }
     document.getElementById('recoveryCodeDisplay').textContent=code;
     document.getElementById('recoveryModal').classList.add('active');
     document.getElementById('recoveryModalCloseBtn').onclick=()=>{
       document.getElementById('recoveryModal').classList.remove('active');
       if(onClose)onClose();
     };
+  }
+
+  // ── Discriminator helpers ──
+  function parseHandle(raw){
+    const trimmed=raw.trim();
+    if(trimmed.includes('#')){
+      const [n,d]=trimmed.split('#');
+      return {name:n.trim(), discriminator:d.trim()};
+    }
+    return {name:trimmed, discriminator:null};
+  }
+  function handleFilter(parsed){
+    return parsed.discriminator
+      ? `name=eq.${encodeURIComponent(parsed.name)}&discriminator=eq.${encodeURIComponent(parsed.discriminator)}`
+      : `name=eq.${encodeURIComponent(parsed.name)}&discriminator=is.null`;
+  }
+  async function generateUniqueDiscriminator(name){
+    for(let attempt=0;attempt<20;attempt++){
+      const code=String(Math.floor(1000+Math.random()*9000));
+      const taken=await sbFetch(`/rest/v1/profiles?name=eq.${encodeURIComponent(name)}&discriminator=eq.${code}&select=id`);
+      if(!taken || taken.length===0)return code;
+    }
+    throw new Error('Konnte keinen freien Discriminator finden');
   }
 
   // ── Tab switching ──
@@ -255,14 +286,21 @@
     btn.disabled=true;btn.textContent='…';
 
     try{
-      const existing=await sbFetch(`/rest/v1/profiles?name=eq.${encodeURIComponent(name)}&select=id`);
-      if(existing && existing.length>0){
-        msg.textContent='❌ Dieser Name ist schon vergeben';msg.className='auth-msg err';
-        btn.disabled=false;btn.textContent='Profil erstellen →';return;
+      const existingPlain=await sbFetch(`/rest/v1/profiles?name=eq.${encodeURIComponent(name)}&discriminator=is.null&select=id`);
+      let discriminator=null;
+      let handle=null;
+      if(existingPlain && existingPlain.length>0){
+        discriminator=await generateUniqueDiscriminator(name);
+        handle=`${name}#${discriminator}`;
       }
+
       const hash=dcodeIO.bcrypt.hashSync(pw,10);
-      await sbFetch('/rest/v1/profiles',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name,password_hash:hash})});
-      const created=await sbFetch(`/rest/v1/profiles?name=eq.${encodeURIComponent(name)}&select=id,name,created_at`);
+      await sbFetch('/rest/v1/profiles',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name,discriminator,password_hash:hash})});
+
+      const filter=discriminator
+        ? `name=eq.${encodeURIComponent(name)}&discriminator=eq.${discriminator}`
+        : `name=eq.${encodeURIComponent(name)}&discriminator=is.null`;
+      const created=await sbFetch(`/rest/v1/profiles?${filter}&select=id,name,discriminator,created_at`);
       const profile=created[0];
 
       const recoveryCode=generateRecoveryCode();
@@ -271,7 +309,7 @@
 
       localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name}));
       msg.textContent='✓ Profil erstellt!';msg.className='auth-msg ok';
-      showRecoveryModal(recoveryCode,()=>showProfile(profile));
+      showRecoveryModal(recoveryCode,()=>showProfile(profile),handle);
     }catch(e){
       msg.textContent='❌ Fehler beim Erstellen';msg.className='auth-msg err';
     }
@@ -280,17 +318,18 @@
 
   // ── Login ──
   document.getElementById('loginBtn').addEventListener('click', async ()=>{
-    const name=document.getElementById('loginName').value.trim();
+    const rawInput=document.getElementById('loginName').value.trim();
     const pw=document.getElementById('loginPassword').value;
     const msg=document.getElementById('loginMsg');
     const btn=document.getElementById('loginBtn');
 
-    if(!name||!pw){msg.textContent='⚠ Name und Passwort eingeben';msg.className='auth-msg err';return}
+    if(!rawInput||!pw){msg.textContent='⚠ Name und Passwort eingeben';msg.className='auth-msg err';return}
 
     btn.disabled=true;btn.textContent='…';
 
     try{
-      const rows=await sbFetch(`/rest/v1/profiles?name=eq.${encodeURIComponent(name)}&select=*`);
+      const parsed=parseHandle(rawInput);
+      const rows=await sbFetch(`/rest/v1/profiles?${handleFilter(parsed)}&select=*`);
       if(!rows || rows.length===0){
         msg.textContent='❌ Kein Profil mit diesem Namen gefunden';msg.className='auth-msg err';
         btn.disabled=false;btn.textContent='Einloggen →';return;
@@ -312,21 +351,22 @@
 
   // ── Password reset via recovery code ──
   document.getElementById('resetPasswordBtn').addEventListener('click', async ()=>{
-    const name=document.getElementById('fpName').value.trim();
+    const rawInput=document.getElementById('fpName').value.trim();
     const code=document.getElementById('fpCode').value.trim().toUpperCase();
     const pw=document.getElementById('fpNewPassword').value;
     const pwConfirm=document.getElementById('fpNewPasswordConfirm').value;
     const msg=document.getElementById('resetMsg');
     const btn=document.getElementById('resetPasswordBtn');
 
-    if(!name||!code){msg.textContent='⚠ Name und Code eingeben';msg.className='auth-msg err';return}
+    if(!rawInput||!code){msg.textContent='⚠ Name und Code eingeben';msg.className='auth-msg err';return}
     if(pw.length<6){msg.textContent='⚠ Passwort muss mind. 6 Zeichen haben';msg.className='auth-msg err';return}
     if(pw!==pwConfirm){msg.textContent='⚠ Passwörter stimmen nicht überein';msg.className='auth-msg err';return}
 
     btn.disabled=true;btn.textContent='…';
 
     try{
-      const rows=await sbFetch(`/rest/v1/profiles?name=eq.${encodeURIComponent(name)}&select=id,recovery_code_hash`);
+      const parsed=parseHandle(rawInput);
+      const rows=await sbFetch(`/rest/v1/profiles?${handleFilter(parsed)}&select=id,recovery_code_hash`);
       const profile=rows && rows[0];
       if(!profile || !profile.recovery_code_hash){
         msg.textContent='❌ Kein Wiederherstellungscode hinterlegt. Wende dich an den Admin.';msg.className='auth-msg err';
@@ -368,7 +408,7 @@
     document.getElementById('authView').style.display='none';
     document.getElementById('profileView').classList.add('active');
     document.getElementById('profileAvatar').textContent=profile.name.charAt(0).toUpperCase();
-    document.getElementById('profileName').textContent=profile.name;
+    document.getElementById('profileName').textContent=profile.discriminator ? `${profile.name}#${profile.discriminator}` : profile.name;
     if(profile.created_at){
       const date=new Date(profile.created_at);
       document.getElementById('profileSince').textContent='Profil seit '+date.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
