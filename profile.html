@@ -45,6 +45,9 @@
     .auth-msg{font-size:.68rem;text-align:center;min-height:18px;margin-top:4px}
     .auth-msg.err{color:#ff4444}
     .auth-msg.ok{color:var(--green)}
+    .auth-alt{font-size:.62rem;color:var(--muted);text-align:center;margin-top:4px}
+    .auth-alt a{color:var(--orange);text-decoration:none;cursor:pointer}
+    .auth-alt a:hover{text-decoration:underline}
 
     .profile-view{display:none;flex-direction:column;gap:20px}
     .profile-view.active{display:flex}
@@ -55,9 +58,19 @@
     .profile-since{font-size:.62rem;color:var(--muted);margin-top:4px}
     .logout-btn{padding:12px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono';font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:8px}
     .logout-btn:hover{border-color:#ff4444;color:#ff4444}
+    .secondary-btn{padding:12px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono';font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:8px}
+    .secondary-btn:hover{border-color:var(--orange);color:var(--orange)}
 
     footer{padding:24px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:24px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
     footer a{color:var(--muted);text-decoration:none}
+
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:9999;padding:24px}
+    .modal-overlay.active{display:flex}
+    .modal-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:380px;width:100%;text-align:center}
+    .modal-title{font-family:'Bebas Neue';font-size:1.3rem;margin-bottom:10px}
+    .modal-title span{color:var(--orange)}
+    .modal-warn{font-size:.66rem;color:var(--muted);line-height:1.7;margin-bottom:6px}
+    .modal-code{font-family:'DM Mono';font-size:1.05rem;letter-spacing:.05em;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px;margin:16px 0;word-break:break-all;color:var(--orange)}
   </style>
 </head>
 <body>
@@ -76,7 +89,7 @@
       <h1 class="auth-title">DEIN <span>PROFIL</span></h1>
       <p class="auth-sub">Ein Profil für alle Challenges — merk dir dein Passwort, es gilt für die ganze Saison.</p>
 
-      <div class="auth-tabs">
+      <div class="auth-tabs" id="authTabs">
         <button class="auth-tab active" data-tab="login">Login</button>
         <button class="auth-tab" data-tab="register">Registrieren</button>
       </div>
@@ -92,6 +105,7 @@
         </div>
         <button class="auth-btn" id="loginBtn">Einloggen →</button>
         <p class="auth-msg" id="loginMsg"></p>
+        <p class="auth-alt">Passwort vergessen? <a id="forgotLink">Code eingeben</a></p>
       </div>
 
       <div class="auth-form" id="registerForm">
@@ -107,9 +121,31 @@
           <label class="form-label">Passwort wiederholen</label>
           <input type="password" class="form-input" id="regPasswordConfirm" placeholder="••••••••" autocomplete="new-password">
         </div>
-        <p class="form-hint">Merk dir Name + Passwort gut — es gibt aktuell keinen automatischen "Passwort vergessen"-Weg. Bei Problemen wende dich an den Admin.</p>
+        <p class="form-hint">Nach dem Erstellen bekommst du einen Wiederherstellungscode — damit kannst du dein Passwort später selbst zurücksetzen, ohne den Admin zu brauchen.</p>
         <button class="auth-btn" id="registerBtn">Profil erstellen →</button>
         <p class="auth-msg" id="registerMsg"></p>
+      </div>
+
+      <div class="auth-form" id="forgotForm">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input type="text" class="form-input" id="fpName" placeholder="Dein Name" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Wiederherstellungscode</label>
+          <input type="text" class="form-input" id="fpCode" placeholder="z.B. K4XZ-9PQR-M2WT" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Neues Passwort</label>
+          <input type="password" class="form-input" id="fpNewPassword" placeholder="Mindestens 6 Zeichen" autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Neues Passwort wiederholen</label>
+          <input type="password" class="form-input" id="fpNewPasswordConfirm" placeholder="••••••••" autocomplete="new-password">
+        </div>
+        <button class="auth-btn" id="resetPasswordBtn">Passwort zurücksetzen →</button>
+        <p class="auth-msg" id="resetMsg"></p>
+        <p class="auth-alt"><a id="backToLoginLink">← Zurück zum Login</a></p>
       </div>
     </div>
 
@@ -121,6 +157,7 @@
         <div class="profile-since" id="profileSince">—</div>
       </div>
       <a href="challenge.html" class="auth-btn" style="text-align:center;text-decoration:none;">Zur Challenge →</a>
+      <button class="secondary-btn" id="regenCodeBtn">Wiederherstellungscode neu erzeugen</button>
       <button class="logout-btn" id="logoutBtn">Ausloggen</button>
     </div>
 
@@ -132,6 +169,15 @@
   <a href="impressum.html">Impressum</a>
   <a href="datenschutz.html">Datenschutz</a>
 </footer>
+
+<div class="modal-overlay" id="recoveryModal">
+  <div class="modal-box">
+    <h3 class="modal-title">DEIN <span>WIEDERHERSTELLUNGSCODE</span></h3>
+    <p class="modal-warn">Speichere diesen Code jetzt gut sichtbar (Notiz-App, Passwort-Manager). Er wird nur dieses eine Mal angezeigt und ist dein einziger Weg, das Passwort ohne Admin-Hilfe zurückzusetzen.</p>
+    <div class="modal-code" id="recoveryCodeDisplay">—</div>
+    <button class="auth-btn" id="recoveryModalCloseBtn">Gespeichert, weiter →</button>
+  </div>
+</div>
 
 <script>
   const cursor=document.getElementById('cursor');
@@ -151,6 +197,25 @@
 
   const SESSION_KEY='om_profile_session'; // stores {id, name}
 
+  // ── Recovery code helpers ──
+  function generateRecoveryCode(){
+    const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // ohne verwechselbare Zeichen (O/0, I/1)
+    let code='';
+    for(let i=0;i<12;i++){
+      if(i>0 && i%4===0)code+='-';
+      code+=chars[Math.floor(Math.random()*chars.length)];
+    }
+    return code;
+  }
+  function showRecoveryModal(code,onClose){
+    document.getElementById('recoveryCodeDisplay').textContent=code;
+    document.getElementById('recoveryModal').classList.add('active');
+    document.getElementById('recoveryModalCloseBtn').onclick=()=>{
+      document.getElementById('recoveryModal').classList.remove('active');
+      if(onClose)onClose();
+    };
+  }
+
   // ── Tab switching ──
   document.querySelectorAll('.auth-tab').forEach(tab=>{
     tab.addEventListener('click',()=>{
@@ -159,6 +224,20 @@
       tab.classList.add('active');
       document.getElementById(tab.dataset.tab+'Form').classList.add('active');
     });
+  });
+
+  // ── Forgot password: show/hide ──
+  document.getElementById('forgotLink').addEventListener('click',()=>{
+    document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+    document.getElementById('forgotForm').classList.add('active');
+    document.getElementById('authTabs').style.display='none';
+  });
+  document.getElementById('backToLoginLink').addEventListener('click',()=>{
+    document.getElementById('authTabs').style.display='flex';
+    document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+    document.getElementById('loginForm').classList.add('active');
+    document.querySelector('.auth-tab[data-tab="login"]').classList.add('active');
   });
 
   // ── Registration ──
@@ -185,9 +264,14 @@
       await sbFetch('/rest/v1/profiles',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name,password_hash:hash})});
       const created=await sbFetch(`/rest/v1/profiles?name=eq.${encodeURIComponent(name)}&select=id,name,created_at`);
       const profile=created[0];
+
+      const recoveryCode=generateRecoveryCode();
+      const recoveryHash=dcodeIO.bcrypt.hashSync(recoveryCode,10);
+      await sbFetch(`/rest/v1/profiles?id=eq.${profile.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({recovery_code_hash:recoveryHash})});
+
       localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name}));
       msg.textContent='✓ Profil erstellt!';msg.className='auth-msg ok';
-      setTimeout(()=>showProfile(profile),500);
+      showRecoveryModal(recoveryCode,()=>showProfile(profile));
     }catch(e){
       msg.textContent='❌ Fehler beim Erstellen';msg.className='auth-msg err';
     }
@@ -224,6 +308,53 @@
       msg.textContent='❌ Fehler beim Einloggen';msg.className='auth-msg err';
     }
     btn.disabled=false;btn.textContent='Einloggen →';
+  });
+
+  // ── Password reset via recovery code ──
+  document.getElementById('resetPasswordBtn').addEventListener('click', async ()=>{
+    const name=document.getElementById('fpName').value.trim();
+    const code=document.getElementById('fpCode').value.trim().toUpperCase();
+    const pw=document.getElementById('fpNewPassword').value;
+    const pwConfirm=document.getElementById('fpNewPasswordConfirm').value;
+    const msg=document.getElementById('resetMsg');
+    const btn=document.getElementById('resetPasswordBtn');
+
+    if(!name||!code){msg.textContent='⚠ Name und Code eingeben';msg.className='auth-msg err';return}
+    if(pw.length<6){msg.textContent='⚠ Passwort muss mind. 6 Zeichen haben';msg.className='auth-msg err';return}
+    if(pw!==pwConfirm){msg.textContent='⚠ Passwörter stimmen nicht überein';msg.className='auth-msg err';return}
+
+    btn.disabled=true;btn.textContent='…';
+
+    try{
+      const rows=await sbFetch(`/rest/v1/profiles?name=eq.${encodeURIComponent(name)}&select=id,recovery_code_hash`);
+      const profile=rows && rows[0];
+      if(!profile || !profile.recovery_code_hash){
+        msg.textContent='❌ Kein Wiederherstellungscode hinterlegt. Wende dich an den Admin.';msg.className='auth-msg err';
+        btn.disabled=false;btn.textContent='Passwort zurücksetzen →';return;
+      }
+      const validCode=dcodeIO.bcrypt.compareSync(code,profile.recovery_code_hash);
+      if(!validCode){
+        msg.textContent='❌ Code ungültig';msg.className='auth-msg err';
+        btn.disabled=false;btn.textContent='Passwort zurücksetzen →';return;
+      }
+      const newHash=dcodeIO.bcrypt.hashSync(pw,10);
+      await sbFetch(`/rest/v1/profiles?id=eq.${profile.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({password_hash:newHash})});
+      msg.textContent='✓ Passwort zurückgesetzt! Du kannst dich jetzt einloggen.';msg.className='auth-msg ok';
+      setTimeout(()=>{document.getElementById('backToLoginLink').click();},1200);
+    }catch(e){
+      msg.textContent='❌ Fehler beim Zurücksetzen';msg.className='auth-msg err';
+    }
+    btn.disabled=false;btn.textContent='Passwort zurücksetzen →';
+  });
+
+  // ── Regenerate recovery code (logged in) ──
+  document.getElementById('regenCodeBtn').addEventListener('click', async ()=>{
+    if(!confirm('Ein neuer Code macht den alten sofort ungültig. Fortfahren?'))return;
+    const session=JSON.parse(localStorage.getItem(SESSION_KEY));
+    const newCode=generateRecoveryCode();
+    const newHash=dcodeIO.bcrypt.hashSync(newCode,10);
+    await sbFetch(`/rest/v1/profiles?id=eq.${session.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({recovery_code_hash:newHash})});
+    showRecoveryModal(newCode);
   });
 
   // ── Logout ──
