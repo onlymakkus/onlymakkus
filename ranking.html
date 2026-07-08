@@ -290,9 +290,17 @@
       currentProfile=JSON.parse(saved);
     }catch(e){ return; }
 
+    try{
+      const rows=await sbFetch(`/rest/v1/profiles?id=eq.${currentProfile.id}&select=id,name,discriminator,display_name`);
+      if(rows && rows[0]){
+        currentProfile={id:rows[0].id,name:rows[0].name,discriminator:rows[0].discriminator,displayName:rows[0].display_name||rows[0].name};
+        localStorage.setItem(SESSION_KEY,JSON.stringify(currentProfile));
+      }
+    }catch(e){}
+
     const eligible=await profileHasEverParticipated(currentProfile.id);
     if(!eligible){
-      msg.textContent='⚠ Du bist eingeloggt als '+currentProfile.name+', hast aber noch nie an einer Challenge teilgenommen. Erst mitmachen, dann abstimmen!';
+      msg.textContent='⚠ Du bist eingeloggt als '+(currentProfile.displayName||currentProfile.name)+', hast aber noch nie an einer Challenge teilgenommen. Erst mitmachen, dann abstimmen!';
       msg.className='vote-gate-msg err';
       return;
     }
@@ -329,7 +337,7 @@
             if(existing && existing.length>0){
               await sbFetch(`/rest/v1/december_votes?id=eq.${existing[0].id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({choice:ch})});
             } else {
-              await sbFetch('/rest/v1/december_votes',{method:'POST',prefer:'return=minimal',body:JSON.stringify({season_year:year,voter_name:currentProfile.name,profile_id:currentProfile.id,choice:ch})});
+              await sbFetch('/rest/v1/december_votes',{method:'POST',prefer:'return=minimal',body:JSON.stringify({season_year:year,voter_name:currentProfile.displayName||currentProfile.name,profile_id:currentProfile.id,choice:ch})});
             }
             renderVoting();
           }catch(e){ btn.textContent='Fehler ✕'; }

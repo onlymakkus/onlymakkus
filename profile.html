@@ -121,6 +121,10 @@
           <label class="form-label">Passwort wiederholen</label>
           <input type="password" class="form-input" id="regPasswordConfirm" placeholder="••••••••" autocomplete="new-password">
         </div>
+        <div class="form-group">
+          <label class="form-label">Anzeigename (optional)</label>
+          <input type="text" class="form-input" id="regDisplayName" placeholder="z.B. Laura K. — frei wählbar, darf auch doppelt vorkommen" autocomplete="off">
+        </div>
         <p class="form-hint">Nach dem Erstellen bekommst du einen Wiederherstellungscode — damit kannst du dein Passwort später selbst zurücksetzen, ohne den Admin zu brauchen. Falls dein Name schon vergeben ist, bekommst du automatisch ein Kürzel wie <b>Laura#4471</b> zur Unterscheidung.</p>
         <button class="auth-btn" id="registerBtn">Profil erstellen →</button>
         <p class="auth-msg" id="registerMsg"></p>
@@ -155,6 +159,13 @@
         <div class="profile-avatar" id="profileAvatar">?</div>
         <div class="profile-name" id="profileName">—</div>
         <div class="profile-since" id="profileSince">—</div>
+        <div class="profile-since" id="profileHandle" style="margin-top:2px;"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Anzeigename ändern</label>
+        <input type="text" class="form-input" id="editDisplayName" placeholder="Neuer Anzeigename">
+        <button class="secondary-btn" id="saveDisplayNameBtn">Speichern</button>
+        <p class="auth-msg" id="displayNameMsg"></p>
       </div>
       <a href="challenge.html" class="auth-btn" style="text-align:center;text-decoration:none;">Zur Challenge →</a>
       <button class="secondary-btn" id="regenCodeBtn">Wiederherstellungscode neu erzeugen</button>
@@ -274,6 +285,8 @@
   // ── Registration ──
   document.getElementById('registerBtn').addEventListener('click', async ()=>{
     const name=document.getElementById('regName').value.trim();
+    const displayNameInput=document.getElementById('regDisplayName').value.trim();
+    const displayName=displayNameInput||name;
     const pw=document.getElementById('regPassword').value;
     const pwConfirm=document.getElementById('regPasswordConfirm').value;
     const msg=document.getElementById('registerMsg');
@@ -295,19 +308,19 @@
       }
 
       const hash=dcodeIO.bcrypt.hashSync(pw,10);
-      await sbFetch('/rest/v1/profiles',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name,discriminator,password_hash:hash})});
+      await sbFetch('/rest/v1/profiles',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name,discriminator,display_name:displayName,password_hash:hash})});
 
       const filter=discriminator
         ? `name=eq.${encodeURIComponent(name)}&discriminator=eq.${discriminator}`
         : `name=eq.${encodeURIComponent(name)}&discriminator=is.null`;
-      const created=await sbFetch(`/rest/v1/profiles?${filter}&select=id,name,discriminator,created_at`);
+      const created=await sbFetch(`/rest/v1/profiles?${filter}&select=id,name,discriminator,display_name,created_at`);
       const profile=created[0];
 
       const recoveryCode=generateRecoveryCode();
       const recoveryHash=dcodeIO.bcrypt.hashSync(recoveryCode,10);
       await sbFetch(`/rest/v1/profiles?id=eq.${profile.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({recovery_code_hash:recoveryHash})});
 
-      localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name}));
+      localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name,discriminator:profile.discriminator,displayName:profile.display_name||profile.name}));
       msg.textContent='✓ Profil erstellt!';msg.className='auth-msg ok';
       showRecoveryModal(recoveryCode,()=>showProfile(profile),handle);
     }catch(e){
@@ -340,7 +353,7 @@
         msg.textContent='❌ Falsches Passwort';msg.className='auth-msg err';
         btn.disabled=false;btn.textContent='Einloggen →';return;
       }
-      localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name}));
+      localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name,discriminator:profile.discriminator,displayName:profile.display_name||profile.name}));
       msg.textContent='✓ Eingeloggt!';msg.className='auth-msg ok';
       setTimeout(()=>showProfile(profile),400);
     }catch(e){
@@ -397,6 +410,24 @@
     showRecoveryModal(newCode);
   });
 
+  // ── Change display name (logged in) ──
+  document.getElementById('saveDisplayNameBtn').addEventListener('click', async ()=>{
+    const session=JSON.parse(localStorage.getItem(SESSION_KEY));
+    const newDisplayName=document.getElementById('editDisplayName').value.trim();
+    const msg=document.getElementById('displayNameMsg');
+    if(!newDisplayName){msg.textContent='⚠ Anzeigename darf nicht leer sein';msg.className='auth-msg err';return}
+    try{
+      await sbFetch(`/rest/v1/profiles?id=eq.${session.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({display_name:newDisplayName})});
+      session.displayName=newDisplayName;
+      localStorage.setItem(SESSION_KEY,JSON.stringify(session));
+      document.getElementById('profileName').textContent=newDisplayName;
+      document.getElementById('profileAvatar').textContent=newDisplayName.charAt(0).toUpperCase();
+      msg.textContent='✓ Gespeichert — gilt ab jetzt für neue Challenge-Einträge';msg.className='auth-msg ok';
+    }catch(e){
+      msg.textContent='❌ Fehler beim Speichern';msg.className='auth-msg err';
+    }
+  });
+
   // ── Logout ──
   document.getElementById('logoutBtn').addEventListener('click',()=>{
     localStorage.removeItem(SESSION_KEY);
@@ -407,12 +438,18 @@
   function showProfile(profile){
     document.getElementById('authView').style.display='none';
     document.getElementById('profileView').classList.add('active');
-    document.getElementById('profileAvatar').textContent=profile.name.charAt(0).toUpperCase();
-    document.getElementById('profileName').textContent=profile.discriminator ? `${profile.name}#${profile.discriminator}` : profile.name;
+    const displayName=profile.display_name||profile.name;
+    const handle=profile.discriminator ? `${profile.name}#${profile.discriminator}` : profile.name;
+    document.getElementById('profileAvatar').textContent=displayName.charAt(0).toUpperCase();
+    document.getElementById('profileName').textContent=displayName;
+    document.getElementById('profileHandle').textContent='Login: '+handle;
+    document.getElementById('editDisplayName').value=displayName;
     if(profile.created_at){
       const date=new Date(profile.created_at);
       document.getElementById('profileSince').textContent='Profil seit '+date.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
     }
+    // Session immer synchron zum aktuellen DB-Stand halten
+    localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name,discriminator:profile.discriminator,displayName}));
   }
 
   // ── Auto-login from session ──
