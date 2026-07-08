@@ -87,7 +87,8 @@
       <div class="go-title">GAME OVER</div>
       <div class="go-sub" id="go-sub">Score: 0</div>
       <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
-        <div style="font-size:.6rem;color:var(--muted);letter-spacing:.1em">Name für Highscore</div>
+        <div style="font-size:.6rem;color:var(--muted);letter-spacing:.1em" id="go-name-label">Name für Highscore</div>
+        <div id="go-loggedin" style="display:none;font-size:.78rem;text-align:center;">Als <b id="go-loggedin-name">—</b> spielen<div style="font-size:.55rem;color:var(--muted);margin-top:2px;"><a href="#" id="go-not-me" style="color:var(--muted);text-decoration:underline;">Nicht du?</a></div></div>
         <input class="go-input" id="go-name" placeholder="Dein Name" maxlength="20">
         <input type="text" id="go-hp" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
         <button class="go-btn" id="go-save">Speichern →</button>
@@ -119,6 +120,34 @@ async function sbFetch(p,o={}){
   const r=await fetch(SB+p,{...o,headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});
   const t=await r.text();return t?JSON.parse(t):null;
 }
+// ── Optionaler Profil-Login (geteilt mit CrossFit-Bereich) ──
+let gameProfile=null;
+async function checkGameProfile(){
+  const saved=localStorage.getItem('om_profile_session');
+  if(!saved)return;
+  try{
+    const session=JSON.parse(saved);
+    const rows=await sbFetch(`/rest/v1/profiles?id=eq.${session.id}&select=id,name,display_name`);
+    if(rows && rows[0]){
+      gameProfile={id:rows[0].id, displayName:rows[0].display_name||rows[0].name};
+    }
+  }catch(e){}
+  applyLoginUI();
+}
+function applyLoginUI(){
+  const box=document.getElementById('go-loggedin');
+  const label=document.getElementById('go-name-label');
+  const input=document.getElementById('go-name');
+  if(!box)return;
+  if(gameProfile){
+    document.getElementById('go-loggedin-name').textContent=gameProfile.displayName;
+    box.style.display='block';label.style.display='none';input.style.display='none';
+  } else {
+    box.style.display='none';label.style.display='block';input.style.display='block';
+  }
+}
+document.getElementById('go-not-me').addEventListener('click',(e)=>{e.preventDefault();gameProfile=null;applyLoginUI();});
+checkGameProfile();
 const cursor=document.getElementById('cursor');
 document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
 document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
@@ -178,6 +207,7 @@ function end(){
   document.getElementById('go-sub').textContent='Score: '+score+' Punkte';
   document.getElementById('go-msg').textContent='';
   document.getElementById('go-name').value=localStorage.getItem('sn_name')||'';
+  applyLoginUI();
   document.getElementById('go').classList.add('show');
   document.getElementById('btn-start').textContent='▶ Nochmal';
 }
@@ -244,16 +274,18 @@ document.getElementById('dp-pause').addEventListener('click',()=>{
   if(paused){clearInterval(loop);draw()}else{loop=setInterval(step,speed())}
 });
 document.getElementById('go-save').addEventListener('click',async()=>{
-  const name=document.getElementById('go-name').value.trim(),msg=document.getElementById('go-msg');
+  const msg=document.getElementById('go-msg');
   const hp=document.getElementById('go-hp').value;
   if(hp){msg.textContent='✓ Gespeichert!';setTimeout(()=>{document.getElementById('go').classList.remove('show');init()},1200);return}
-  if(!name){msg.textContent='⚠ Name eingeben';return}
+  let name,profileId=null;
+  if(gameProfile){name=gameProfile.displayName;profileId=gameProfile.id;}
+  else{name=document.getElementById('go-name').value.trim();if(!name){msg.textContent='⚠ Name eingeben';return}}
   const elapsed=(Date.now()-gameStartTime)/1000;
   const minTimeNeeded=score*0.3;
   if(gameStartTime===0||elapsed<minTimeNeeded||elapsed<1){msg.textContent='⚠ Ungültiger Spielverlauf';return}
   if(score>500){msg.textContent='⚠ Score außerhalb des möglichen Bereichs';return}
   document.getElementById('go-save').textContent='…';
-  try{await sbFetch('/rest/v1/snake_scores',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name,score})});localStorage.setItem('sn_name',name);msg.textContent='✓ Gespeichert!';await loadScores();setTimeout(()=>{document.getElementById('go').classList.remove('show');init()},1200)}
+  try{await sbFetch('/rest/v1/snake_scores',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name,score,profile_id:profileId})});if(!gameProfile)localStorage.setItem('sn_name',name);msg.textContent='✓ Gespeichert!';await loadScores();setTimeout(()=>{document.getElementById('go').classList.remove('show');init()},1200)}
   catch{msg.textContent='❌ Fehler'}
   document.getElementById('go-save').textContent='Speichern →';
 });
