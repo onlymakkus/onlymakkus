@@ -326,13 +326,14 @@
     const wrap=document.getElementById('profilesTableWrap');
     wrap.innerHTML='<div class="empty">Lädt…</div>';
     try{
-      const data=await sbFetch('/rest/v1/profiles?select=id,name,created_at&order=created_at.asc');
+      const data=await sbFetch('/rest/v1/profiles?select=id,name,discriminator,created_at&order=created_at.asc');
       if(!data||!data.length){wrap.innerHTML='<div class="empty">Noch keine Profile registriert.</div>';return}
       let html='<table><tr><th>Name</th><th>Registriert am</th><th>Neues Passwort</th><th>Aktionen</th></tr>';
       data.forEach(p=>{
         const date=new Date(p.created_at).toLocaleDateString('de-DE');
+        const displayName = p.discriminator ? `${p.name}<span style="color:var(--muted)">#${p.discriminator}</span>` : p.name;
         html+=`<tr data-id="${p.id}">
-          <td>${p.name}</td>
+          <td>${displayName}</td>
           <td>${date}</td>
           <td><input type="text" class="new-password" placeholder="neues Passwort" style="width:140px"></td>
           <td class="row-actions">
@@ -634,13 +635,16 @@
     const sel=document.getElementById('newRankProfile');
     try{
       const [profiles, existingRanks] = await Promise.all([
-        sbFetch('/rest/v1/profiles?select=id,name&order=name.asc'),
+        sbFetch('/rest/v1/profiles?select=id,name,discriminator&order=name.asc'),
         sbFetch('/rest/v1/season_ranking?select=profile_id')
       ]);
       const usedProfileIds = new Set((existingRanks||[]).map(r=>r.profile_id).filter(Boolean));
       const available = (profiles||[]).filter(p=>!usedProfileIds.has(p.id));
       sel.innerHTML = '<option value="">— Profil wählen —</option>' +
-        available.map(p=>`<option value="${p.id}" data-name="${p.name}">${p.name}</option>`).join('');
+        available.map(p=>{
+          const label = p.discriminator ? `${p.name}#${p.discriminator}` : p.name;
+          return `<option value="${p.id}" data-name="${p.name}">${label}</option>`;
+        }).join('');
     }catch(e){ sel.innerHTML='<option value="">Fehler beim Laden der Profile</option>'; }
   }
 
