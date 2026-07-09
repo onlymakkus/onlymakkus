@@ -13,7 +13,7 @@
   --orange:#ff4e1a;
   --danger:#ff3b5c; --violet:#7c3aed; --amber:#ffb454;
 }
-html,body{height:100%}
+html,body{height:100%;height:calc(var(--vh, 1vh) * 100)}
 body{
   background:var(--black); color:var(--cream); font-family:'DM Mono',monospace;
   overflow:hidden; cursor:none;
@@ -51,7 +51,7 @@ body{
 .lvl-badge{position:absolute;bottom:18px;right:22px;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);text-align:right}
 .lvl-badge b{font-family:'Bebas Neue';font-size:1.3rem;letter-spacing:.02em;color:var(--orange);display:block}
 
-.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(8,8,6,0.94);z-index:100}
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;height:calc(var(--vh, 1vh) * 100);display:none;align-items:center;justify-content:center;background:rgba(8,8,6,0.94);z-index:100;overflow-y:auto;padding:20px 0}
 .overlay.show{display:flex}
 .overlay::before{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none}
 
@@ -180,9 +180,20 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
   let W, H;
+
+  // ── iOS Safari 100vh fix: real viewport height incl. address-bar changes ──
+  function setVH(){
+    const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    document.documentElement.style.setProperty('--vh', (h * 0.01) + 'px');
+  }
+  setVH();
+  window.addEventListener('resize', setVH);
+  window.addEventListener('orientationchange', setVH);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', setVH);
+
   function resize(){
     W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
+    H = canvas.height = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
   }
   window.addEventListener('resize', resize);
   resize();
@@ -271,26 +282,22 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
   let elapsed, killCount, spawnTimer, running, paused;
   let nextLevelXp;
 
-  function resetGame(){
+  function initState(){
     player = {
-      x: W/2, y: H/2, r: 13,
-      speed: 230,
-      hp: 100, maxHp: 100,
-      xp: 0, level: 1,
+      x: W/2, y: H/2, r: 13, speed: 230,
+      hp: 100, maxHp: 100, xp: 0, level: 1,
       dmg: 12, atkCooldown: 0.45, atkTimer: 0,
-      projSpeed: 520, projectiles: 1, pierce: 0,
-      pickupRadius: 70,
+      projSpeed: 520, projectiles: 1, pierce: 0, pickupRadius: 70,
     };
-    enemies = [];
-    projectiles = [];
-    orbs = [];
-    particles = [];
-    elapsed = 0;
-    killCount = 0;
-    spawnTimer = 0;
-    nextLevelXp = 20;
+    enemies = []; projectiles = []; orbs = []; particles = [];
+    elapsed = 0; killCount = 0; spawnTimer = 0; nextLevelXp = 20;
+    running = false; paused = false;
+  }
+  initState(); // safe defaults so the render loop never touches undefined before "Run starten"
+
+  function resetGame(){
+    initState();
     running = true;
-    paused = false;
     updateHud();
   }
 
@@ -620,8 +627,12 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     lastT = t;
     dt = Math.min(dt, 0.05);
 
-    if (running && !paused) update(dt);
-    render();
+    try {
+      if (running && !paused) update(dt);
+      render();
+    } catch(err){
+      console.error('Schwarmkern frame error:', err);
+    }
     requestAnimationFrame(loop);
   }
 
