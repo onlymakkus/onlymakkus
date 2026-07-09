@@ -86,7 +86,7 @@ body{
 
 /* TOUCH JOYSTICK */
 .joystick-zone{display:none;position:fixed;left:0;bottom:0;width:45vw;height:45vh;z-index:50;touch-action:none;}
-.joystick-base{position:absolute;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,0.04);border:1px solid var(--border);pointer-events:none;opacity:0;transition:opacity .15s}
+.joystick-base{position:fixed;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,0.04);border:1px solid var(--border);pointer-events:none;opacity:0;transition:opacity .15s;z-index:51}
 .joystick-base.active{opacity:1}
 .joystick-knob{position:absolute;top:50%;left:50%;width:46px;height:46px;border-radius:50%;background:rgba(255,78,26,0.18);border:1px solid var(--orange);transform:translate(-50%,-50%);box-shadow:0 0 14px rgba(255,78,26,.35)}
 @media (pointer:coarse){
