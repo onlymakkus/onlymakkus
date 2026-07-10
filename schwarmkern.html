@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Schwarmkern — onlymakkus Gaming</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -13,16 +13,21 @@
   --orange:#ff4e1a;
   --danger:#ff3b5c; --violet:#7c3aed; --amber:#ffb454;
 }
-html,body{height:100%;height:calc(var(--vh, 1vh) * 100)}
+html,body{height:100%;height:calc(var(--vh, 1vh) * 100);overscroll-behavior:none}
 body{
   background:var(--black); color:var(--cream); font-family:'DM Mono',monospace;
   overflow:hidden; cursor:none;
+  touch-action:manipulation;
+  -webkit-touch-callout:none;
+  -webkit-user-select:none; user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior:none;
 }
 .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
 .cursor.big{width:32px;height:32px}
 @media(hover:none){.cursor{display:none}body{cursor:auto}}
 
-.topbar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--border);background:rgba(10,10,8,0.88);backdrop-filter:blur(6px)}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) 12px calc(20px + env(safe-area-inset-left));border-bottom:1px solid var(--border);background:rgba(10,10,8,0.88);backdrop-filter:blur(6px)}
 .topbar-title{font-family:'Bebas Neue';letter-spacing:.15em;font-size:1.05rem;color:var(--cream)}
 .topbar-title span{color:var(--orange)}
 .tb-back{background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono';font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:7px 14px;cursor:pointer;text-decoration:none;transition:all .15s}
@@ -33,22 +38,22 @@ body{
 .hud { position:fixed; inset:0; pointer-events:none; z-index:5; }
 .hud * { pointer-events:none; }
 
-.top-hud{position:absolute;top:52px;left:0;right:0;display:flex;align-items:flex-start;justify-content:space-between;padding:14px 22px;}
+.top-hud{position:absolute;top:calc(52px + env(safe-area-inset-top));left:0;right:0;display:flex;align-items:flex-start;justify-content:space-between;padding:14px calc(22px + env(safe-area-inset-right)) 14px calc(22px + env(safe-area-inset-left));}
 .brand-tag{font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:var(--orange)}
 .timer { font-family:'Bebas Neue'; font-size:26px; letter-spacing:.05em; color:var(--cream); text-align:center; }
 .wave-label{text-align:right;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
 .wave-label b{color:var(--danger);font-family:'Bebas Neue';font-size:1rem;letter-spacing:.02em}
 
-.bars { position:absolute; top:96px; left:22px; width:250px; }
+.bars { position:absolute; top:calc(96px + env(safe-area-inset-top)); left:calc(22px + env(safe-area-inset-left)); width:250px; }
 .bar-track{height:7px;background:rgba(255,255,255,0.06);border:1px solid var(--border);overflow:hidden;margin-bottom:8px}
 .bar-fill{height:100%;transition:width .15s ease}
 #hp-fill{background:var(--danger);box-shadow:0 0 8px rgba(255,59,92,.6)}
 #xp-fill{background:var(--orange);box-shadow:0 0 8px rgba(255,78,26,.6)}
 .bar-label{font-size:.58rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
 
-.kills{position:absolute;bottom:18px;left:22px;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+.kills{position:absolute;bottom:calc(18px + env(safe-area-inset-bottom));left:calc(22px + env(safe-area-inset-left));font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
 .kills b{font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:.02em;color:var(--cream)}
-.lvl-badge{position:absolute;bottom:18px;right:22px;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);text-align:right}
+.lvl-badge{position:absolute;bottom:calc(18px + env(safe-area-inset-bottom));right:calc(22px + env(safe-area-inset-right));font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);text-align:right}
 .lvl-badge b{font-family:'Bebas Neue';font-size:1.3rem;letter-spacing:.02em;color:var(--orange);display:block}
 
 .boss-bar-wrap{position:absolute;top:14px;left:50%;transform:translate(-50%,-140%);width:min(420px, 70vw);opacity:0;transition:transform .35s ease, opacity .35s ease}
@@ -233,6 +238,9 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
   let W, H;
+
+  // Touch-Geräte haben oft schwächere GPUs -> Glow-Effekte (shadowBlur) günstiger machen
+  const FX_BLUR = window.matchMedia('(pointer:coarse)').matches ? 0.4 : 1;
 
   // ── iOS Safari 100vh fix: real viewport height incl. address-bar changes ──
   function setVH(){
@@ -551,8 +559,9 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     orbs.push({ x,y, r:5, val });
   }
 
+  const PARTICLE_COUNT = window.matchMedia('(pointer:coarse)').matches ? 3 : 6;
   function spawnHitParticles(x,y,color){
-    for (let i=0;i<6;i++){
+    for (let i=0;i<PARTICLE_COUNT;i++){
       const a = Math.random()*Math.PI*2;
       const spd = 60+Math.random()*80;
       particles.push({ x,y, vx:Math.cos(a)*spd, vy:Math.sin(a)*spd, life:0.35, color });
@@ -945,7 +954,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     for (const o of orbs){
       ctx.beginPath();
       ctx.fillStyle = '#ff4e1a';
-      ctx.shadowColor = '#ff4e1a'; ctx.shadowBlur = 8;
+      ctx.shadowColor = '#ff4e1a'; ctx.shadowBlur = 8*FX_BLUR;
       ctx.arc(o.x,o.y,o.r,0,7);
       ctx.fill();
     }
@@ -970,7 +979,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
 
         ctx.beginPath();
         ctx.fillStyle = e.color;
-        ctx.shadowColor = e.color; ctx.shadowBlur = 22;
+        ctx.shadowColor = e.color; ctx.shadowBlur = 22*FX_BLUR;
         ctx.arc(e.x,e.y,e.r,0,7);
         ctx.fill();
         ctx.shadowBlur = 0;
@@ -988,7 +997,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
       } else {
         ctx.beginPath();
         ctx.fillStyle = e.color;
-        ctx.shadowColor = e.color; ctx.shadowBlur = 10;
+        ctx.shadowColor = e.color; ctx.shadowBlur = 10*FX_BLUR;
         ctx.arc(e.x,e.y,e.r,0,7);
         ctx.fill();
         ctx.shadowBlur = 0;
@@ -1004,7 +1013,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     for (const bp of bossProjectiles){
       ctx.beginPath();
       ctx.fillStyle = '#ff3b5c';
-      ctx.shadowColor = '#ff3b5c'; ctx.shadowBlur = 10;
+      ctx.shadowColor = '#ff3b5c'; ctx.shadowBlur = 10*FX_BLUR;
       ctx.arc(bp.x,bp.y,bp.r,0,7);
       ctx.fill();
     }
@@ -1013,7 +1022,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     for (const p of projectiles){
       ctx.beginPath();
       ctx.fillStyle = '#f2ede4';
-      ctx.shadowColor = '#ff4e1a'; ctx.shadowBlur = 6;
+      ctx.shadowColor = '#ff4e1a'; ctx.shadowBlur = 6*FX_BLUR;
       ctx.arc(p.x,p.y,p.r,0,7);
       ctx.fill();
     }
@@ -1021,7 +1030,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
 
     ctx.beginPath();
     ctx.fillStyle = '#f2ede4';
-    ctx.shadowColor = '#ff4e1a'; ctx.shadowBlur = 18;
+    ctx.shadowColor = '#ff4e1a'; ctx.shadowBlur = 18*FX_BLUR;
     ctx.arc(player.x, player.y, player.r, 0, 7);
     ctx.fill();
     ctx.shadowBlur = 0;
@@ -1049,7 +1058,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
         const by = player.y + Math.sin(a)*player.orbit.radius;
         ctx.beginPath();
         ctx.fillStyle = '#ffb454';
-        ctx.shadowColor = '#ffb454'; ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ffb454'; ctx.shadowBlur = 10*FX_BLUR;
         ctx.arc(bx, by, 8, 0, 7);
         ctx.fill();
         ctx.shadowBlur = 0;
