@@ -328,6 +328,48 @@
   }
   table td:first-child{color:var(--yellow);white-space:nowrap;}
 
+  @media(max-width:640px){
+    section#legend{padding:18px 16px;border-radius:14px;}
+    table thead{display:none;}
+    table, table tbody, table tr, table td{display:block;width:100%;}
+    table tr{
+      border:1px solid var(--line);
+      border-radius:10px;
+      margin-bottom:12px;
+      padding:14px;
+      background:var(--card);
+    }
+    table td{
+      border-bottom:none;
+      padding:6px 0;
+      text-align:left;
+      white-space:normal;
+    }
+    table td:first-child{
+      color:var(--yellow);
+      font-family:'JetBrains Mono',monospace;
+      font-size:11px;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      padding-bottom:2px;
+    }
+    table td:nth-child(2){
+      font-size:15px;
+      font-weight:600;
+      color:var(--chalk);
+      padding-bottom:8px;
+      border-bottom:1px dashed var(--line);
+      margin-bottom:8px;
+    }
+    table td:nth-child(3){
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+    table td:first-child::before{content:'Original: ';color:var(--muted);font-weight:400;}
+    table td:nth-child(3)::before{content:'Warum: ';color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:3px;}
+  }
+
   section#schedule{margin-top:24px;}
   .sched-grid{
     display:grid;
