@@ -8,6 +8,7 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08)}
+    html,body{height:100%;height:calc(var(--vh, 1vh) * 100)}
     body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;min-height:100vh;display:flex;flex-direction:column;cursor:none;overflow-x:hidden;user-select:none}
     .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
     .cursor.big{width:36px;height:36px}
@@ -18,7 +19,13 @@
     .nav-links{display:flex;gap:20px}
     .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
     .nav-link:hover{color:var(--cream)}
-    main{flex:1;display:flex;flex-direction:column;align-items:center;padding:20px 16px 60px;gap:16px}
+
+    .topbar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(10,10,8,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+    .topbar-title{font-family:'Bebas Neue';letter-spacing:.15em;font-size:1.05rem;color:var(--cream)}
+    .topbar-title span{color:var(--orange)}
+    .tb-back{background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono';font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 14px;text-decoration:none;transition:all .2s}
+    .tb-back:hover{border-color:var(--orange);color:var(--orange)}
+    main{flex:1;display:flex;flex-direction:column;align-items:center;padding:20px 16px 60px;gap:16px;padding-top:66px}
     .game-layout{display:flex;gap:20px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
     .side-panel{display:flex;flex-direction:column;gap:16px;width:100px}
     .mobile-stats{display:none}
@@ -77,11 +84,11 @@
 </head>
 <body>
 <div class="cursor" id="cursor"></div>
-<nav>
-  <a class="nav-logo" href="index.html">← OM</a>
-  <div class="nav-center">TETRIS <span>2026</span></div>
-  <a class="nav-link" href="gaming.html">← Gaming</a>
-</nav>
+<div class="topbar">
+  <a class="tb-back" href="gaming.html">← Gaming</a>
+  <div class="topbar-title">TETRIS<span> 2026</span></div>
+  <div style="width:80px"></div>
+</div>
 <main>
   <!-- MOBILE STATS BAR (shown only on small screens) -->
   <div class="mobile-stats">
@@ -112,8 +119,7 @@
         <div class="go-title">GAME OVER</div>
         <div class="go-sub" id="go-sub">Score: 0</div>
         <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
-          <div style="font-size:.6rem;color:var(--muted);letter-spacing:.1em" id="go-name-label">Name für Highscore</div>
-          <div id="go-loggedin" style="display:none;font-size:.78rem;text-align:center;">Als <b id="go-loggedin-name">—</b> spielen<div style="font-size:.55rem;color:var(--muted);margin-top:2px;"><a href="#" id="go-not-me" style="color:var(--muted);text-decoration:underline;">Nicht du?</a></div></div>
+          <div style="font-size:.6rem;color:var(--muted);letter-spacing:.1em">Name für Highscore</div>
           <input class="go-input" id="go-name" placeholder="Dein Name" maxlength="20">
           <input type="text" id="go-hp" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
           <button class="go-btn" id="go-save">Speichern →</button>
@@ -140,34 +146,12 @@
 const SB='https://bsubsesbcxdaqofmkiqg.supabase.co';
 const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
 async function sbFetch(p,o={}){const r=await fetch(SB+p,{...o,headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
-// ── Optionaler Profil-Login (geteilt mit CrossFit-Bereich) ──
-let gameProfile=null;
-async function checkGameProfile(){
-  const saved=localStorage.getItem('om_profile_session');
-  if(!saved)return;
-  try{
-    const session=JSON.parse(saved);
-    const rows=await sbFetch(`/rest/v1/profiles?id=eq.${session.id}&select=id,name,display_name`);
-    if(rows && rows[0]){
-      gameProfile={id:rows[0].id, displayName:rows[0].display_name||rows[0].name};
-    }
-  }catch(e){}
-  applyLoginUI();
-}
-function applyLoginUI(){
-  const box=document.getElementById('go-loggedin');
-  const label=document.getElementById('go-name-label');
-  const input=document.getElementById('go-name');
-  if(!box)return;
-  if(gameProfile){
-    document.getElementById('go-loggedin-name').textContent=gameProfile.displayName;
-    box.style.display='block';label.style.display='none';input.style.display='none';
-  } else {
-    box.style.display='none';label.style.display='block';input.style.display='block';
-  }
-}
-document.getElementById('go-not-me').addEventListener('click',(e)=>{e.preventDefault();gameProfile=null;applyLoginUI();});
-checkGameProfile();
+function setVH(){const h=(window.visualViewport?window.visualViewport.height:window.innerHeight);document.documentElement.style.setProperty('--vh',(h*0.01)+'px')}
+setVH();
+window.addEventListener('resize',setVH);
+window.addEventListener('orientationchange',setVH);
+if(window.visualViewport)window.visualViewport.addEventListener('resize',setVH);
+
 const cursor=document.getElementById('cursor');
 document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
 document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
@@ -368,7 +352,6 @@ function endGame(){
   document.getElementById('go-sub').textContent='Score: '+score+' · '+lines+' Reihen';
   document.getElementById('go-name').value=localStorage.getItem('tt_name')||'';
   document.getElementById('go-msg').textContent='';
-  applyLoginUI();
   document.getElementById('go').classList.add('show');
 }
 
@@ -390,20 +373,18 @@ document.getElementById('m-rotate').addEventListener('click',()=>{if(running){tr
 document.getElementById('m-drop').addEventListener('click',()=>{if(running){hardDrop();drawAll()}});
 
 document.getElementById('go-save').addEventListener('click',async()=>{
-  const msg=document.getElementById('go-msg');
+  const name=document.getElementById('go-name').value.trim(),msg=document.getElementById('go-msg');
   const hp=document.getElementById('go-hp').value;
   if(hp){msg.textContent='✓ Gespeichert!';setTimeout(()=>{document.getElementById('go').classList.remove('show');init()},1200);return}
-  let name,profileId=null;
-  if(gameProfile){name=gameProfile.displayName;profileId=gameProfile.id;}
-  else{name=document.getElementById('go-name').value.trim();if(!name){msg.textContent='⚠ Name eingeben';return}}
+  if(!name){msg.textContent='⚠ Name eingeben';return}
   const elapsed=(Date.now()-gameStartTime)/1000;
   if(gameStartTime===0||elapsed<3){msg.textContent='⚠ Ungültiger Spielverlauf';return}
   const maxPlausibleScore=elapsed*180;
   if(score>maxPlausibleScore||score>99999){msg.textContent='⚠ Score außerhalb des möglichen Bereichs';return}
   document.getElementById('go-save').textContent='…';
   try{
-    await sbFetch('/rest/v1/snake_scores',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name:'TT:'+name,score,profile_id:profileId})});
-    if(!gameProfile)localStorage.setItem('tt_name',name);msg.textContent='✓ Gespeichert!';await loadScores();
+    await sbFetch('/rest/v1/snake_scores',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name:'TT:'+name,score})});
+    localStorage.setItem('tt_name',name);msg.textContent='✓ Gespeichert!';await loadScores();
     setTimeout(()=>{document.getElementById('go').classList.remove('show');init()},1200);
   }catch{msg.textContent='❌ Fehler'}
   document.getElementById('go-save').textContent='Speichern →';
