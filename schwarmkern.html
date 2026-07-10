@@ -51,6 +51,16 @@ body{
 .lvl-badge{position:absolute;bottom:18px;right:22px;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);text-align:right}
 .lvl-badge b{font-family:'Bebas Neue';font-size:1.3rem;letter-spacing:.02em;color:var(--orange);display:block}
 
+.boss-bar-wrap{position:absolute;top:14px;left:50%;transform:translate(-50%,-140%);width:min(420px, 70vw);opacity:0;transition:transform .35s ease, opacity .35s ease}
+.boss-bar-wrap.show{transform:translate(-50%,0);opacity:1}
+.boss-name{text-align:center;font-family:'Bebas Neue';font-size:1rem;letter-spacing:.12em;color:var(--danger);margin-bottom:5px;text-shadow:0 0 10px rgba(255,59,92,.6)}
+.boss-bar-track{height:10px;background:rgba(255,255,255,0.06);border:1px solid var(--danger)}
+.boss-bar-fill{height:100%;background:linear-gradient(90deg,#7c0f22,var(--danger));transition:width .15s ease;box-shadow:0 0 10px rgba(255,59,92,.6)}
+
+.toast{position:absolute;top:34%;left:50%;transform:translate(-50%,-50%) scale(0.9);font-family:'Bebas Neue';font-size:2.2rem;letter-spacing:.08em;color:var(--cream);text-align:center;opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;text-shadow:0 0 20px rgba(0,0,0,.8)}
+.toast span{color:var(--danger)}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
 .overlay{position:fixed;top:0;left:0;right:0;bottom:0;height:calc(var(--vh, 1vh) * 100);display:none;align-items:center;justify-content:center;background:rgba(8,8,6,0.94);z-index:100;overflow-y:auto;padding:20px 0}
 .overlay.show{display:flex}
 .overlay::before{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none}
@@ -70,6 +80,24 @@ body{
 .card .desc{font-size:.66rem;color:var(--muted);line-height:1.7}
 .card .key{margin-top:14px;font-size:.58rem;letter-spacing:.2em;color:var(--muted)}
 .card .key::before{content:'▸ ';color:var(--orange)}
+
+.frag-row{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.68rem;letter-spacing:.05em;color:var(--muted);margin:14px 0 4px;flex-wrap:wrap}
+.frag-row b{color:var(--cream);font-family:'Bebas Neue';font-size:1.1rem;font-weight:400}
+.frag-icon{color:var(--orange)}
+.frag-shop-btn{margin-left:10px;pointer-events:all}
+
+.meta-card{width:150px;padding:18px 14px;background:var(--panel);border:1px solid var(--border);cursor:pointer;transition:background .2s,border-color .2s;pointer-events:all;text-align:left}
+.meta-card:hover{background:var(--panel2);border-color:var(--orange)}
+.meta-card.maxed{opacity:.55;cursor:default}
+.meta-card.maxed:hover{background:var(--panel);border-color:var(--border)}
+.meta-card .icon{font-family:'Bebas Neue';font-size:1.4rem;color:var(--orange);margin-bottom:10px;display:block}
+.meta-card .name{font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:.02em;color:var(--cream);margin-bottom:6px}
+.meta-card .desc{font-size:.62rem;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.meta-card .tier-dots{display:flex;gap:4px;margin-bottom:10px}
+.meta-card .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid var(--border)}
+.meta-card .dot.filled{background:var(--orange);border-color:var(--orange)}
+.meta-card .cost{font-size:.62rem;letter-spacing:.1em;color:var(--orange)}
+.meta-card.maxed .cost{color:var(--muted)}
 
 .btn{margin-top:32px;pointer-events:all;font-family:'DM Mono';font-weight:500;letter-spacing:.15em;text-transform:uppercase;background:var(--orange);color:var(--black);border:none;padding:15px 36px;font-size:.7rem;cursor:pointer;transition:filter .15s}
 .btn:hover{filter:brightness(1.1)}
@@ -123,6 +151,11 @@ body{
   </div>
   <div class="kills">Abgewehrt <b id="kill-count">0</b></div>
   <div class="lvl-badge">Stufe<b id="lvl-num">1</b></div>
+  <div class="boss-bar-wrap" id="boss-bar-wrap">
+    <div class="boss-name" id="boss-name">WÄCHTER</div>
+    <div class="boss-bar-track"><div class="boss-bar-fill" id="boss-bar-fill" style="width:100%"></div></div>
+  </div>
+  <div class="toast" id="toast"></div>
 </div>
 
 <div class="hint" id="hint-desktop">WASD / Pfeiltasten — der Kern feuert <span>automatisch</span></div>
@@ -139,7 +172,24 @@ body{
     <h1>SCHWARM<span>KERN</span></h1>
     <p class="sub">Der Schwarm kommt aus jeder Richtung. Halte den Kern am Leben, so lange es geht.</p>
     <div class="best-note" id="best-note-start"></div>
+    <div class="frag-row">
+      <span class="frag-icon">◆</span> <b id="fragment-count">0</b> Kernfragmente
+      <button class="tb-back frag-shop-btn" id="open-shop-btn">Ausbau</button>
+    </div>
     <button class="btn" id="start-btn">Run starten</button>
+  </div>
+</div>
+
+<div class="overlay" id="shop-overlay">
+  <div class="panel">
+    <p class="section-label">permanenter ausbau</p>
+    <h1 style="font-size:38px;">KERN<span>SCHMIEDE</span></h1>
+    <p class="sub">Mit <span style="color:var(--orange)">Kernfragmenten</span> aus vergangenen Runs freischalten — gilt für jeden künftigen Run.</p>
+    <div class="frag-row" style="justify-content:center;margin-bottom:6px;">
+      <span class="frag-icon">◆</span> <b id="fragment-count-shop">0</b> verfügbar
+    </div>
+    <div class="cards" id="meta-shop-items"></div>
+    <button class="btn" id="close-shop-btn">Zurück</button>
   </div>
 </div>
 
@@ -160,6 +210,9 @@ body{
       <div><div class="v" id="go-time">00:00</div><div class="l">Überlebt</div></div>
       <div><div class="v" id="go-lvl">1</div><div class="l">Stufe</div></div>
       <div><div class="v" id="go-kills">0</div><div class="l">Abgewehrt</div></div>
+    </div>
+    <div class="frag-row" style="justify-content:center;">
+      <span class="frag-icon">◆</span> <b id="go-fragments">+0</b> Kernfragmente verdient
     </div>
     <div class="best-note" id="best-note-go"></div>
     <div>
@@ -197,6 +250,135 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
   }
   window.addEventListener('resize', resize);
   resize();
+
+  // ============================================================
+  // META-PROGRESSION STORAGE
+  // Angemeldete Profile -> Supabase (game_meta_progress Tabelle)
+  // Alle anderen        -> localStorage (Fallback, pro Browser)
+  //
+  // Integration in die echte Seite: einfach SUPABASE_URL/ANON_KEY
+  // unten eintragen (oder diesen Block durch euer bestehendes
+  // sbFetch aus den anderen Seiten ersetzen, gleiches Prinzip).
+  // ============================================================
+  const SUPABASE_URL = ''; // z.B. 'https://xxxxx.supabase.co'
+  const SUPABASE_ANON_KEY = ''; // euer public anon key
+
+  function getProfileSession(){
+    try {
+      const raw = localStorage.getItem('om_profile_session');
+      return raw ? JSON.parse(raw) : null;
+    } catch(e) { return null; }
+  }
+
+  async function sbUpsertMeta(profileId, gameKey, data){
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/game_meta_progress?on_conflict=profile_id,game_key`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({ profile_id: profileId, game_key: gameKey, data, updated_at: new Date().toISOString() })
+    });
+    if (!res.ok) throw new Error(`sbUpsertMeta failed: ${res.status}`);
+  }
+
+  async function sbGetMeta(profileId, gameKey){
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/game_meta_progress?profile_id=eq.${profileId}&game_key=eq.${gameKey}&select=data`, {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    if (!res.ok) throw new Error(`sbGetMeta failed: ${res.status}`);
+    const rows = await res.json();
+    return rows[0]?.data ?? null;
+  }
+
+  const MetaStore = {
+    async get(gameKey){
+      const session = getProfileSession();
+      if (session && SUPABASE_URL){
+        try { return (await sbGetMeta(session.id, gameKey)) ?? null; }
+        catch(e){ console.error('MetaStore.get (Supabase) failed, falling back to local:', e); }
+      }
+      try {
+        const raw = localStorage.getItem(`meta:${gameKey}`);
+        return raw ? JSON.parse(raw) : null;
+      } catch(e) { return null; }
+    },
+    async set(gameKey, data){
+      const session = getProfileSession();
+      // immer auch lokal spiegeln -> funktioniert als Fallback, falls die Seite offline/ausgeloggt geöffnet wird
+      try { localStorage.setItem(`meta:${gameKey}`, JSON.stringify(data)); } catch(e){}
+      if (session && SUPABASE_URL){
+        try { await sbUpsertMeta(session.id, gameKey, data); }
+        catch(e){ console.error('MetaStore.set (Supabase) failed, kept local copy:', e); }
+      }
+    }
+  };
+
+  const META_KEY = 'schwarmkern';
+  const META_UPGRADES = [
+    { key:'vitality',  name:'Vitalität',  icon:'♥', desc:'+8 Start-Integrität', maxTier:5, cost:t=>3*(t+1) },
+    { key:'power',     name:'Wucht',      icon:'⚔', desc:'+6% Start-Schaden',   maxTier:5, cost:t=>3*(t+1) },
+    { key:'momentum',  name:'Trieb',      icon:'➤', desc:'+4% Start-Tempo',     maxTier:3, cost:t=>4*(t+1) },
+    { key:'magnetism', name:'Sog',        icon:'◎', desc:'+15% Start-Sogradius',maxTier:3, cost:t=>4*(t+1) },
+  ];
+  let meta = { fragments: 0, tiers: {} };
+
+  async function loadMeta(){
+    const stored = await MetaStore.get(META_KEY);
+    if (stored) meta = { fragments: stored.fragments||0, tiers: stored.tiers||{} };
+    renderMetaShop();
+  }
+  async function saveMeta(){
+    await MetaStore.set(META_KEY, meta);
+    renderMetaShop();
+  }
+  function tierOf(key){ return meta.tiers[key] || 0; }
+  function fragmentsEarnedForRun(elapsedSec, kills, level){
+    return Math.round(elapsedSec/8 + kills*0.6 + level*2.5);
+  }
+  function applyMetaBonuses(p){
+    p.maxHp += 8 * tierOf('vitality');
+    p.hp = p.maxHp;
+    p.dmg *= (1 + 0.06 * tierOf('power'));
+    p.speed *= (1 + 0.04 * tierOf('momentum'));
+    p.pickupRadius *= (1 + 0.15 * tierOf('magnetism'));
+  }
+
+  function renderMetaShop(){
+    document.getElementById('fragment-count').textContent = meta.fragments;
+    document.getElementById('fragment-count-shop').textContent = meta.fragments;
+    const wrap = document.getElementById('meta-shop-items');
+    wrap.innerHTML = '';
+    META_UPGRADES.forEach(u => {
+      const tier = tierOf(u.key);
+      const maxed = tier >= u.maxTier;
+      const cost = maxed ? null : u.cost(tier);
+      const div = document.createElement('div');
+      div.className = 'meta-card' + (maxed ? ' maxed' : '');
+      div.innerHTML = `
+        <span class="icon">${u.icon}</span>
+        <div class="name">${u.name}</div>
+        <div class="desc">${u.desc}</div>
+        <div class="tier-dots">${Array.from({length:u.maxTier}).map((_,i)=>`<span class="dot${i<tier?' filled':''}"></span>`).join('')}</div>
+        <div class="cost">${maxed ? 'MAX' : `${cost} <span class="frag-icon">◆</span>`}</div>
+      `;
+      if (!maxed){
+        div.onclick = () => buyMetaUpgrade(u, cost);
+        div.tabIndex = 0;
+        div.addEventListener('mouseenter',()=>cursorEl.classList.add('big'));
+        div.addEventListener('mouseleave',()=>cursorEl.classList.remove('big'));
+      }
+      wrap.appendChild(div);
+    });
+  }
+  function buyMetaUpgrade(u, cost){
+    if (meta.fragments < cost) return;
+    meta.fragments -= cost;
+    meta.tiers[u.key] = tierOf(u.key) + 1;
+    saveMeta();
+  }
 
   let bestStats = { bestTime: 0, bestLevel: 1, totalKills: 0 };
   async function loadBest(){
@@ -278,9 +460,11 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
   });
   joyZone.addEventListener('touchcancel', joyEnd);
 
-  let player, enemies, projectiles, orbs, particles;
+  let player, enemies, projectiles, orbs, particles, bossProjectiles;
   let elapsed, killCount, spawnTimer, running, paused;
-  let nextLevelXp;
+  let nextLevelXp, bossTierSpawned, activeBoss, lastWaveAnnounced;
+
+  const BOSS_NAMES = ['WÄCHTER','ZERMALMER','HERALD','TITAN','ÜBERMACHT','ABGRUND'];
 
   function initState(){
     player = {
@@ -289,9 +473,13 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
       dmg: 12, atkCooldown: 0.45, atkTimer: 0,
       projSpeed: 520, projectiles: 1, pierce: 0, pickupRadius: 70,
     };
-    enemies = []; projectiles = []; orbs = []; particles = [];
+    enemies = []; projectiles = []; orbs = []; particles = []; bossProjectiles = [];
     elapsed = 0; killCount = 0; spawnTimer = 0; nextLevelXp = 20;
     running = false; paused = false;
+    bossTierSpawned = 0; activeBoss = null; lastWaveAnnounced = 1;
+    applyMetaBonuses(player);
+    document.getElementById('boss-bar-wrap').classList.remove('show');
+    document.getElementById('toast').classList.remove('show');
   }
   initState(); // safe defaults so the render loop never touches undefined before "Run starten"
 
@@ -366,6 +554,57 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
       const a = Math.random()*Math.PI*2;
       const spd = 60+Math.random()*80;
       particles.push({ x,y, vx:Math.cos(a)*spd, vy:Math.sin(a)*spd, life:0.35, color });
+    }
+  }
+
+  // ---------- toast banner ----------
+  let toastTimer = 0;
+  function showToast(html, duration){
+    const el = document.getElementById('toast');
+    el.innerHTML = html;
+    el.classList.add('show');
+    toastTimer = duration || 2.2;
+  }
+
+  // ---------- boss ----------
+  function spawnBoss(tier){
+    const edge = Math.floor(Math.random()*4);
+    let x,y;
+    if (edge===0){ x = Math.random()*W; y = -60; }
+    else if (edge===1){ x = W+60; y = Math.random()*H; }
+    else if (edge===2){ x = Math.random()*W; y = H+60; }
+    else { x = -60; y = Math.random()*H; }
+
+    const scale = 1 + (tier-1)*0.55;
+    const boss = {
+      x, y, r: 38 + tier*2,
+      hp: 260*scale, maxHp: 260*scale,
+      speed: 62 + tier*3, dmg: 22 + tier*2,
+      color: '#ff3b5c', xp: 40 + tier*15,
+      type: 'boss', tier,
+      atkTimer: 2.0, telegraph: false, telegraphTimer: 0,
+    };
+    enemies.push(boss);
+    activeBoss = boss;
+
+    const name = BOSS_NAMES[Math.min(tier-1, BOSS_NAMES.length-1)];
+    document.getElementById('boss-name').textContent = name;
+    document.getElementById('boss-bar-wrap').classList.add('show');
+    showToast(`WELLE ${difficultyWave()} <span>· ${name} ERSCHEINT</span>`, 2.4);
+  }
+
+  function fireBossVolley(boss){
+    const dx = player.x-boss.x, dy = player.y-boss.y;
+    const baseAngle = Math.atan2(dy,dx);
+    const spread = 0.32;
+    const shots = 3 + Math.min(2, Math.floor(boss.tier/2));
+    for (let i=0;i<shots;i++){
+      const a = baseAngle + (i - (shots-1)/2) * spread;
+      bossProjectiles.push({
+        x: boss.x, y: boss.y,
+        vx: Math.cos(a)*260, vy: Math.sin(a)*260,
+        r: 7, dmg: boss.dmg*0.55,
+      });
     }
   }
 
@@ -451,8 +690,23 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     const spawnInterval = Math.max(0.18, 1.0 - wave*0.06);
     if (spawnTimer <= 0){
       spawnTimer = spawnInterval;
-      const burst = 1 + Math.floor(wave/3);
+      const burst = (activeBoss ? Math.max(1, Math.floor((1 + Math.floor(wave/3))/2)) : 1 + Math.floor(wave/3));
       for (let i=0;i<burst;i++) spawnEnemy();
+    }
+
+    const bossTier = Math.floor(wave/3);
+
+    if (wave > lastWaveAnnounced){
+      lastWaveAnnounced = wave;
+      if (!(bossTier > bossTierSpawned)){
+        // only show the plain wave banner if no boss is about to take over this same tick
+        showToast(`WELLE <span style="color:var(--orange)">${wave}</span>`, 1.8);
+      }
+    }
+
+    if (bossTier > bossTierSpawned && !activeBoss){
+      bossTierSpawned = bossTier;
+      spawnBoss(bossTier);
     }
 
     player.atkTimer -= dt;
@@ -464,12 +718,46 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     for (const e of enemies){
       const dx = player.x-e.x, dy = player.y-e.y;
       const len = Math.hypot(dx,dy) || 1;
-      e.x += dx/len*e.speed*dt;
-      e.y += dy/len*e.speed*dt;
+
+      if (e.type === 'boss'){
+        e.atkTimer -= dt;
+        if (e.telegraph){
+          e.telegraphTimer -= dt;
+          e.x += dx/len*e.speed*0.15*dt; // barely creeps while charging
+          e.y += dy/len*e.speed*0.15*dt;
+          if (e.telegraphTimer <= 0){
+            e.telegraph = false;
+            fireBossVolley(e);
+            e.atkTimer = 2.3;
+          }
+        } else {
+          e.x += dx/len*e.speed*dt;
+          e.y += dy/len*e.speed*dt;
+          if (e.atkTimer <= 0){
+            e.telegraph = true;
+            e.telegraphTimer = 0.45;
+          }
+        }
+      } else {
+        e.x += dx/len*e.speed*dt;
+        e.y += dy/len*e.speed*dt;
+      }
+
       if (len < e.r+player.r){
         player.hp -= e.dmg*dt;
       }
     }
+
+    for (const bp of bossProjectiles){
+      bp.x += bp.vx*dt; bp.y += bp.vy*dt;
+      const d = Math.hypot(player.x-bp.x, player.y-bp.y);
+      if (d < player.r+bp.r){
+        player.hp -= bp.dmg;
+        bp.dead = true;
+        spawnHitParticles(bp.x,bp.y,'#ff3b5c');
+      }
+    }
+    bossProjectiles = bossProjectiles.filter(bp => !bp.dead && bp.x>-60 && bp.x<W+60 && bp.y>-60 && bp.y<H+60);
 
     for (const p of projectiles){
       p.x += p.vx*dt; p.y += p.vy*dt;
@@ -494,7 +782,19 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     for (const e of enemies){
       if (e.hp <= 0){
         killCount++;
-        spawnOrb(e.x,e.y,e.xp);
+        if (e.type === 'boss'){
+          for (let i=0;i<7;i++){
+            const a = Math.random()*Math.PI*2, dist = Math.random()*40;
+            spawnOrb(e.x+Math.cos(a)*dist, e.y+Math.sin(a)*dist, Math.ceil(e.xp/7));
+          }
+          spawnHitParticles(e.x,e.y,'#ff3b5c');
+          spawnHitParticles(e.x,e.y,'#ffb454');
+          showToast(`<span>${BOSS_NAMES[Math.min(e.tier-1,BOSS_NAMES.length-1)]} BESIEGT</span>`, 1.8);
+          document.getElementById('boss-bar-wrap').classList.remove('show');
+          activeBoss = null;
+        } else {
+          spawnOrb(e.x,e.y,e.xp);
+        }
       } else alive.push(e);
     }
     enemies = alive;
@@ -518,6 +818,11 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     }
     particles = particles.filter(pt => pt.life>0);
 
+    if (toastTimer > 0){
+      toastTimer -= dt;
+      if (toastTimer <= 0) document.getElementById('toast').classList.remove('show');
+    }
+
     if (player.xp >= nextLevelXp){
       player.xp -= nextLevelXp;
       player.level++;
@@ -539,6 +844,9 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     document.getElementById('wave-num').textContent = difficultyWave();
     document.getElementById('kill-count').textContent = killCount;
     document.getElementById('lvl-num').textContent = player.level;
+    if (activeBoss){
+      document.getElementById('boss-bar-fill').style.width = Math.max(0,(activeBoss.hp/activeBoss.maxHp*100)) + '%';
+    }
   }
 
   function endGame(){
@@ -548,9 +856,14 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     if (player.level > bestStats.bestLevel) bestStats.bestLevel = player.level;
     saveBest().then(renderBestNote);
 
+    const earned = fragmentsEarnedForRun(elapsed, killCount, player.level);
+    meta.fragments += earned;
+    saveMeta();
+
     document.getElementById('go-time').textContent = fmtTime(elapsed);
     document.getElementById('go-lvl').textContent = player.level;
     document.getElementById('go-kills').textContent = killCount;
+    document.getElementById('go-fragments').textContent = '+' + earned;
     document.getElementById('gameover-overlay').classList.add('show');
   }
 
@@ -584,19 +897,56 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     ctx.globalAlpha = 1;
 
     for (const e of enemies){
-      ctx.beginPath();
-      ctx.fillStyle = e.color;
-      ctx.shadowColor = e.color; ctx.shadowBlur = 10;
-      ctx.arc(e.x,e.y,e.r,0,7);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      if (e.type==='tank'){
-        ctx.fillStyle='rgba(0,0,0,0.4)';
-        ctx.fillRect(e.x-e.r, e.y-e.r-8, e.r*2, 3);
-        ctx.fillStyle='#ff3b5c';
-        ctx.fillRect(e.x-e.r, e.y-e.r-8, e.r*2*(e.hp/e.maxHp), 3);
+      if (e.type === 'boss'){
+        // pulsing outer ring, more intense while telegraphing an attack
+        const pulse = e.telegraph ? (0.5 + 0.5*Math.sin(elapsed*22)) : 0.25;
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(255,59,92,${0.4+pulse*0.5})`;
+        ctx.lineWidth = 3;
+        ctx.arc(e.x, e.y, e.r + 10 + pulse*6, 0, 7);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.fillStyle = e.color;
+        ctx.shadowColor = e.color; ctx.shadowBlur = 22;
+        ctx.arc(e.x,e.y,e.r,0,7);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // spikes
+        ctx.strokeStyle = '#ffb454';
+        ctx.lineWidth = 3;
+        for (let i=0;i<8;i++){
+          const a = (i/8)*Math.PI*2 + elapsed*0.6;
+          ctx.beginPath();
+          ctx.moveTo(e.x+Math.cos(a)*e.r, e.y+Math.sin(a)*e.r);
+          ctx.lineTo(e.x+Math.cos(a)*(e.r+12), e.y+Math.sin(a)*(e.r+12));
+          ctx.stroke();
+        }
+      } else {
+        ctx.beginPath();
+        ctx.fillStyle = e.color;
+        ctx.shadowColor = e.color; ctx.shadowBlur = 10;
+        ctx.arc(e.x,e.y,e.r,0,7);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        if (e.type==='tank'){
+          ctx.fillStyle='rgba(0,0,0,0.4)';
+          ctx.fillRect(e.x-e.r, e.y-e.r-8, e.r*2, 3);
+          ctx.fillStyle='#ff3b5c';
+          ctx.fillRect(e.x-e.r, e.y-e.r-8, e.r*2*(e.hp/e.maxHp), 3);
+        }
       }
     }
+
+    for (const bp of bossProjectiles){
+      ctx.beginPath();
+      ctx.fillStyle = '#ff3b5c';
+      ctx.shadowColor = '#ff3b5c'; ctx.shadowBlur = 10;
+      ctx.arc(bp.x,bp.y,bp.r,0,7);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
 
     for (const p of projectiles){
       ctx.beginPath();
@@ -646,6 +996,16 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
   };
 
   loadBest();
+  loadMeta();
+
+  document.getElementById('open-shop-btn').onclick = () => {
+    document.getElementById('start-overlay').classList.remove('show');
+    document.getElementById('shop-overlay').classList.add('show');
+  };
+  document.getElementById('close-shop-btn').onclick = () => {
+    document.getElementById('shop-overlay').classList.remove('show');
+    document.getElementById('start-overlay').classList.add('show');
+  };
   requestAnimationFrame(loop);
 })();
 </script>
