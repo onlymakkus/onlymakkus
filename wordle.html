@@ -8,17 +8,17 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--border:rgba(255,255,255,0.08);--green:#538d4e;--yellow:#b59f3b;--gray:#3a3a3c}
+    html,body{height:100%;height:calc(var(--vh, 1vh) * 100)}
     body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;min-height:100vh;display:flex;flex-direction:column;cursor:none;overflow-x:hidden}
-    .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .2s,height .2s}
-    .cursor.big{width:36px;height:36px}
-    nav{padding:18px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
-    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--cream);text-decoration:none}
-    .nav-center{font-family:'Bebas Neue';font-size:1.5rem;letter-spacing:.1em}
-    .nav-center span{color:var(--orange)}
-    .nav-links{display:flex;gap:20px}
-    .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
-    .nav-link:hover{color:var(--cream)}
-    main{flex:1;display:flex;flex-direction:column;align-items:center;padding:28px 20px 60px;gap:20px}
+    .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
+    .cursor.big{width:32px;height:32px}
+    @media(hover:none){.cursor{display:none}body{cursor:auto}}
+    .topbar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--border);background:rgba(10,10,8,0.88);backdrop-filter:blur(6px)}
+    .topbar-title{font-family:'Bebas Neue';letter-spacing:.15em;font-size:1.05rem;color:var(--cream)}
+    .topbar-title span{color:var(--orange)}
+    .tb-back{background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono';font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:7px 14px;cursor:pointer;text-decoration:none;transition:all .15s}
+    .tb-back:hover{border-color:var(--orange);color:var(--orange)}
+    main{flex:1;display:flex;flex-direction:column;align-items:center;padding:80px 20px 60px;gap:20px}
     .stats{display:flex;gap:28px;justify-content:center;flex-wrap:wrap}
     .stat-box{text-align:center}
     .stat-val{font-family:'Bebas Neue';font-size:2rem;color:var(--orange);line-height:1}
@@ -86,11 +86,11 @@
     </div>
   </div>
 </div>
-<nav>
-  <a class="nav-logo" href="index.html">← OM</a>
-  <div class="nav-center">WORDLE <span>de</span></div>
-  <a class="nav-link" href="gaming.html">Gaming</a>
-</nav>
+<div class="topbar">
+  <a class="tb-back" href="gaming.html">← Gaming</a>
+  <div class="topbar-title">WORDLE<span>DE</span></div>
+  <div style="width:80px"></div>
+</div>
 <main>
   <div class="stats">
     <div class="stat-box"><div class="stat-val" id="s-played">0</div><div class="stat-label">Gespielt</div></div>
@@ -103,6 +103,14 @@
 </main>
 <footer><span>© 2026 onlymakkus.de</span><a href="impressum.html" style="color:var(--muted);text-decoration:none;">Impressum</a><a href="datenschutz.html" style="color:var(--muted);text-decoration:none;">Datenschutz</a><span>täglich neues wort</span></footer>
 <script>
+function setVH(){
+  const h=(window.visualViewport?window.visualViewport.height:window.innerHeight);
+  document.documentElement.style.setProperty('--vh',(h*0.01)+'px');
+}
+setVH();
+window.addEventListener('resize',setVH);
+window.addEventListener('orientationchange',setVH);
+if(window.visualViewport)window.visualViewport.addEventListener('resize',setVH);
 const cursor=document.getElementById('cursor');
 document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
 document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});

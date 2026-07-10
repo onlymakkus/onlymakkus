@@ -222,6 +222,7 @@ body{
     <div class="best-note" id="best-note-go"></div>
     <div>
       <button class="btn" id="restart-btn">Nochmal</button>
+      <button class="btn" id="go-shop-btn" style="background:transparent;color:var(--cream);border:1px solid var(--border);margin-left:10px;">Ausbau</button>
     </div>
   </div>
 </div>
@@ -1226,13 +1227,20 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
   loadBest();
   loadMeta();
 
+  let shopReturnTo = 'start-overlay';
   document.getElementById('open-shop-btn').onclick = () => {
+    shopReturnTo = 'start-overlay';
     document.getElementById('start-overlay').classList.remove('show');
+    document.getElementById('shop-overlay').classList.add('show');
+  };
+  document.getElementById('go-shop-btn').onclick = () => {
+    shopReturnTo = 'gameover-overlay';
+    document.getElementById('gameover-overlay').classList.remove('show');
     document.getElementById('shop-overlay').classList.add('show');
   };
   document.getElementById('close-shop-btn').onclick = () => {
     document.getElementById('shop-overlay').classList.remove('show');
-    document.getElementById('start-overlay').classList.add('show');
+    document.getElementById(shopReturnTo).classList.add('show');
   };
   requestAnimationFrame(loop);
 })();
