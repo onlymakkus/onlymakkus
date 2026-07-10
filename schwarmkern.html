@@ -137,7 +137,7 @@ body{
 <div class="topbar">
   <a class="tb-back" href="gaming.html">← Gaming</a>
   <div class="topbar-title">SCHWARM<span>KERN</span></div>
-  <div style="width:80px"></div>
+  <button class="tb-back" id="mute-btn" style="width:44px;font-size:.85rem;">🔊</button>
 </div>
 
 <canvas id="game"></canvas>
@@ -242,6 +242,96 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
   // Touch-Geräte haben oft schwächere GPUs -> Glow-Effekte (shadowBlur) günstiger machen
   const FX_BLUR = window.matchMedia('(pointer:coarse)').matches ? 0.4 : 1;
 
+  // ============================================================
+  // AUDIO ENGINE — komplett synthetisiert über Web Audio API,
+  // keine externen Dateien nötig. Retro-Sci-Fi-Blips per Oszillator/
+  // Noise-Buffer statt fertiger Samples.
+  // ============================================================
+  const SFX = (() => {
+    let ctx = null, master, sfxGain;
+    let muted = localStorage.getItem('schwarmkern:muted') === '1';
+
+    function ensureCtx(){
+      if (!ctx){
+        try {
+          ctx = new (window.AudioContext || window.webkitAudioContext)();
+          master = ctx.createGain(); master.gain.value = muted ? 0 : 1; master.connect(ctx.destination);
+          sfxGain = ctx.createGain(); sfxGain.gain.value = 0.5; sfxGain.connect(master);
+        } catch(e){ console.error('AudioContext init failed:', e); }
+      }
+      if (ctx && ctx.state === 'suspended') ctx.resume();
+    }
+
+    function tone(freq, dur, { type='sine', gain=0.25, glideTo=null, delay=0 } = {}){
+      if (!ctx) return;
+      const t0 = ctx.currentTime + delay;
+      const osc = ctx.createOscillator();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      if (glideTo) osc.frequency.exponentialRampToValueAtTime(Math.max(1,glideTo), t0+dur);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(gain, t0+0.008);
+      g.gain.exponentialRampToValueAtTime(0.001, t0+dur);
+      osc.connect(g); g.connect(sfxGain);
+      osc.start(t0); osc.stop(t0+dur+0.02);
+    }
+
+    function noiseBurst(dur, { gain=0.2, filterFreq=2500 } = {}){
+      if (!ctx) return;
+      const n = Math.max(1, Math.floor(ctx.sampleRate * dur));
+      const buffer = ctx.createBuffer(1, n, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i=0;i<n;i++) data[i] = (Math.random()*2-1) * (1 - i/n);
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass'; filter.frequency.value = filterFreq;
+      const g = ctx.createGain(); g.gain.value = gain;
+      src.connect(filter); filter.connect(g); g.connect(sfxGain);
+      src.start();
+    }
+
+    const sfx = {
+      shoot(){ tone(680, 0.06, { type:'square', gain:0.05, glideTo:420 }); },
+      kill(){ tone(300, 0.12, { type:'sawtooth', gain:0.1, glideTo:80 }); },
+      pickup(){ tone(880, 0.06, { type:'sine', gain:0.06, glideTo:1200 }); },
+      levelup(){ [523,659,784,1047].forEach((f,i)=> tone(f,0.15,{type:'triangle',gain:0.14,delay:i*0.06})); },
+      bossSpawn(){ tone(120,0.9,{type:'sawtooth',gain:0.18,glideTo:55}); noiseBurst(0.9,{gain:0.07,filterFreq:400}); },
+      bossTelegraph(){ tone(1500,0.1,{type:'square',gain:0.1}); },
+      bossDefeated(){ [392,494,587,784].forEach((f,i)=> tone(f,0.3,{type:'triangle',gain:0.17,delay:i*0.08})); },
+      damage(){ tone(160,0.15,{type:'sawtooth',gain:0.14,glideTo:55}); },
+      wave(){ tone(700,0.1,{type:'sine',gain:0.07,glideTo:900}); },
+      purchase(){ tone(660,0.08,{type:'square',gain:0.09,glideTo:990}); },
+      gameover(){ [400,340,280,200].forEach((f,i)=> tone(f,0.35,{type:'sawtooth',gain:0.16,delay:i*0.15})); },
+      start(){ tone(440,0.15,{type:'triangle',gain:0.14,glideTo:660}); },
+    };
+
+    function setMuted(m){
+      muted = m;
+      localStorage.setItem('schwarmkern:muted', m ? '1' : '0');
+      if (master) master.gain.value = m ? 0 : 1;
+    }
+
+    return { ensureCtx, sfx, setMuted, isMuted: () => muted };
+  })();
+
+  // Audio darf laut Browser-Policy nur nach echter Nutzerinteraktion starten -> beim allerersten Tap/Klick freischalten
+  function unlockAudioOnce(){
+    SFX.ensureCtx();
+    document.removeEventListener('pointerdown', unlockAudioOnce);
+  }
+  document.addEventListener('pointerdown', unlockAudioOnce);
+
+  const muteBtn = document.getElementById('mute-btn');
+  function refreshMuteBtn(){ muteBtn.textContent = SFX.isMuted() ? '🔇' : '🔊'; }
+  refreshMuteBtn();
+  muteBtn.onclick = () => {
+    SFX.ensureCtx();
+    SFX.setMuted(!SFX.isMuted());
+    refreshMuteBtn();
+  };
+
   // ── iOS Safari 100vh fix: real viewport height incl. address-bar changes ──
   function setVH(){
     const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
@@ -326,10 +416,10 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
 
   const META_KEY = 'schwarmkern';
   const META_UPGRADES = [
-    { key:'vitality',  name:'Vitalität',  icon:'♥', desc:'+8 Start-Integrität', maxTier:5, cost:t=>3*(t+1) },
-    { key:'power',     name:'Wucht',      icon:'⚔', desc:'+6% Start-Schaden',   maxTier:5, cost:t=>3*(t+1) },
-    { key:'momentum',  name:'Trieb',      icon:'➤', desc:'+4% Start-Tempo',     maxTier:3, cost:t=>4*(t+1) },
-    { key:'magnetism', name:'Sog',        icon:'◎', desc:'+15% Start-Sogradius',maxTier:3, cost:t=>4*(t+1) },
+    { key:'vitality',  name:'Vitalität',  icon:'♥', desc:'+8 Start-Integrität', maxTier:5, cost:t=>6*(t+1) },
+    { key:'power',     name:'Wucht',      icon:'⚔', desc:'+6% Start-Schaden',   maxTier:5, cost:t=>6*(t+1) },
+    { key:'momentum',  name:'Trieb',      icon:'➤', desc:'+4% Start-Tempo',     maxTier:3, cost:t=>7*(t+1) },
+    { key:'magnetism', name:'Sog',        icon:'◎', desc:'+15% Start-Sogradius',maxTier:3, cost:t=>7*(t+1) },
   ];
   let meta = { fragments: 0, tiers: {} };
 
@@ -344,7 +434,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
   }
   function tierOf(key){ return meta.tiers[key] || 0; }
   function fragmentsEarnedForRun(elapsedSec, kills, level){
-    return Math.round(elapsedSec/8 + kills*0.6 + level*2.5);
+    return Math.round(elapsedSec/18 + kills*0.22 + level*1.2);
   }
   function applyMetaBonuses(p){
     p.maxHp += 8 * tierOf('vitality');
@@ -385,6 +475,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     if (meta.fragments < cost) return;
     meta.fragments -= cost;
     meta.tiers[u.key] = tierOf(u.key) + 1;
+    SFX.sfx.purchase();
     saveMeta();
   }
 
@@ -470,7 +561,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
 
   let player, enemies, projectiles, orbs, particles, bossProjectiles, novaPulses;
   let elapsed, killCount, spawnTimer, running, paused;
-  let nextLevelXp, bossTierSpawned, activeBoss, lastWaveAnnounced;
+  let nextLevelXp, bossTierSpawned, activeBoss, lastWaveAnnounced, lastDamageSoundAt;
 
   const BOSS_NAMES = ['WÄCHTER','ZERMALMER','HERALD','TITAN','ÜBERMACHT','ABGRUND'];
 
@@ -486,7 +577,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     enemies = []; projectiles = []; orbs = []; particles = []; bossProjectiles = []; novaPulses = [];
     elapsed = 0; killCount = 0; spawnTimer = 0; nextLevelXp = 20;
     running = false; paused = false;
-    bossTierSpawned = 0; activeBoss = null; lastWaveAnnounced = 1;
+    bossTierSpawned = 0; activeBoss = null; lastWaveAnnounced = 1; lastDamageSoundAt = -99;
     applyMetaBonuses(player);
     document.getElementById('boss-bar-wrap').classList.remove('show');
     document.getElementById('toast').classList.remove('show');
@@ -541,6 +632,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
   function fireWeapon(){
     const used = new Set();
     const shots = player.projectiles;
+    let fired = false;
     for (let i=0;i<shots;i++){
       const target = nearestEnemy(player.x, player.y, used);
       if (!target) break;
@@ -552,7 +644,9 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
         vx: dx/len*player.projSpeed, vy: dy/len*player.projSpeed,
         r: 4, dmg: player.dmg, pierce: player.pierce, hitSet: new Set()
       });
+      fired = true;
     }
+    if (fired) SFX.sfx.shoot();
   }
 
   function spawnOrb(x,y,val){
@@ -602,6 +696,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     document.getElementById('boss-name').textContent = name;
     document.getElementById('boss-bar-wrap').classList.add('show');
     showToast(`WELLE ${difficultyWave()} <span>· ${name} ERSCHEINT</span>`, 2.4);
+    SFX.sfx.bossSpawn();
   }
 
   function fireBossVolley(boss){
@@ -664,6 +759,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
 
   function showLevelUp(){
     paused = true;
+    SFX.sfx.levelup();
     document.getElementById('lvl-title').textContent = `stufe ${player.level}`;
     const cardsEl = document.getElementById('cards');
     cardsEl.innerHTML = '';
@@ -734,6 +830,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
       if (!(bossTier > bossTierSpawned)){
         // only show the plain wave banner if no boss is about to take over this same tick
         showToast(`WELLE <span style="color:var(--orange)">${wave}</span>`, 1.8);
+        SFX.sfx.wave();
       }
     }
 
@@ -761,7 +858,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
             if (!e._orbitNextHit || elapsed >= e._orbitNextHit){
               e.hp -= player.orbit.dmg;
               e._orbitNextHit = elapsed + 0.35;
-              spawnHitParticles(bx, by, '#ffb454');
+              spawnHitParticles(bx, by, '#ff4e1a');
             }
           }
         }
@@ -807,6 +904,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
           if (e.atkTimer <= 0){
             e.telegraph = true;
             e.telegraphTimer = 0.45;
+            SFX.sfx.bossTelegraph();
           }
         }
       } else {
@@ -816,6 +914,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
 
       if (len < e.r+player.r){
         player.hp -= e.dmg*dt;
+        if (elapsed - lastDamageSoundAt > 0.35){ SFX.sfx.damage(); lastDamageSoundAt = elapsed; }
       }
     }
 
@@ -826,6 +925,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
         player.hp -= bp.dmg;
         bp.dead = true;
         spawnHitParticles(bp.x,bp.y,'#ff3b5c');
+        if (elapsed - lastDamageSoundAt > 0.35){ SFX.sfx.damage(); lastDamageSoundAt = elapsed; }
       }
     }
     bossProjectiles = bossProjectiles.filter(bp => !bp.dead && bp.x>-60 && bp.x<W+60 && bp.y>-60 && bp.y<H+60);
@@ -850,6 +950,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     projectiles = projectiles.filter(p => !p.dead);
 
     const alive = [];
+    let killSoundsThisFrame = 0;
     for (const e of enemies){
       if (e.hp <= 0){
         killCount++;
@@ -863,13 +964,16 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
           showToast(`<span>${BOSS_NAMES[Math.min(e.tier-1,BOSS_NAMES.length-1)]} BESIEGT</span>`, 1.8);
           document.getElementById('boss-bar-wrap').classList.remove('show');
           activeBoss = null;
+          SFX.sfx.bossDefeated();
         } else {
           spawnOrb(e.x,e.y,e.xp);
+          if (killSoundsThisFrame < 3){ SFX.sfx.kill(); killSoundsThisFrame++; } // Deckel gegen Audio-Kaskaden bei AoE-Kills
         }
       } else alive.push(e);
     }
     enemies = alive;
 
+    let pickedUpThisFrame = false;
     for (const o of orbs){
       const d = Math.hypot(player.x-o.x, player.y-o.y);
       if (d < player.pickupRadius){
@@ -879,9 +983,11 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
       if (d < player.r+o.r+4){
         player.xp += o.val;
         o.dead = true;
+        pickedUpThisFrame = true;
       }
     }
     orbs = orbs.filter(o => !o.dead);
+    if (pickedUpThisFrame) SFX.sfx.pickup();
 
     for (const pt of particles){
       pt.x += pt.vx*dt; pt.y += pt.vy*dt;
@@ -922,6 +1028,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
 
   function endGame(){
     running = false;
+    SFX.sfx.gameover();
     bestStats.totalKills += killCount;
     if (elapsed > bestStats.bestTime) bestStats.bestTime = elapsed;
     if (player.level > bestStats.bestLevel) bestStats.bestLevel = player.level;
@@ -1050,18 +1157,40 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
       ctx.stroke();
     }
 
-    // orbit blades
+    // orbit blades — echte Klingenform statt Punkt, plus Speiche zum Kern (klar als eigene Waffe erkennbar)
     if (player.orbit.owned && player.orbit.count > 0){
       for (let i=0;i<player.orbit.count;i++){
         const a = player.orbit.angle + (i/player.orbit.count)*Math.PI*2;
         const bx = player.x + Math.cos(a)*player.orbit.radius;
         const by = player.y + Math.sin(a)*player.orbit.radius;
+        const tangent = a + Math.PI/2; // Ausrichtung entlang der Bewegungsrichtung
+
+        // dünne Speiche vom Kern zur Klinge
         ctx.beginPath();
-        ctx.fillStyle = '#ffb454';
-        ctx.shadowColor = '#ffb454'; ctx.shadowBlur = 10*FX_BLUR;
-        ctx.arc(bx, by, 8, 0, 7);
+        ctx.strokeStyle = 'rgba(255,78,26,0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.moveTo(player.x, player.y);
+        ctx.lineTo(bx, by);
+        ctx.stroke();
+
+        // Klinge: gestrecktes Kite/Rauten-Polygon entlang der Tangente, spitz in Rotationsrichtung
+        ctx.save();
+        ctx.translate(bx, by);
+        ctx.rotate(tangent);
+        ctx.beginPath();
+        ctx.moveTo(16, 0);
+        ctx.lineTo(-4, 6);
+        ctx.lineTo(-9, 0);
+        ctx.lineTo(-4, -6);
+        ctx.closePath();
+        ctx.fillStyle = '#f2ede4';
+        ctx.shadowColor = '#ff4e1a'; ctx.shadowBlur = 12*FX_BLUR;
         ctx.fill();
         ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#ff4e1a';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
       }
     }
   }
@@ -1083,10 +1212,13 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
   }
 
   document.getElementById('start-btn').onclick = () => {
+    SFX.ensureCtx();
+    SFX.sfx.start();
     document.getElementById('start-overlay').classList.remove('show');
     resetGame();
   };
   document.getElementById('restart-btn').onclick = () => {
+    SFX.sfx.start();
     document.getElementById('gameover-overlay').classList.remove('show');
     resetGame();
   };
