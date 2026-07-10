@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NO BOX. NO PROBLEM. — 2-Wochen WOD-Paket</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a08;
+    --panel:#141410;
+    --card:#141410;
+    --card-hi:#1c1c18;
+    --chalk:#f2ede4;
+    --muted:#9a9488;
+    --yellow:#ff4e1a;
+    --steel:#5a9db5;
+    --red:#ff3b5c;
+    --line:rgba(255,255,255,0.08);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--chalk);
+    font-family:'DM Mono',monospace;
+    -webkit-font-smoothing:antialiased;
+  }
+  .stripes{
+    height:10px;
+    background:repeating-linear-gradient(135deg,var(--yellow) 0 14px,#0a0a08 14px 28px);
+  }
+  header.hero{
+    padding:64px 24px 40px;
+    max-width:880px;
+    margin:0 auto;
+    text-align:center;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.18em;
+    color:var(--yellow);
+    text-transform:uppercase;
+  }
+  h1{
+    font-family:'Bebas Neue',sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    font-size:clamp(48px,10vw,96px);
+    line-height:0.92;
+    margin:14px 0 8px;
+    letter-spacing:.01em;
+  }
+  h1 span{color:var(--yellow);}
+  .sub{
+    color:var(--muted);
+    font-size:15px;
+    max-width:540px;
+    margin:0 auto 36px;
+    line-height:1.6;
+  }
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    justify-content:center;
+    margin-top:8px;
+  }
+  .toggle-group{
+    display:flex;
+    align-items:center;
+    gap:0;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:4px;
+  }
+  .toggle-group button{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    background:transparent;
+    border:none;
+    color:var(--muted);
+    padding:9px 16px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:all .2s ease;
+  }
+  .toggle-group button.active{
+    background:var(--chalk);
+    color:#101112;
+    font-weight:700;
+  }
+  .switch-btn{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--muted);
+    padding:11px 18px;
+    border-radius:999px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:all .2s ease;
+  }
+  .switch-btn .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--muted);
+    transition:all .2s ease;
+  }
+  .switch-btn.on{border-color:var(--steel);color:var(--chalk);}
+  .switch-btn.on .dot{background:var(--steel);box-shadow:0 0 8px var(--steel);}
+
+  nav.weeknav{
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:rgba(16,17,18,0.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    padding:14px 16px;
+  }
+  nav.weeknav a{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+    text-decoration:none;
+    padding:8px 16px;
+    border-radius:999px;
+    border:1px solid transparent;
+    transition:all .2s ease;
+  }
+  nav.weeknav a.active{
+    color:var(--yellow);
+    border-color:var(--yellow);
+  }
+
+  main{max-width:760px;margin:0 auto;padding:20px 20px 40px;}
+  .week-title{
+    font-family:'Bebas Neue',sans-serif;
+    text-transform:uppercase;
+    font-size:14px;
+    letter-spacing:0.2em;
+    color:var(--muted);
+    margin:52px 0 18px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .week-title::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+
+  .card{
+    position:relative;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:26px 26px 22px;
+    margin-bottom:18px;
+    overflow:hidden;
+    opacity:0;
+    transform:translateY(18px);
+    transition:opacity .6s ease, transform .6s ease;
+  }
+  .card.is-visible{opacity:1;transform:translateY(0);}
+  .card.partner{border-color:rgba(255,59,59,0.35);}
+  .partner-tag{
+    position:absolute;
+    top:14px;
+    right:-34px;
+    background:var(--red);
+    color:#101112;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:11px;
+    letter-spacing:0.1em;
+    padding:4px 40px;
+    transform:rotate(35deg);
+  }
+  .card-top{
+    display:flex;
+    align-items:baseline;
+    gap:16px;
+    margin-bottom:10px;
+  }
+  .num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:15px;
+    color:var(--muted);
+  }
+  .format{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    background:rgba(228,255,58,0.1);
+    color:var(--yellow);
+    padding:5px 10px;
+    border-radius:6px;
+  }
+  .card h2{
+    font-family:'Bebas Neue',sans-serif;
+    text-transform:uppercase;
+    font-size:30px;
+    margin:2px 0 16px;
+    letter-spacing:.02em;
+  }
+  ul.moves{
+    list-style:none;
+    margin:0 0 4px;
+    padding:0;
+    border-top:1px dashed var(--line);
+  }
+  ul.moves li{
+    padding:11px 0;
+    border-bottom:1px dashed var(--line);
+    font-size:15px;
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  ul.moves li .rep{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--yellow);
+    font-weight:700;
+    min-width:34px;
+  }
+  .badge{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    padding:2px 7px;
+    border-radius:5px;
+    letter-spacing:0.03em;
+  }
+  .badge.knee{background:rgba(91,141,190,0.15);color:var(--steel);}
+  .badge.bar{background:rgba(228,255,58,0.12);color:var(--yellow);}
+  .swap-hint{color:var(--muted);font-size:12px;font-style:italic;}
+  .note{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:8px;
+    line-height:1.5;
+  }
+  .weight-box{
+    display:none;
+    margin-top:14px;
+    padding:12px 14px;
+    background:rgba(228,255,58,0.06);
+    border:1px solid rgba(228,255,58,0.2);
+    border-radius:10px;
+    font-size:13px;
+    color:var(--chalk);
+  }
+  body[data-weight="show"] .weight-box{display:block;}
+  .weight-box .lbl{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--yellow);
+    font-size:11px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    display:block;
+    margin-bottom:4px;
+  }
+
+  /* swap logic */
+  body[data-eq="none"] .bar-default{display:none;}
+  body[data-eq="none"] .bar-alt{display:inline;}
+  body[data-eq="bar"] .bar-default{display:inline;}
+  body[data-eq="bar"] .bar-alt{display:none;}
+  body[data-knee="friendly"] .knee-default{display:none;}
+  body[data-knee="friendly"] .knee-alt{display:inline;}
+  body[data-knee="normal"] .knee-default{display:inline;}
+  body[data-knee="normal"] .knee-alt{display:none;}
+
+  section#legend{
+    margin-top:60px;
+    padding:26px;
+    background:var(--panel);
+    border-radius:18px;
+    border:1px solid var(--line);
+  }
+  section#legend h3{
+    font-family:'Bebas Neue',sans-serif;
+    text-transform:uppercase;
+    font-size:18px;
+    margin:0 0 14px;
+    color:var(--steel);
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+  table th{
+    text-align:left;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--muted);
+    padding:8px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  table td{
+    padding:10px 8px;
+    border-bottom:1px solid var(--line);
+    color:var(--chalk);
+    vertical-align:top;
+  }
+  table td:first-child{color:var(--yellow);white-space:nowrap;}
+
+  section#schedule{margin-top:24px;}
+  .sched-grid{
+    display:grid;
+    grid-template-columns:70px 1fr 1fr;
+    gap:1px;
+    background:var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    margin-top:14px;
+  }
+  .sched-grid > div{
+    background:var(--card);
+    padding:12px 10px;
+    font-size:12px;
+  }
+  .sched-grid > div.head{
+    font-family:'JetBrains Mono',monospace;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--muted);
+    font-size:10px;
+    background:var(--panel);
+  }
+  .sched-grid > div.day{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--yellow);
+    font-weight:700;
+  }
+
+  footer{
+    text-align:center;
+    padding:50px 24px 60px;
+    color:var(--muted);
+    font-size:13px;
+    max-width:560px;
+    margin:0 auto;
+    line-height:1.6;
+  }
+
+  @media (max-width:600px){
+    header.hero{padding:44px 18px 28px;}
+    .card{padding:20px 18px 18px;}
+    .sched-grid{grid-template-columns:56px 1fr 1fr;font-size:11px;}
+  }
+</style>
+</head>
+<body data-eq="none" data-knee="normal" data-weight="hide">
+
+<a href="crossfit.html" style="position:fixed;top:16px;left:20px;z-index:50;font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--line);padding:8px 14px;background:rgba(10,10,8,.7);backdrop-filter:blur(6px);transition:all .2s;" onmouseover="this.style.borderColor='var(--yellow)';this.style.color='var(--yellow)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--muted)'">← CrossFit</a>
+
+<div class="stripes"></div>
+
+<header class="hero">
+  <div class="eyebrow">Box-Ferien-Bridge · 12 WODs · 2 Wochen</div>
+  <h1>No box.<br><span>No problem.</span></h1>
+  <p class="sub">Reines Bodyweight, Springseil und Matte reichen. Stange, KB oder DB? Nice to have, kein Muss. Stellt unten ein, was ihr habt — die Workouts passen sich an.</p>
+
+  <div class="controls">
+    <div class="toggle-group" role="group" aria-label="Stange verfügbar">
+      <button data-eq="none" class="active">Ohne Stange</button>
+      <button data-eq="bar">Mit Stange</button>
+    </div>
+    <button class="switch-btn" id="weightToggle"><span class="dot"></span>Gewicht-Varianten</button>
+    <button class="switch-btn" id="kneeToggle"><span class="dot"></span>Kniefreundlicher Modus</button>
+  </div>
+</header>
+
+<nav class="weeknav">
+  <a href="#woche1" class="active">Woche 1</a>
+  <a href="#woche2">Woche 2</a>
+  <a href="#legend">Alternativen</a>
+</nav>
+
+<main>
+
+  <h3 class="week-title" id="woche1">Woche 1</h3>
+
+  <!-- WOD 1 -->
+  <article class="card">
+    <div class="card-top"><span class="num">01</span><span class="format">AMRAP 15</span></div>
+    <h2>Warm Welcome</h2>
+    <ul class="moves">
+      <li><span class="rep">5</span>
+        <span class="bar-default">Pull-ups</span>
+        <span class="bar-alt">Tisch-Rows / Supermans · 30 Sek.</span>
+        <span class="badge bar">🚫 Stange</span>
+      </li>
+      <li><span class="rep">10</span> Push-ups</li>
+      <li><span class="rep">15</span>
+        <span class="knee-default">Air Squats</span>
+        <span class="knee-alt">Hip Thrusts / Glute Bridges</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+    </ul>
+    <div class="weight-box"><span class="lbl">Mit Gewicht</span>Push-ups → 10 DB Floor Press · Air Squats → 15 Goblet Squats (KB/DB)</div>
+  </article>
+
+  <!-- WOD 2 -->
+  <article class="card">
+    <div class="card-top"><span class="num">02</span><span class="format">For Time · Cap 20</span></div>
+    <h2>Chipper One</h2>
+    <ul class="moves">
+      <li><span class="rep">50</span> Sit-ups</li>
+      <li><span class="rep">40</span>
+        <span class="knee-default">Burpees</span>
+        <span class="knee-alt">Burpees ohne Sprung / Elevated Burpees</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+      <li><span class="rep">30</span> Push-ups</li>
+      <li><span class="rep">20</span>
+        <span class="bar-default">Pull-ups</span>
+        <span class="bar-alt">Tisch-Rows / Supermans · 60 Sek.</span>
+        <span class="badge bar">🚫 Stange</span>
+      </li>
+      <li><span class="rep">10</span> Handstand Push-ups (oder Pike Push-ups)</li>
+    </ul>
+    <div class="weight-box"><span class="lbl">Mit Gewicht</span>Letzte Runde Push-ups → DB Push Press statt Handstand Push-ups</div>
+  </article>
+
+  <!-- WOD 3 -->
+  <article class="card">
+    <div class="card-top"><span class="num">03</span><span class="format">EMOM 20</span></div>
+    <h2>EMOM Engine</h2>
+    <ul class="moves">
+      <li><span class="rep">12</span> Min 1–5:
+        <span class="knee-default">Air Squats</span>
+        <span class="knee-alt">15 Hip Thrusts</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+      <li><span class="rep">8</span> Min 6–10: Push-ups</li>
+      <li><span class="rep">10+5</span> Min 11–15: Sit-ups +
+        <span class="knee-default">Mountain Climbers</span>
+        <span class="knee-alt">Plank Shoulder Taps</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+      <li><span class="rep">6</span> Min 16–20:
+        <span class="knee-default">Burpees</span>
+        <span class="knee-alt">Burpees ohne Sprung</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+    </ul>
+    <div class="weight-box"><span class="lbl">Mit Gewicht</span>Block 1 → Goblet Squats · Block 4 → DB Snatch (leicht) statt Burpees</div>
+  </article>
+
+  <!-- WOD 4 partner -->
+  <article class="card partner">
+    <span class="partner-tag">Partner</span>
+    <div class="card-top"><span class="num">04</span><span class="format">AMRAP 20 · Partner</span></div>
+    <h2>You Go, I Go</h2>
+    <p class="note">Abwechselnd komplette Runden — Partner A arbeitet, Partner B ruht, dann Wechsel.</p>
+    <ul class="moves">
+      <li><span class="rep">10</span>
+        <span class="knee-default">Burpees</span><span class="knee-alt">Burpees ohne Sprung</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+      <li><span class="rep">15</span>
+        <span class="knee-default">Air Squats</span><span class="knee-alt">Hip Thrusts</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+      <li><span class="rep">10</span> Push-ups</li>
+      <li><span class="rep">15</span> Sit-ups</li>
+    </ul>
+    <div class="weight-box"><span class="lbl">Mit Gewicht</span>Air Squats → Front Squats mit DB · Push-ups → alternierend DB Renegade Rows</div>
+  </article>
+
+  <!-- WOD 5 -->
+  <article class="card">
+    <div class="card-top"><span class="num">05</span><span class="format">Tabata</span></div>
+    <h2>Tabata Mix</h2>
+    <p class="note">20s work / 10s rest · 8 Runden pro Übung, direkt nacheinander.</p>
+    <ul class="moves">
+      <li><span class="rep">1</span> Push-ups</li>
+      <li><span class="rep">2</span>
+        <span class="knee-default">Air Squats</span><span class="knee-alt">Glute Bridges</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+      <li><span class="rep">3</span> Sit-ups</li>
+      <li><span class="rep">4</span> Plank Hold (Sekunden statt Reps)</li>
+    </ul>
+    <div class="weight-box"><span class="lbl">Mit Gewicht</span>Runde 2 → Goblet Squats</div>
+  </article>
+
+  <h3 class="week-title" id="woche2">Woche 2</h3>
+
+  <!-- WOD 6 -->
+  <article class="card">
+    <div class="card-top"><span class="num">06</span><span class="format">21-15-9</span></div>
+    <h2>21-15-9</h2>
+    <ul class="moves">
+      <li><span class="rep">–</span>
+        <span class="knee-default">Burpees</span><span class="knee-alt">Burpees ohne Sprung</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+      <li><span class="rep">–</span> Sit-ups</li>
+      <li><span class="rep">–</span> Push-ups</li>
+    </ul>
+    <div class="weight-box"><span class="lbl">Mit Gewicht</span>Burpees → Burpee + DB Deadlift</div>
+  </article>
+
+  <!-- WOD 7 -->
+  <article class="card">
+    <div class="card-top"><span class="num">07</span><span class="format">Ladder 1–10</span></div>
+    <h2>Ladder</h2>
+    <ul class="moves">
+      <li><span class="rep">+1</span>
+        <span class="bar-default">Pull-ups</span>
+        <span class="bar-alt">Tisch-Rows / Supermans (in Sek.)</span>
+        <span class="badge bar">🚫 Stange</span>
+      </li>
+      <li><span class="rep">+1</span>
+        <span class="knee-default">Air Squats</span><span class="knee-alt">Hip Thrusts (doppelte Reps)</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+      <li><span class="rep">+1</span> Push-ups</li>
+    </ul>
+    <div class="weight-box"><span class="lbl">Mit Gewicht</span>Ab Runde 6 → KB Thrusters statt Air Squats</div>
+  </article>
+
+  <!-- WOD 8 -->
+  <article class="card">
+    <div class="card-top"><span class="num">08</span><span class="format">5 Runden</span></div>
+    <h2>Grinder</h2>
+    <p class="note">Jede Runde so schnell wie möglich, 2 Min Pause dazwischen.</p>
+    <ul class="moves">
+      <li><span class="rep">15</span> Push-ups</li>
+      <li><span class="rep">20</span> Sit-ups</li>
+      <li><span class="rep">25</span>
+        <span class="knee-default">Air Squats</span><span class="knee-alt">20 Single-Leg Hip Thrusts / Bein</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+    </ul>
+    <div class="weight-box"><span class="lbl">Mit Gewicht</span>Air Squats → Front Rack Squats mit DB</div>
+  </article>
+
+  <!-- WOD 9 partner -->
+  <article class="card partner">
+    <span class="partner-tag">Partner</span>
+    <div class="card-top"><span class="num">09</span><span class="format">4 Runden · Partner</span></div>
+    <h2>Sync or Swim</h2>
+    <p class="note">Partner A hält Plank, während Partner B arbeitet — dann Wechsel, gleiche Runde.</p>
+    <ul class="moves">
+      <li><span class="rep">15</span>
+        <span class="knee-default">Burpees</span><span class="knee-alt">Burpees ohne Sprung</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+      <li><span class="rep">20</span> Push-ups</li>
+      <li><span class="rep">25</span> Sit-ups</li>
+    </ul>
+    <div class="weight-box"><span class="lbl">Mit Gewicht</span>Push-ups → DB Man Makers (falls Knie okay) — sonst bodyweight bleiben</div>
+  </article>
+
+  <!-- WOD 10 -->
+  <article class="card">
+    <div class="card-top"><span class="num">10</span><span class="format">Death By</span></div>
+    <h2>Death by...</h2>
+    <ul class="moves">
+      <li><span class="rep">+1/min</span>
+        <span class="knee-default">Burpees</span>
+        <span class="knee-alt">Push-ups oder Plank Shoulder Taps (4 Taps = 1 Rep)</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+    </ul>
+    <p class="note">Minute 1 = 1 Rep, Minute 2 = 2 Reps, usw. bis Failure.</p>
+    <div class="weight-box"><span class="lbl">Mit Gewicht</span>Death by DB Snatch (alternierend)</div>
+  </article>
+
+  <!-- WOD 11 -->
+  <article class="card">
+    <div class="card-top"><span class="num">11</span><span class="format">For Time · Cap 25</span></div>
+    <h2>Long Grind</h2>
+    <ul class="moves">
+      <li><span class="rep">–</span> 1000m Row/Bike (falls vorhanden) — sonst 400 Jumping Jacks</li>
+      <li><span class="rep">50</span>
+        <span class="knee-default">Air Squats</span><span class="knee-alt">40 Hip Thrusts</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+      <li><span class="rep">40</span> Push-ups</li>
+      <li><span class="rep">30</span> Sit-ups</li>
+      <li><span class="rep">20</span>
+        <span class="knee-default">Burpees</span><span class="knee-alt">Burpees ohne Sprung</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+      <li><span class="rep">10</span>
+        <span class="bar-default">Pull-ups</span>
+        <span class="bar-alt">Tisch-Rows / Supermans · 45 Sek.</span>
+        <span class="badge bar">🚫 Stange</span>
+      </li>
+    </ul>
+    <div class="weight-box"><span class="lbl">Mit Gewicht</span>50 Air Squats → 40 Goblet Squats</div>
+  </article>
+
+  <!-- WOD 12 -->
+  <article class="card">
+    <div class="card-top"><span class="num">12</span><span class="format">AMRAP 12</span></div>
+    <h2>Finisher</h2>
+    <p class="note">Reps steigen nicht — jede Runde immer 3-6-9-12.</p>
+    <ul class="moves">
+      <li><span class="rep">3</span>
+        <span class="knee-default">Burpees</span><span class="knee-alt">Burpees ohne Sprung</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+      <li><span class="rep">6</span> Push-ups</li>
+      <li><span class="rep">9</span>
+        <span class="knee-default">Air Squats</span><span class="knee-alt">Hip Thrusts</span>
+        <span class="badge knee">🦵 Knie</span>
+      </li>
+      <li><span class="rep">12</span> Sit-ups</li>
+    </ul>
+    <div class="weight-box"><span class="lbl">Mit Gewicht</span>Air Squats → DB Thrusters (reduziert auf 6 statt 9)</div>
+  </article>
+
+  <section id="legend">
+    <h3>🦵 Kniefreundliche Alternativen</h3>
+    <table>
+      <tr><th>Original</th><th>Alternative</th><th>Warum ähnlicher Stimulus</th></tr>
+      <tr><td>Air Squats</td><td>Hip Thrusts / Glute Bridges</td><td>Gleiche Muskelgruppe, keine Knie-Flexion unter Last</td></tr>
+      <tr><td>Lunges</td><td>Single-Leg Hip Thrust</td><td>Einbeinige Kraft ohne Knie-Beugewinkel</td></tr>
+      <tr><td>Box Jumps</td><td>Step-Ups kontrolliert / Jumping Jacks</td><td>Power-Reiz ohne Impact</td></tr>
+      <tr><td>Burpees</td><td>Ohne Sprung / Elevated Burpees</td><td>Reduzierte Kniebeugung, Puls bleibt hoch</td></tr>
+      <tr><td>Pistol Squats</td><td>Single-Leg Hip Thrust / Good Mornings</td><td>Einbeinige Kraft ohne tiefe Knieflexion</td></tr>
+      <tr><td>Double-Unders</td><td>Plank Jacks / Step-Touches</td><td>Cardio ohne Sprung-Impact</td></tr>
+      <tr><td>Mountain Climbers</td><td>Plank Shoulder Taps</td><td>Core-Reiz, kein dynamisches Knie</td></tr>
+      <tr><td>Broad Jumps</td><td>Standing Long Reach</td><td>Hüftstreckung ohne Landing-Impact</td></tr>
+    </table>
+    <p class="note" style="margin-top:14px;">🚫 Keine Stange? Standard ist Tisch-/Handtuch-Rows oder Supermans in Zeitform. Sobald ihr eine Stange habt, oben auf „Mit Stange" umschalten.</p>
+  </section>
+
+  <section id="schedule">
+    <h3 class="week-title" style="margin-top:40px;">Vorschlag Wochenplan</h3>
+    <div class="sched-grid">
+      <div class="head">Tag</div><div class="head">Woche 1</div><div class="head">Woche 2</div>
+      <div class="day">Mo</div><div>WOD 1</div><div>WOD 6</div>
+      <div class="day">Di</div><div>WOD 2</div><div>WOD 7</div>
+      <div class="day">Mi</div><div>Ruhe / Mobility</div><div>Ruhe / Mobility</div>
+      <div class="day">Do</div><div>WOD 3</div><div>WOD 8</div>
+      <div class="day">Fr</div><div>WOD 4 · Partner</div><div>WOD 9 · Partner</div>
+      <div class="day">Sa</div><div>WOD 5</div><div>WOD 10</div>
+      <div class="day">So</div><div>Ruhe</div><div>WOD 11 + 12 (optional)</div>
+    </div>
+  </section>
+
+</main>
+
+<div class="stripes"></div>
+<footer>Bei mehr Knie-Symptomen an einem Tag: einfach oben auf „Kniefreundlicher Modus" umschalten — der Rest des WODs bleibt gleich.</footer>
+
+<script>
+  // equipment toggle
+  document.querySelectorAll('.toggle-group button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.toggle-group button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.body.dataset.eq = btn.dataset.eq;
+    });
+  });
+
+  // weight switch
+  const weightBtn = document.getElementById('weightToggle');
+  weightBtn.addEventListener('click',()=>{
+    const on = weightBtn.classList.toggle('on');
+    document.body.dataset.weight = on ? 'show':'hide';
+  });
+
+  // knee switch
+  const kneeBtn = document.getElementById('kneeToggle');
+  kneeBtn.addEventListener('click',()=>{
+    const on = kneeBtn.classList.toggle('on');
+    document.body.dataset.knee = on ? 'friendly':'normal';
+  });
+
+  // scroll reveal
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('is-visible'); io.unobserve(e.target);} });
+  },{threshold:0.12});
+  document.querySelectorAll('.card').forEach(c=>io.observe(c));
+
+  // week nav active state
+  const navLinks = document.querySelectorAll('nav.weeknav a');
+  const sections = ['woche1','woche2','legend'].map(id=>document.getElementById(id));
+  const navObserver = new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        navLinks.forEach(l=>l.classList.remove('active'));
+        const match = document.querySelector('nav.weeknav a[href="#'+entry.target.id+'"]');
+        if(match) match.classList.add('active');
+      }
+    });
+  },{rootMargin:'-40% 0px -50% 0px'});
+  sections.forEach(s=>{ if(s) navObserver.observe(s); });
+</script>
+
+</body>
+</html>
