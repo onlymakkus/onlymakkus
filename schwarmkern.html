@@ -43,6 +43,11 @@ body{
 .timer { font-family:'Bebas Neue'; font-size:26px; letter-spacing:.05em; color:var(--cream); text-align:center; }
 .wave-label{text-align:right;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
 .wave-label b{color:var(--danger);font-family:'Bebas Neue';font-size:1rem;letter-spacing:.02em}
+.wave-timer-track{width:90px;height:4px;background:rgba(255,255,255,0.08);margin-top:5px;overflow:hidden}
+.wave-timer-fill.boss-mode{animation:bossPulse 1.1s ease-in-out infinite}
+@keyframes bossPulse{0%,100%{opacity:.45}50%{opacity:1}}
+.wave-sub-label{font-size:.52rem;letter-spacing:.15em;color:var(--muted);margin-top:2px}
+.wave-timer-fill{height:100%;background:var(--danger);transition:width .15s linear}
 
 .bars { position:absolute; top:calc(96px + env(safe-area-inset-top)); left:calc(22px + env(safe-area-inset-left)); width:250px; }
 .bar-track{height:7px;background:rgba(255,255,255,0.06);border:1px solid var(--border);overflow:hidden;margin-bottom:8px}
@@ -91,6 +96,12 @@ body{
 .frag-icon{color:var(--orange)}
 .frag-shop-btn{margin-left:10px;pointer-events:all}
 
+.aim-toggle{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:16px}
+.aim-toggle-label{font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+.aim-toggle-pill{display:flex;border:1px solid var(--border);pointer-events:all}
+.aim-opt{background:transparent;border:none;color:var(--muted);font-family:'DM Mono';font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:7px 14px;cursor:pointer;transition:all .15s}
+.aim-opt.active{background:var(--orange);color:var(--black)}
+
 .meta-card{width:150px;padding:18px 14px;background:var(--panel);border:1px solid var(--border);cursor:pointer;transition:background .2s,border-color .2s;pointer-events:all;text-align:left}
 .meta-card:hover{background:var(--panel2);border-color:var(--orange)}
 .meta-card.maxed{opacity:.55;cursor:default}
@@ -122,6 +133,11 @@ body{
 .joystick-base{position:fixed;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,0.04);border:1px solid var(--border);pointer-events:none;opacity:0;transition:opacity .15s;z-index:51}
 .joystick-base.active{opacity:1}
 .joystick-knob{position:absolute;top:50%;left:50%;width:46px;height:46px;border-radius:50%;background:rgba(255,78,26,0.18);border:1px solid var(--orange);transform:translate(-50%,-50%);box-shadow:0 0 14px rgba(255,78,26,.35)}
+
+.aim-zone{display:none !important;left:auto;right:0;}
+.aim-zone.enabled{display:block !important}
+.aim-knob{background:rgba(124,58,237,0.22);border-color:#7c3aed;box-shadow:0 0 14px rgba(124,58,237,.4)}
+
 @media (pointer:coarse){
   .joystick-zone{display:block}
   .hint{display:none}
@@ -146,7 +162,10 @@ body{
   <div class="top-hud">
     <div class="brand-tag">// überlebe den schwarm</div>
     <div class="timer" id="timer">00:00</div>
-    <div class="wave-label">WELLE<br><b id="wave-num">1</b></div>
+    <div class="wave-label">WELLE<br><b id="wave-num">1</b>
+      <div class="wave-timer-track"><div class="wave-timer-fill" id="wave-timer-fill" style="width:100%"></div></div>
+      <div class="wave-sub-label" id="wave-sub-label"></div>
+    </div>
   </div>
   <div class="bars">
     <div class="bar-label">Kern-Integrität</div>
@@ -171,15 +190,28 @@ body{
   </div>
 </div>
 
+<div class="joystick-zone aim-zone" id="aim-zone">
+  <div class="joystick-base aim-base" id="aim-base">
+    <div class="joystick-knob aim-knob" id="aim-knob"></div>
+  </div>
+</div>
+
 <div class="overlay show" id="start-overlay">
   <div class="panel">
     <p class="section-label">wave survivor</p>
     <h1>SCHWARM<span>KERN</span></h1>
-    <p class="sub">Der Schwarm kommt aus jeder Richtung. Halte den Kern am Leben, so lange es geht.</p>
+    <p class="sub">Der Schwarm kommt aus jeder Richtung. Je stärker dein Kern wird, desto mehr zieht er den Schwarm zu sich hinab.</p>
     <div class="best-note" id="best-note-start"></div>
     <div class="frag-row">
       <span class="frag-icon">◆</span> <b id="fragment-count">0</b> Kernfragmente
       <button class="tb-back frag-shop-btn" id="open-shop-btn">Ausbau</button>
+    </div>
+    <div class="aim-toggle" id="aim-toggle">
+      <span class="aim-toggle-label">Zielmodus</span>
+      <div class="aim-toggle-pill">
+        <button class="aim-opt" id="aim-auto-btn">Auto</button>
+        <button class="aim-opt" id="aim-manual-btn">Manuell</button>
+      </div>
     </div>
     <button class="btn" id="start-btn">Run starten</button>
   </div>
@@ -560,9 +592,88 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
   });
   joyZone.addEventListener('touchcancel', joyEnd);
 
+  // ---------- aim mode (toggleable: auto-target vs. manual twin-stick) ----------
+  let aimMode = localStorage.getItem('schwarmkern:aimMode') || 'auto';
+  let aimDirX = 0, aimDirY = -1; // Standardrichtung: nach oben, falls noch nicht gezielt wurde
+
+  function applyAimModeUI(){
+    document.getElementById('aim-auto-btn').classList.toggle('active', aimMode === 'auto');
+    document.getElementById('aim-manual-btn').classList.toggle('active', aimMode === 'manual');
+    document.getElementById('aim-zone').classList.toggle('enabled', aimMode === 'manual');
+    document.getElementById('hint-desktop').innerHTML = aimMode === 'manual'
+      ? 'WASD zum Bewegen — Maus zielt, der Kern feuert <span>automatisch in Zielrichtung</span>'
+      : 'WASD / Pfeiltasten — der Kern feuert <span>automatisch</span>';
+  }
+  document.getElementById('aim-auto-btn').onclick = () => {
+    aimMode = 'auto'; localStorage.setItem('schwarmkern:aimMode','auto'); applyAimModeUI();
+  };
+  document.getElementById('aim-manual-btn').onclick = () => {
+    aimMode = 'manual'; localStorage.setItem('schwarmkern:aimMode','manual'); applyAimModeUI();
+  };
+  applyAimModeUI();
+
+  // Desktop: Maus bestimmt Zielrichtung relativ zum Kern
+  document.addEventListener('mousemove', e => {
+    if (aimMode !== 'manual' || !player) return;
+    const dx = e.clientX - player.x, dy = e.clientY - player.y;
+    const len = Math.hypot(dx,dy);
+    if (len > 4){ aimDirX = dx/len; aimDirY = dy/len; }
+  });
+
+  // Mobile: zweiter Joystick rechts unten bestimmt Zielrichtung
+  const aimZone = document.getElementById('aim-zone');
+  const aimBase = document.getElementById('aim-base');
+  const aimKnob = document.getElementById('aim-knob');
+  let aimJoyActive = false, aimJoyTouchId = null;
+  const AIM_JOY_RADIUS = 55;
+
+  function aimJoyStart(x, y, id){
+    aimJoyActive = true;
+    aimJoyTouchId = id;
+    aimBase.style.left = (x - 55) + 'px';
+    aimBase.style.top = (y - 55) + 'px';
+    aimBase.classList.add('active');
+    aimKnob.style.transform = 'translate(-50%,-50%)';
+  }
+  function aimJoyMove(x, y){
+    const baseX = parseFloat(aimBase.style.left) + 55;
+    const baseY = parseFloat(aimBase.style.top) + 55;
+    let dx = x - baseX, dy = y - baseY;
+    const dist = Math.min(Math.hypot(dx, dy), AIM_JOY_RADIUS);
+    const ang = Math.atan2(dy, dx);
+    const kx = Math.cos(ang) * dist, ky = Math.sin(ang) * dist;
+    aimKnob.style.transform = `translate(calc(-50% + ${kx}px), calc(-50% + ${ky}px))`;
+    if (dist > 8){ aimDirX = Math.cos(ang); aimDirY = Math.sin(ang); }
+  }
+  function aimJoyEnd(){
+    aimJoyActive = false;
+    aimJoyTouchId = null;
+    aimBase.classList.remove('active');
+    // letzte Zielrichtung bleibt erhalten, bis erneut gezielt wird
+  }
+  aimZone.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    aimJoyStart(t.clientX, t.clientY, t.identifier);
+  }, { passive:false });
+  aimZone.addEventListener('touchmove', e => {
+    e.preventDefault();
+    for (const t of e.changedTouches){
+      if (t.identifier === aimJoyTouchId) aimJoyMove(t.clientX, t.clientY);
+    }
+  }, { passive:false });
+  aimZone.addEventListener('touchend', e => {
+    for (const t of e.changedTouches){
+      if (t.identifier === aimJoyTouchId) aimJoyEnd();
+    }
+  });
+  aimZone.addEventListener('touchcancel', aimJoyEnd);
+
   let player, enemies, projectiles, orbs, particles, bossProjectiles, novaPulses;
   let elapsed, killCount, spawnTimer, running, paused;
-  let nextLevelXp, bossTierSpawned, activeBoss, lastWaveAnnounced, lastDamageSoundAt;
+  let nextLevelXp, activeBoss, lastDamageSoundAt;
+  let waveNumber, waveTimer, bossSpawnedThisWave;
+  const WAVE_DURATION = 24;
 
   const BOSS_NAMES = ['WÄCHTER','ZERMALMER','HERALD','TITAN','ÜBERMACHT','ABGRUND'];
 
@@ -574,11 +685,13 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
       projSpeed: 520, projectiles: 1, pierce: 0, pickupRadius: 70,
       orbit: { owned:false, count:0, dmg:10, radius:75, rotSpeed:2.0, angle:0 },
       nova: { owned:false, dmg:16, radius:110, cooldown:3.2, timer:0 },
+      gravityMult: 1, crushMult: 1, baseR: 13, absorbedCount: 0,
     };
     enemies = []; projectiles = []; orbs = []; particles = []; bossProjectiles = []; novaPulses = [];
-    elapsed = 0; killCount = 0; spawnTimer = 0; nextLevelXp = 20;
+    elapsed = 0; killCount = 0; spawnTimer = 0; nextLevelXp = 26;
     running = false; paused = false;
-    bossTierSpawned = 0; activeBoss = null; lastWaveAnnounced = 1; lastDamageSoundAt = -99;
+    activeBoss = null; lastDamageSoundAt = -99;
+    waveNumber = 1; waveTimer = WAVE_DURATION; bossSpawnedThisWave = false;
     applyMetaBonuses(player);
     document.getElementById('boss-bar-wrap').classList.remove('show');
     document.getElementById('toast').classList.remove('show');
@@ -591,10 +704,8 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     updateHud();
   }
 
-  function difficultyWave(){ return Math.floor(elapsed/20) + 1; }
-
   function spawnEnemy(){
-    const wave = difficultyWave();
+    const wave = waveNumber;
     const edge = Math.floor(Math.random()*4);
     let x,y;
     if (edge===0){ x = Math.random()*W; y = -30; }
@@ -604,16 +715,25 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
 
     const roll = Math.random();
     let type;
-    if (wave >= 4 && roll < 0.12) type = 'tank';
-    else if (wave >= 2 && roll < 0.35) type = 'fast';
+    if (wave >= 9 && roll < 0.05) type = 'juggernaut';
+    else if (wave >= 5 && roll < 0.14) type = 'brute';
+    else if (wave >= 4 && roll < 0.24) type = 'tank';
+    else if (wave >= 2 && roll < 0.50) type = 'fast';
+    else if (roll < 0.68) type = 'swarmer';
     else type = 'grunt';
 
-    const scale = 1 + (wave-1)*0.14;
+    const scale = 1 + (wave-1)*0.19;
     let e;
-    if (type === 'tank') {
+    if (type === 'juggernaut') {
+      e = { x,y, r:28, hp:130*scale, maxHp:130*scale, speed:45+wave*1, dmg:25, color:'#4c1d78', xp:14, type };
+    } else if (type === 'brute') {
+      e = { x,y, r:18, hp:45*scale, maxHp:45*scale, speed:80+wave*2, dmg:14, color:'#e8622f', xp:7, type };
+    } else if (type === 'tank') {
       e = { x,y, r:22, hp:60*scale, maxHp:60*scale, speed:60+wave*2, dmg:18, color:'#ff3b5c', xp:8, type };
     } else if (type === 'fast') {
       e = { x,y, r:9, hp:12*scale, maxHp:12*scale, speed:170+wave*4, dmg:8, color:'#ffb454', xp:4, type };
+    } else if (type === 'swarmer') {
+      e = { x,y, r:7, hp:6*scale, maxHp:6*scale, speed:210+wave*3, dmg:5, color:'#ffe27a', xp:3, type };
     } else {
       e = { x,y, r:14, hp:22*scale, maxHp:22*scale, speed:95+wave*3, dmg:10, color:'#7c3aed', xp:5, type };
     }
@@ -631,21 +751,39 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
   }
 
   function fireWeapon(){
-    const used = new Set();
     const shots = player.projectiles;
     let fired = false;
-    for (let i=0;i<shots;i++){
-      const target = nearestEnemy(player.x, player.y, used);
-      if (!target) break;
-      used.add(target);
-      const dx = target.x-player.x, dy = target.y-player.y;
-      const len = Math.hypot(dx,dy) || 1;
-      projectiles.push({
-        x: player.x, y: player.y,
-        vx: dx/len*player.projSpeed, vy: dy/len*player.projSpeed,
-        r: 4, dmg: player.dmg, pierce: player.pierce, hitSet: new Set()
-      });
-      fired = true;
+
+    if (aimMode === 'manual'){
+      // Salve fächert sich leicht um die Zielrichtung auf bei mehreren Geschossen
+      const spread = 0.18;
+      for (let i=0;i<shots;i++){
+        const off = (i - (shots-1)/2) * spread;
+        const cos = Math.cos(off), sin = Math.sin(off);
+        const vx = aimDirX*cos - aimDirY*sin;
+        const vy = aimDirX*sin + aimDirY*cos;
+        projectiles.push({
+          x: player.x, y: player.y,
+          vx: vx*player.projSpeed, vy: vy*player.projSpeed,
+          r: 4, dmg: player.dmg, pierce: player.pierce, hitSet: new Set()
+        });
+        fired = true;
+      }
+    } else {
+      const used = new Set();
+      for (let i=0;i<shots;i++){
+        const target = nearestEnemy(player.x, player.y, used);
+        if (!target) break;
+        used.add(target);
+        const dx = target.x-player.x, dy = target.y-player.y;
+        const len = Math.hypot(dx,dy) || 1;
+        projectiles.push({
+          x: player.x, y: player.y,
+          vx: dx/len*player.projSpeed, vy: dy/len*player.projSpeed,
+          r: 4, dmg: player.dmg, pierce: player.pierce, hitSet: new Set()
+        });
+        fired = true;
+      }
     }
     if (fired) SFX.sfx.shoot();
   }
@@ -696,7 +834,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     const name = BOSS_NAMES[Math.min(tier-1, BOSS_NAMES.length-1)];
     document.getElementById('boss-name').textContent = name;
     document.getElementById('boss-bar-wrap').classList.add('show');
-    showToast(`WELLE ${difficultyWave()} <span>· ${name} ERSCHEINT</span>`, 2.4);
+    showToast(`WELLE ${waveNumber} <span>· ${name} ERSCHEINT</span>`, 2.4);
     SFX.sfx.bossSpawn();
   }
 
@@ -715,6 +853,14 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     }
   }
 
+  function endWave(){
+    waveNumber++;
+    waveTimer = WAVE_DURATION;
+    bossSpawnedThisWave = false;
+    showToast(`WELLE <span style="color:var(--orange)">${waveNumber}</span>`, 1.8);
+    SFX.sfx.wave();
+  }
+
   const BASE_UPGRADES = [
     { key:'dmg', icon:'⚔', name:'Wucht', desc:'+35% Kernstrahl-Schaden', apply:p=>{ p.dmg*=1.35; } },
     { key:'atkspeed', icon:'⚡', name:'Kadenz', desc:'-18% Kernstrahl-Feuerpause', apply:p=>{ p.atkCooldown*=0.82; } },
@@ -724,25 +870,27 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     { key:'multi', icon:'✦', name:'Vielschuss', desc:'+1 Kernstrahl-Geschoss', apply:p=>{ p.projectiles+=1; } },
     { key:'pierce', icon:'↯', name:'Durchschlag', desc:'Kernstrahl durchdringt +1 Ziel', apply:p=>{ p.pierce+=1; } },
     { key:'regen', icon:'✚', name:'Selbstheilung', desc:'Heile 15 Integrität sofort', apply:p=>{ p.hp=Math.min(p.maxHp,p.hp+15); } },
+    { key:'gravity', icon:'✷', name:'Zugkraft', desc:'+25% Kernmasse-Reichweite', apply:p=>{ p.gravityMult*=1.25; } },
+    { key:'crush', icon:'⊙', name:'Verdichtung', desc:'+30% Absorptionsgrenze — auch schwerere Gegner werden angezogen', apply:p=>{ p.crushMult*=1.3; } },
   ];
 
   function buildUpgradePool(p){
     const pool = [...BASE_UPGRADES];
 
     if (!p.orbit.owned){
-      pool.push({ key:'orbit_unlock', icon:'✺', name:'Orbit-Klinge', desc:'Neue Waffe: rotierende Klinge um den Kern', apply:pl=>{ pl.orbit.owned=true; pl.orbit.count=1; } });
+      pool.push({ key:'orbit_unlock', icon:'✺', name:'Trümmerfeld', desc:'Neue Waffe: Trümmer kreisen um deine Kernmasse', apply:pl=>{ pl.orbit.owned=true; pl.orbit.count=1; } });
     } else {
-      if (p.orbit.count < 6) pool.push({ key:'orbit_count', icon:'✺', name:'Orbit-Klinge +1', desc:'+1 rotierende Klinge', apply:pl=>{ pl.orbit.count++; } });
-      pool.push({ key:'orbit_dmg', icon:'✺', name:'Orbit-Wucht', desc:'+30% Klingen-Schaden', apply:pl=>{ pl.orbit.dmg*=1.3; } });
-      pool.push({ key:'orbit_speed', icon:'✺', name:'Orbit-Tempo', desc:'+25% Rotationsgeschwindigkeit', apply:pl=>{ pl.orbit.rotSpeed*=1.25; } });
+      if (p.orbit.count < 6) pool.push({ key:'orbit_count', icon:'✺', name:'Trümmerfeld +1', desc:'+1 kreisender Trümmerbrocken', apply:pl=>{ pl.orbit.count++; } });
+      pool.push({ key:'orbit_dmg', icon:'✺', name:'Trümmer-Dichte', desc:'+30% Trümmer-Schaden', apply:pl=>{ pl.orbit.dmg*=1.3; } });
+      pool.push({ key:'orbit_speed', icon:'✺', name:'Trümmer-Tempo', desc:'+25% Umlaufgeschwindigkeit', apply:pl=>{ pl.orbit.rotSpeed*=1.25; } });
     }
 
     if (!p.nova.owned){
-      pool.push({ key:'nova_unlock', icon:'◉', name:'Pulswelle', desc:'Neue Waffe: periodischer Flächenschaden um den Kern', apply:pl=>{ pl.nova.owned=true; pl.nova.timer=pl.nova.cooldown; } });
+      pool.push({ key:'nova_unlock', icon:'◉', name:'Massenauswurf', desc:'Neue Waffe: stößt periodisch alles im Umkreis gewaltsam ab', apply:pl=>{ pl.nova.owned=true; pl.nova.timer=pl.nova.cooldown; } });
     } else {
-      pool.push({ key:'nova_dmg', icon:'◉', name:'Wellen-Wucht', desc:'+35% Pulsschaden', apply:pl=>{ pl.nova.dmg*=1.35; } });
-      pool.push({ key:'nova_radius', icon:'◉', name:'Wellen-Reichweite', desc:'+20% Radius', apply:pl=>{ pl.nova.radius*=1.2; } });
-      if (p.nova.cooldown > 1.2) pool.push({ key:'nova_speed', icon:'◉', name:'Wellen-Kadenz', desc:'-15% Pulspause', apply:pl=>{ pl.nova.cooldown*=0.85; } });
+      pool.push({ key:'nova_dmg', icon:'◉', name:'Auswurf-Wucht', desc:'+35% Auswurf-Schaden', apply:pl=>{ pl.nova.dmg*=1.35; } });
+      pool.push({ key:'nova_radius', icon:'◉', name:'Auswurf-Reichweite', desc:'+20% Radius', apply:pl=>{ pl.nova.radius*=1.2; } });
+      if (p.nova.cooldown > 1.2) pool.push({ key:'nova_speed', icon:'◉', name:'Auswurf-Kadenz', desc:'-15% Pause zwischen Ausstößen', apply:pl=>{ pl.nova.cooldown*=0.85; } });
     }
 
     return pool;
@@ -796,6 +944,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
 
   function update(dt){
     elapsed += dt;
+    player.r = player.baseR + Math.min(11, player.level*0.65);
 
     let mx=0, my=0;
     if (keys['w']||keys['arrowup']) my -= 1;
@@ -815,33 +964,37 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     player.x = Math.max(player.r, Math.min(W-player.r, player.x));
     player.y = Math.max(player.r, Math.min(H-player.r, player.y));
 
+    const isBossWave = (waveNumber % 3 === 0);
+
     spawnTimer -= dt;
-    const wave = difficultyWave();
-    const spawnInterval = Math.max(0.18, 1.0 - wave*0.06);
+    const spawnInterval = Math.max(0.18, 1.0 - waveNumber*0.06);
     if (spawnTimer <= 0){
       spawnTimer = spawnInterval;
-      const burst = (activeBoss ? Math.max(1, Math.floor((1 + Math.floor(wave/3))/2)) : 1 + Math.floor(wave/3));
+      const burst = (activeBoss ? Math.max(1, Math.floor((1 + Math.floor(waveNumber/3))/2)) : 1 + Math.floor(waveNumber/3));
       for (let i=0;i<burst;i++) spawnEnemy();
     }
 
-    const bossTier = Math.floor(wave/3);
+    if (isBossWave && !bossSpawnedThisWave){
+      bossSpawnedThisWave = true;
+      spawnBoss(Math.floor(waveNumber/3));
+    }
 
-    if (wave > lastWaveAnnounced){
-      lastWaveAnnounced = wave;
-      if (!(bossTier > bossTierSpawned)){
-        // only show the plain wave banner if no boss is about to take over this same tick
-        showToast(`WELLE <span style="color:var(--orange)">${wave}</span>`, 1.8);
-        SFX.sfx.wave();
+    if (isBossWave){
+      // Boss-Welle endet erst, wenn der Boss fällt (nicht per Timer)
+      if (bossSpawnedThisWave && !activeBoss){
+        endWave();
+        return;
+      }
+    } else {
+      waveTimer -= dt;
+      if (waveTimer <= 0){
+        endWave();
+        return;
       }
     }
 
-    if (bossTier > bossTierSpawned && !activeBoss){
-      bossTierSpawned = bossTier;
-      spawnBoss(bossTier);
-    }
-
     player.atkTimer -= dt;
-    if (player.atkTimer <= 0 && enemies.length){
+    if (player.atkTimer <= 0 && (enemies.length || aimMode === 'manual')){
       player.atkTimer = player.atkCooldown;
       fireWeapon();
     }
@@ -866,16 +1019,22 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
       }
     }
 
-    // nova pulse: periodic AoE burst around the player
+    // nova pulse: periodic AoE burst around the player — Massenauswurf: Schaden + echter Rückstoß
     if (player.nova.owned){
       player.nova.timer -= dt;
       if (player.nova.timer <= 0){
         player.nova.timer = player.nova.cooldown;
         for (const e of enemies){
-          const d = Math.hypot(player.x-e.x, player.y-e.y);
+          const edx = e.x-player.x, edy = e.y-player.y;
+          const d = Math.hypot(edx,edy) || 1;
           if (d < player.nova.radius + e.r){
             e.hp -= player.nova.dmg;
             spawnHitParticles(e.x, e.y, '#7c3aed');
+            if (e.type !== 'boss'){
+              const force = 420 * (1 - Math.min(1, d/(player.nova.radius+e.r)) * 0.4); // näher dran = härter rausgeschleudert
+              e.kbX = (edx/d) * force;
+              e.kbY = (edy/d) * force;
+            }
           }
         }
         novaPulses.push({ x:player.x, y:player.y, maxR:player.nova.radius, life:0.4, maxLife:0.4 });
@@ -887,6 +1046,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     for (const e of enemies){
       const dx = player.x-e.x, dy = player.y-e.y;
       const len = Math.hypot(dx,dy) || 1;
+      let dealsContactDamage = true;
 
       if (e.type === 'boss'){
         e.atkTimer -= dt;
@@ -911,9 +1071,39 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
       } else {
         e.x += dx/len*e.speed*dt;
         e.y += dy/len*e.speed*dt;
+
+        // Rückstoß vom Massenauswurf abklingen lassen und anwenden
+        if (e.kbX || e.kbY){
+          e.x += e.kbX * dt;
+          e.y += e.kbY * dt;
+          const decay = Math.pow(0.02, dt); // schnelles, aber spürbares Abklingen
+          e.kbX *= decay; e.kbY *= decay;
+          if (Math.abs(e.kbX) < 4) e.kbX = 0;
+          if (Math.abs(e.kbY) < 4) e.kbY = 0;
+        }
+
+        // Kernmasse: nur Gegner, die leicht genug sind, werden angezogen.
+        // Die sterben bei Kontakt sofort und harmlos (kein Schaden, nur XP) —
+        // zu schwere Gegner (Tanks, mit steigendem Level irgendwann auch die)
+        // ignorieren die Anziehung komplett und bleiben normal gefährlich.
+        const absorbThreshold = player.level * 6 * player.crushMult;
+        if (e.maxHp <= absorbThreshold){
+          const gravityRadius = (90 + player.level*14) * player.gravityMult;
+          if (len < gravityRadius){
+            const pull = (1 - len/gravityRadius) * 260;
+            e.x += (dx/len) * pull * dt;
+            e.y += (dy/len) * pull * dt;
+          }
+          if (len < player.r + e.r){
+            e.hp = -9999; // absorbiert: sofort tot, kein Kontaktschaden
+            player.absorbedCount = (player.absorbedCount || 0) + 1;
+            spawnHitParticles(e.x, e.y, '#ff4e1a');
+            dealsContactDamage = false;
+          }
+        }
       }
 
-      if (len < e.r+player.r){
+      if (dealsContactDamage && len < e.r+player.r){
         player.hp -= e.dmg*dt;
         if (elapsed - lastDamageSoundAt > 0.35){ SFX.sfx.damage(); lastDamageSoundAt = elapsed; }
       }
@@ -1004,7 +1194,7 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     if (player.xp >= nextLevelXp){
       player.xp -= nextLevelXp;
       player.level++;
-      nextLevelXp = Math.floor(nextLevelXp*1.28 + 10);
+      nextLevelXp = Math.floor(nextLevelXp*1.36 + 15);
       showLevelUp();
     }
 
@@ -1019,7 +1209,13 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
     document.getElementById('hp-fill').style.width = Math.max(0,(player.hp/player.maxHp*100)) + '%';
     document.getElementById('xp-fill').style.width = Math.min(100,(player.xp/nextLevelXp*100)) + '%';
     document.getElementById('timer').textContent = fmtTime(elapsed);
-    document.getElementById('wave-num').textContent = difficultyWave();
+    document.getElementById('wave-num').textContent = waveNumber;
+    const isBossWaveNow = (waveNumber % 3 === 0);
+    const timerFill = document.getElementById('wave-timer-fill');
+    timerFill.style.width = isBossWaveNow ? '100%' : Math.max(0, (waveTimer/WAVE_DURATION*100)) + '%';
+    timerFill.style.background = isBossWaveNow ? 'var(--orange)' : 'var(--danger)';
+    timerFill.classList.toggle('boss-mode', isBossWaveNow);
+    document.getElementById('wave-sub-label').textContent = isBossWaveNow ? 'bis boss fällt' : '';
     document.getElementById('kill-count').textContent = killCount;
     document.getElementById('lvl-num').textContent = player.level;
     if (activeBoss){
@@ -1103,13 +1299,22 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
           ctx.stroke();
         }
       } else {
+        const absorbThreshold = player.level * 6 * player.crushMult;
+        const absorbable = e.maxHp <= absorbThreshold;
+        if (absorbable){
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(255,78,26,${0.35 + 0.25*Math.sin(elapsed*6)})`;
+          ctx.lineWidth = 1.5;
+          ctx.arc(e.x, e.y, e.r + 4, 0, 7);
+          ctx.stroke();
+        }
         ctx.beginPath();
         ctx.fillStyle = e.color;
         ctx.shadowColor = e.color; ctx.shadowBlur = 10*FX_BLUR;
         ctx.arc(e.x,e.y,e.r,0,7);
         ctx.fill();
         ctx.shadowBlur = 0;
-        if (e.type==='tank'){
+        if (e.type==='tank' || e.type==='brute' || e.type==='juggernaut'){
           ctx.fillStyle='rgba(0,0,0,0.4)';
           ctx.fillRect(e.x-e.r, e.y-e.r-8, e.r*2, 3);
           ctx.fillStyle='#ff3b5c';
@@ -1135,6 +1340,23 @@ document.querySelectorAll('a,button,.card').forEach(el=>{
       ctx.fill();
     }
     ctx.shadowBlur = 0;
+
+    // Kernmasse: einwärts fließende Sog-Ringe (Gegenstück zu den Auswurf-Ringen), wächst mit dem Level
+    if (player.level >= 2){
+      const gravityRadius = (90 + player.level*14) * player.gravityMult;
+      const ringCount = 3;
+      const period = 1.5;
+      for (let i=0;i<ringCount;i++){
+        const phase = ((elapsed/period) + i/ringCount) % 1; // 0 = außen, 1 = am Kern
+        const r = gravityRadius * (1 - phase);
+        if (r < player.r + 6) continue;
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(255,78,26,${0.22 * phase})`;
+        ctx.lineWidth = 1.5;
+        ctx.arc(player.x, player.y, r, 0, 7);
+        ctx.stroke();
+      }
+    }
 
     ctx.beginPath();
     ctx.fillStyle = '#f2ede4';

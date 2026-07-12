@@ -184,6 +184,7 @@
   <div class="search-results" id="searchResults"></div>
 
   <div class="section-title">Log <span class="hint" id="logDateHint"></span></div>
+  <button class="add-quick-btn" id="manualEntryBtn">+ Manueller Eintrag (z.B. auswärts essen)</button>
   <div id="logList"></div>
 </main>
 
@@ -204,6 +205,7 @@
 // ---------- SUPABASE CONFIG (gleiches Projekt wie der Rest von onlymakkus.de) ----------
 const SB_URL = 'https://bsubsesbcxdaqofmkiqg.supabase.co';
 const SB_KEY = 'DEIN_ANON_KEY_HIER'; // gleicher anon key wie auf den anderen Seiten
+const OFF_EDGE_FUNCTION_URL = SB_URL + '/functions/v1/add-off-product';
 
 async function sbFetch(p, o={}) {
   const r = await fetch(SB_URL+p, {
@@ -566,7 +568,8 @@ async function searchFood(query){
     scored.sort((a,b)=>b.score-a.score);
     products = scored.length ? scored.map(x=>x.p) : products; // Fallback falls nichts matcht
     if(products.length===0){
-      statusEl.textContent = 'Nichts gefunden — probier einen anderen Begriff oder leg es manuell als Schnellauswahl an.';
+      statusEl.innerHTML = 'Nichts gefunden. Wenn du den Barcode zur Hand hast, kannst du das Produkt auch <button id="contributeFromSearchBtn" style="background:none; border:1px solid var(--accent); color:var(--accent); border-radius:6px; padding:3px 9px; font-size:0.76rem;">per Scan anlegen</button>.';
+      document.getElementById('contributeFromSearchBtn').onclick = ()=>{ statusEl.textContent=''; startScan(); };
       return;
     }
     statusEl.textContent = '';
@@ -630,12 +633,12 @@ async function onScanSuccess(decodedText){
     const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${decodedText}.json?fields=product_name,nutriments`);
     const data = await res.json();
     if(data.status !== 1 || !data.product || !data.product.product_name){
-      document.getElementById('searchStatus').textContent = `Kein Produkt zu Barcode ${decodedText} gefunden.`;
+      showContributeOffer(decodedText, `Kein Produkt zu Barcode ${decodedText} gefunden.`);
       return;
     }
     const n = data.product.nutriments || {};
     if(n['energy-kcal_100g']==null){
-      document.getElementById('searchStatus').textContent = `${data.product.product_name} gefunden, aber keine Kalorienangabe hinterlegt.`;
+      showContributeOffer(decodedText, `${data.product.product_name} gefunden, aber keine Kalorienangabe hinterlegt.`);
       return;
     }
     document.getElementById('searchStatus').textContent = '';
@@ -650,6 +653,80 @@ async function onScanSuccess(decodedText){
 
 document.getElementById('scanBtn').onclick = startScan;
 document.getElementById('scanCloseBtn').onclick = stopScan;
+
+// ---------- CONTRIBUTE MISSING PRODUCT TO OFF ----------
+function showContributeOffer(barcode, msg){
+  const statusEl = document.getElementById('searchStatus');
+  statusEl.innerHTML = `${msg} <button id="contributeBtn" style="margin-left:6px; background:none; border:1px solid var(--accent); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.76rem;">+ Produkt anlegen (mit Foto)</button>`;
+  document.getElementById('contributeBtn').onclick = ()=> openContributeModal(barcode);
+}
+
+function openContributeModal(barcode){
+  openModal(`
+    <h3>Produkt anlegen</h3>
+    <label>Barcode</label>
+    <input type="text" id="cfBarcode" value="${barcode}" readonly>
+    <label>Produktname</label>
+    <input type="text" id="cfName" placeholder="z.B. Cola Zero Vanille 1,25L">
+    <div class="modal-grid">
+      <div><label>kcal / 100g</label><input type="number" id="cfKcal"></div>
+      <div><label>Protein / 100g</label><input type="number" id="cfP"></div>
+      <div><label>Fett / 100g</label><input type="number" id="cfF"></div>
+      <div><label>KH / 100g</label><input type="number" id="cfC"></div>
+    </div>
+    <label>Foto vom Etikett</label>
+    <input type="file" id="cfPhoto" accept="image/*" capture="environment">
+    <div class="save-status" id="cfStatus" style="margin-top:8px;"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="modalCancel">Abbrechen</button>
+      <button class="btn-primary" id="cfSubmit">Einreichen &amp; lokal speichern</button>
+    </div>
+  `);
+  document.getElementById('modalCancel').onclick = closeModal;
+  document.getElementById('cfSubmit').onclick = submitContribution;
+}
+
+async function submitContribution(){
+  const barcode = document.getElementById('cfBarcode').value.trim();
+  const name = document.getElementById('cfName').value.trim();
+  const kcal = parseFloat(document.getElementById('cfKcal').value) || 0;
+  const p = parseFloat(document.getElementById('cfP').value) || 0;
+  const f = parseFloat(document.getElementById('cfF').value) || 0;
+  const c = parseFloat(document.getElementById('cfC').value) || 0;
+  const photoInput = document.getElementById('cfPhoto');
+  const statusEl = document.getElementById('cfStatus');
+
+  if(!name){ statusEl.textContent = 'Bitte Produktname eingeben.'; return; }
+
+  // Sofort lokal in die Schnellauswahl übernehmen, unabhängig vom Community-Upload
+  const localFood = {name, kcal100:kcal, p100:p, f100:f, c100:c, defaultGrams:100};
+  const saved = await addQuickFoodRemote(localFood);
+  quickFoods.push(saved || localFood);
+  renderQuickGrid();
+
+  statusEl.textContent = 'Lokal gespeichert ✓ — sende an Open Food Facts...';
+
+  try{
+    const fd = new FormData();
+    fd.set('barcode', barcode);
+    fd.set('product_name', name);
+    fd.set('kcal100', kcal);
+    fd.set('protein100', p);
+    fd.set('fat100', f);
+    fd.set('carb100', c);
+    if(photoInput.files[0]) fd.set('image', photoInput.files[0]);
+
+    const res = await fetch(OFF_EDGE_FUNCTION_URL, {method:'POST', body:fd});
+    const json = await res.json();
+    statusEl.textContent = json.success
+      ? 'Lokal gespeichert ✓ — an Open Food Facts übermittelt ✓'
+      : `Lokal gespeichert ✓ — Community-Upload fehlgeschlagen (${json.message})`;
+  }catch(e){
+    statusEl.textContent = 'Lokal gespeichert ✓ — Community-Upload fehlgeschlagen (keine Verbindung zur Edge Function).';
+  }
+
+  setTimeout(closeModal, 1800);
+}
 
 // ---------- EVENTS ----------
 document.getElementById('quickGrid').addEventListener('click', async (e)=>{
@@ -667,6 +744,35 @@ document.getElementById('quickGrid').addEventListener('click', async (e)=>{
     quickAddModal(quickFoods[idx]);
   }
 });
+
+function manualEntryModal(){
+  openModal(`
+    <h3>Manueller Eintrag</h3>
+    <label>Bezeichnung</label>
+    <input type="text" id="meName" placeholder="z.B. Restaurant-Pizza, Buffet-Teller...">
+    <div class="modal-grid">
+      <div><label>kcal (gesamt)</label><input type="number" id="meKcal"></div>
+      <div><label>Protein (g)</label><input type="number" id="meP"></div>
+      <div><label>Fett (g)</label><input type="number" id="meF"></div>
+      <div><label>KH (g)</label><input type="number" id="meC"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="modalCancel">Abbrechen</button>
+      <button class="btn-primary" id="meSubmit">Zum Log hinzufügen</button>
+    </div>
+  `);
+  document.getElementById('modalCancel').onclick = closeModal;
+  document.getElementById('meSubmit').onclick = async ()=>{
+    const name = document.getElementById('meName').value.trim() || 'Manueller Eintrag';
+    const kcal = parseFloat(document.getElementById('meKcal').value) || 0;
+    const p = parseFloat(document.getElementById('meP').value) || 0;
+    const f = parseFloat(document.getElementById('meF').value) || 0;
+    const c = parseFloat(document.getElementById('meC').value) || 0;
+    await addLogEntry({name, grams:null, kcal, protein:p, fat:f, carb:c});
+    closeModal();
+  };
+}
+document.getElementById('manualEntryBtn').onclick = manualEntryModal;
 
 document.getElementById('addQuickBtn').onclick = addQuickFoodModal;
 
