@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalorien Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#15171a; --bg-alt:#1c1f24; --bg-card:#20242a; --line:#2c3038;
+    --text:#e9e7e2; --muted:#8b919b; --accent:#f2b705;
+    --protein:#5b8fd9; --fat:#e0a03d; --carb:#5fae72; --red:#d94c3d;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; padding-bottom:60px;}
+  h1,h2,.display{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:0.03em;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  header{
+    padding:20px 16px 16px; background:linear-gradient(180deg,var(--bg-alt),var(--bg));
+    border-bottom:2px solid var(--accent); position:sticky; top:0; z-index:20;
+  }
+  .datebar{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .datebar button{background:var(--bg-card); border:1px solid var(--line); color:var(--text); width:34px; height:34px; border-radius:6px; font-size:1rem;}
+  .datebar .datelabel{font-family:'JetBrains Mono',monospace; font-size:0.85rem; color:var(--muted);}
+
+  .kcal-row{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .kcal-row .big{font-family:'Oswald',sans-serif; font-size:2.1rem; font-weight:700;}
+  .kcal-row .of{color:var(--muted); font-size:0.95rem;}
+  .goal-edit{display:flex; align-items:center; gap:6px; margin-left:auto;}
+  .goal-edit input{
+    width:70px; background:var(--bg-card); border:1px solid var(--line); color:var(--text);
+    padding:5px 7px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:0.85rem;
+  }
+  .goal-edit label{font-size:0.7rem; color:var(--muted); font-family:'JetBrains Mono',monospace;}
+
+  .bar{height:8px; background:var(--bg-card); border-radius:4px; margin-top:10px; overflow:hidden; border:1px solid var(--line);}
+  .bar-fill{height:100%; background:var(--accent); transition:width .3s;}
+  .bar-fill.over{background:var(--red);}
+
+  .macros{display:flex; gap:14px; margin-top:12px; flex-wrap:wrap;}
+  .macro{font-size:0.78rem; font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:5px;}
+  .dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
+
+  main{max-width:640px; margin:0 auto; padding:18px 16px;}
+  .section-title{font-size:0.95rem; margin:22px 0 10px; display:flex; justify-content:space-between; align-items:center;}
+  .section-title span.hint{font-size:0.72rem; color:var(--muted); font-family:'JetBrains Mono',monospace; text-transform:none; letter-spacing:0;}
+
+  .quick-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .quick-item{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:10px 12px;
+    text-align:left; color:var(--text); cursor:pointer; position:relative;
+  }
+  .quick-item .qn{font-size:0.88rem; font-weight:500;}
+  .quick-item .qd{font-size:0.72rem; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-top:3px;}
+  .quick-item .del{position:absolute; top:4px; right:6px; background:none; border:none; color:var(--muted); font-size:0.9rem;}
+
+  .add-quick-btn{
+    width:100%; background:none; border:1px dashed var(--line); color:var(--muted);
+    padding:10px; border-radius:8px; margin-top:8px; font-size:0.82rem;
+  }
+
+  .search-row{display:flex; gap:8px;}
+  .search-row input{
+    flex:1; background:var(--bg-card); border:1px solid var(--line); color:var(--text);
+    padding:10px 12px; border-radius:8px; font-size:0.9rem;
+  }
+  .search-row button{
+    background:var(--accent); color:#1a1a1a; border:none; padding:0 16px; border-radius:8px; font-weight:600;
+  }
+  .search-results{margin-top:10px;}
+  .result-item{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:10px 12px;
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:10px;
+  }
+  .result-item .rn{font-size:0.86rem;}
+  .result-item .rd{font-size:0.72rem; color:var(--muted); font-family:'JetBrains Mono',monospace;}
+  .result-item button{background:var(--bg); border:1px solid var(--accent); color:var(--accent); border-radius:6px; padding:6px 10px; font-size:0.78rem;}
+  .search-status{font-size:0.78rem; color:var(--muted); margin-top:8px; font-family:'JetBrains Mono',monospace;}
+
+  .log-item{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:10px 12px;
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;
+  }
+  .log-item .ln{font-size:0.86rem;}
+  .log-item .ld{font-size:0.72rem; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-top:2px;}
+  .log-item .lx{background:none; border:none; color:var(--muted); font-size:1rem;}
+  .empty{color:var(--muted); font-size:0.85rem; padding:14px 0; text-align:center;}
+
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:flex-end; justify-content:center; z-index:100;
+  }
+  .modal-backdrop.open{display:flex;}
+  .modal{
+    background:var(--bg-alt); border-top:2px solid var(--accent); border-radius:14px 14px 0 0;
+    width:100%; max-width:640px; padding:20px 18px 26px;
+  }
+  .modal h3{font-size:1rem; margin-bottom:14px; font-family:'Oswald',sans-serif; text-transform:uppercase;}
+  .modal label{display:block; font-size:0.72rem; color:var(--muted); font-family:'JetBrains Mono',monospace; margin:10px 0 4px;}
+  .modal input{
+    width:100%; background:var(--bg-card); border:1px solid var(--line); color:var(--text);
+    padding:9px 11px; border-radius:6px; font-size:0.9rem;
+  }
+  .modal-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .modal-actions{display:flex; gap:10px; margin-top:18px;}
+  .modal-actions button{flex:1; padding:11px; border-radius:8px; border:none; font-weight:600; font-size:0.88rem;}
+  .btn-primary{background:var(--accent); color:#1a1a1a;}
+  .btn-secondary{background:var(--bg-card); color:var(--muted); border:1px solid var(--line) !important;}
+.login-gate{
+    position:fixed; inset:0; background:var(--bg); z-index:200;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px;
+  }
+  .login-gate.hidden{display:none;}
+  .login-gate h2{font-size:1.3rem; margin-bottom:10px;}
+  .login-gate p{color:var(--muted); font-size:0.88rem; max-width:320px; margin-bottom:18px;}
+  .login-gate a{background:var(--accent); color:#1a1a1a; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.88rem;}
+</style>
+</head>
+<body>
+
+<div class="login-gate" id="loginGate">
+  <h2>Erst einloggen</h2>
+  <p>Der Kalorien-Tracker speichert deine Einträge an dein Profil gebunden. Logg dich auf profile.html ein und komm dann zurück.</p>
+  <a href="profile.html">Zu profile.html</a>
+</div>
+
+
+<header id="appHeader" style="display:none;">
+  <div class="datebar">
+    <button id="prevDay">‹</button>
+    <div class="datelabel" id="dateLabel">Heute</div>
+    <button id="nextDay">›</button>
+  </div>
+  <div class="mono" id="greeting" style="font-size:0.72rem; color:var(--muted); margin-bottom:8px;"></div>
+  <div class="kcal-row">
+    <div class="big"><span id="consumedKcal">0</span></div>
+    <div class="of">/ <span id="goalDisplay">2500</span> kcal</div>
+    <div class="goal-edit">
+      <label>Ziel</label>
+      <input type="number" id="goalInput" value="2500">
+    </div>
+  </div>
+  <div class="bar"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
+  <div class="macros">
+    <div class="macro"><span class="dot" style="background:var(--protein)"></span>Protein <span id="pTotal">0</span>g</div>
+    <div class="macro"><span class="dot" style="background:var(--fat)"></span>Fett <span id="fTotal">0</span>g</div>
+    <div class="macro"><span class="dot" style="background:var(--carb)"></span>KH <span id="cTotal">0</span>g</div>
+  </div>
+</header>
+
+<main id="appMain" style="display:none;">
+  <div class="section-title"><span>Schnellauswahl</span><span class="hint">antippen = hinzufügen</span></div>
+  <div class="quick-grid" id="quickGrid"></div>
+  <button class="add-quick-btn" id="addQuickBtn">+ eigenes Lebensmittel zur Schnellauswahl</button>
+
+  <div class="section-title">Suche (Open Food Facts)</div>
+  <div class="search-row">
+    <input type="text" id="searchInput" placeholder="z.B. Skyr, Vollkornbrot...">
+    <button id="searchBtn">Suchen</button>
+  </div>
+  <div class="search-status" id="searchStatus"></div>
+  <div class="search-results" id="searchResults"></div>
+
+  <div class="section-title">Log <span class="hint" id="logDateHint"></span></div>
+  <div id="logList"></div>
+</main>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+// ---------- SUPABASE CONFIG (gleiches Projekt wie der Rest von onlymakkus.de) ----------
+const SB_URL = 'https://bsubsesbcxdaqofmkiqg.supabase.co';
+const SB_KEY = 'DEIN_ANON_KEY_HIER'; // gleicher anon key wie auf den anderen Seiten
+
+async function sbFetch(p, o={}) {
+  const r = await fetch(SB_URL+p, {
+    ...o,
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer '+SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': o.prefer || '',
+      ...o.headers
+    }
+  });
+  const t = await r.text();
+  return t ? JSON.parse(t) : null;
+}
+
+// ---------- SESSION ----------
+let session = null;
+try{
+  const saved = localStorage.getItem('om_profile_session');
+  if(saved) session = JSON.parse(saved);
+}catch(e){}
+
+// ---------- STATE ----------
+let currentDate = new Date();
+let quickFoods = [];
+let dayLog = [];
+let dailyGoal = 2500;
+
+function dateKey(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function fmtDate(d){
+  const today = new Date();
+  if(dateKey(d)===dateKey(today)) return "Heute";
+  return d.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit'});
+}
+
+const defaultQuickFoods = [
+  {name:"Skyr", kcal100:63, p100:11, f100:0.2, c100:4, defaultGrams:250},
+  {name:"Magerquark", kcal100:67, p100:12, f100:0.3, c100:4, defaultGrams:250},
+  {name:"Whey Shake (1 Scoop + Wasser)", kcal100:0, p100:0, f100:0, c100:0, fixedKcal:120, fixedP:24, fixedF:1.5, fixedC:3, defaultGrams:1},
+  {name:"Vollkornbrot", kcal100:220, p100:8, f100:2.5, c100:40, defaultGrams:60},
+  {name:"Ei (gekocht)", kcal100:0, p100:0, f100:0, c100:0, fixedKcal:78, fixedP:6.5, fixedF:5.5, fixedC:0.5, defaultGrams:1},
+  {name:"Haferflocken", kcal100:370, p100:13, f100:7, c100:60, defaultGrams:60},
+];
+
+// ---------- STORAGE (Supabase) ----------
+function mapQuickRow(r){
+  return {
+    id:r.id, name:r.name,
+    kcal100:r.kcal_100, p100:r.protein_100, f100:r.fat_100, c100:r.carb_100,
+    fixedKcal:r.fixed_kcal, fixedP:r.fixed_protein, fixedF:r.fixed_fat, fixedC:r.fixed_carb,
+    defaultGrams:r.default_grams
+  };
+}
+
+async function loadSettings(){
+  try{
+    const rows = await sbFetch(`/rest/v1/calorie_settings?profile_id=eq.${session.id}&select=daily_goal`);
+    if(rows && rows.length) dailyGoal = rows[0].daily_goal;
+    else {
+      await sbFetch(`/rest/v1/calorie_settings`, {method:'POST', body:JSON.stringify({profile_id:session.id, daily_goal:2500})});
+      dailyGoal = 2500;
+    }
+  }catch(e){}
+}
+async function saveSettings(){
+  try{
+    await sbFetch(`/rest/v1/calorie_settings?profile_id=eq.${session.id}`, {
+      method:'PATCH', headers:{'Prefer':'return=minimal'}, body:JSON.stringify({daily_goal:dailyGoal})
+    });
+  }catch(e){}
+}
+
+async function loadQuickFoods(){
+  try{
+    const rows = await sbFetch(`/rest/v1/calorie_quick_foods?profile_id=eq.${session.id}&order=id.asc`);
+    if(rows && rows.length){
+      quickFoods = rows.map(mapQuickRow);
+    } else {
+      const seed = defaultQuickFoods.map(f=>({
+        profile_id:session.id, name:f.name,
+        kcal_100:f.kcal100??null, protein_100:f.p100??null, fat_100:f.f100??null, carb_100:f.c100??null,
+        fixed_kcal:f.fixedKcal??null, fixed_protein:f.fixedP??null, fixed_fat:f.fixedF??null, fixed_carb:f.fixedC??null,
+        default_grams:f.defaultGrams
+      }));
+      await sbFetch(`/rest/v1/calorie_quick_foods`, {method:'POST', body:JSON.stringify(seed)});
+      const rows2 = await sbFetch(`/rest/v1/calorie_quick_foods?profile_id=eq.${session.id}&order=id.asc`);
+      quickFoods = (rows2||[]).map(mapQuickRow);
+    }
+  }catch(e){ quickFoods = defaultQuickFoods; }
+}
+async function addQuickFoodRemote(f){
+  const row = {
+    profile_id:session.id, name:f.name,
+    kcal_100:f.kcal100??null, protein_100:f.p100??null, fat_100:f.f100??null, carb_100:f.c100??null,
+    default_grams:f.defaultGrams
+  };
+  const res = await sbFetch(`/rest/v1/calorie_quick_foods`, {method:'POST', headers:{'Prefer':'return=representation'}, body:JSON.stringify(row)});
+  return res && res[0] ? mapQuickRow(res[0]) : null;
+}
+async function deleteQuickFoodRemote(id){
+  await sbFetch(`/rest/v1/calorie_quick_foods?id=eq.${id}`, {method:'DELETE'});
+}
+
+async function loadLogForCurrentDate(){
+  try{
+    const rows = await sbFetch(`/rest/v1/calorie_entries?profile_id=eq.${session.id}&date=eq.${dateKey(currentDate)}&order=created_at.asc`);
+    dayLog = (rows||[]).map(r=>({id:r.id, name:r.name, grams:r.grams, kcal:r.kcal, protein:r.protein, fat:r.fat, carb:r.carb}));
+  }catch(e){
+    dayLog = [];
+  }
+}
+async function insertLogEntryRemote(entry){
+  const row = {profile_id:session.id, date:dateKey(currentDate), name:entry.name, grams:entry.grams, kcal:entry.kcal, protein:entry.protein, fat:entry.fat, carb:entry.carb};
+  const res = await sbFetch(`/rest/v1/calorie_entries`, {method:'POST', headers:{'Prefer':'return=representation'}, body:JSON.stringify(row)});
+  return res && res[0] ? res[0].id : null;
+}
+async function deleteLogEntryRemote(id){
+  await sbFetch(`/rest/v1/calorie_entries?id=eq.${id}`, {method:'DELETE'});
+}
+
+// ---------- RENDER ----------
+function renderHeader(){
+  document.getElementById('dateLabel').textContent = fmtDate(currentDate);
+  document.getElementById('logDateHint').textContent = '· ' + fmtDate(currentDate);
+  document.getElementById('goalInput').value = dailyGoal;
+  document.getElementById('goalDisplay').textContent = dailyGoal;
+
+  const totals = dayLog.reduce((a,e)=>({
+    kcal:a.kcal+e.kcal, p:a.p+e.protein, f:a.f+e.fat, c:a.c+e.carb
+  }), {kcal:0,p:0,f:0,c:0});
+
+  document.getElementById('consumedKcal').textContent = Math.round(totals.kcal);
+  document.getElementById('pTotal').textContent = Math.round(totals.p);
+  document.getElementById('fTotal').textContent = Math.round(totals.f);
+  document.getElementById('cTotal').textContent = Math.round(totals.c);
+
+  const pct = Math.min(100, (totals.kcal/dailyGoal)*100 || 0);
+  const fill = document.getElementById('barFill');
+  fill.style.width = pct+'%';
+  fill.classList.toggle('over', totals.kcal > dailyGoal);
+}
+
+function renderQuickGrid(){
+  const grid = document.getElementById('quickGrid');
+  grid.innerHTML = quickFoods.map((f,i)=>{
+    const kcal = f.fixedKcal!=null ? f.fixedKcal : Math.round(f.kcal100 * f.defaultGrams/100);
+    const unit = f.fixedKcal!=null ? 'Stk/Portion' : f.defaultGrams+'g';
+    return `<div class="quick-item" data-idx="${i}">
+      <button class="del" data-del="${i}">✕</button>
+      <div class="qn">${f.name}</div>
+      <div class="qd">${unit} · ${kcal} kcal</div>
+    </div>`;
+  }).join('');
+}
+
+function renderLog(){
+  const list = document.getElementById('logList');
+  if(dayLog.length===0){ list.innerHTML = '<div class="empty">Noch nichts geloggt.</div>'; return; }
+  list.innerHTML = dayLog.map((e,i)=>`
+    <div class="log-item">
+      <div>
+        <div class="ln">${e.name}</div>
+        <div class="ld">${e.grams ? e.grams+'g · ' : ''}${Math.round(e.kcal)} kcal · P${Math.round(e.protein)} F${Math.round(e.fat)} K${Math.round(e.carb)}</div>
+      </div>
+      <button class="lx" data-rm="${i}">✕</button>
+    </div>
+  `).join('');
+}
+
+function renderAll(){
+  renderHeader(); renderQuickGrid(); renderLog();
+}
+
+// ---------- LOG ACTIONS ----------
+async function addLogEntry(entry){
+  const id = await insertLogEntryRemote(entry);
+  dayLog.push({...entry, id});
+  renderAll();
+}
+async function removeLogEntry(i){
+  const entry = dayLog[i];
+  if(entry.id) await deleteLogEntryRemote(entry.id);
+  dayLog.splice(i,1);
+  renderAll();
+}
+
+// ---------- MODAL ----------
+function openModal(html){
+  document.getElementById('modal').innerHTML = html;
+  document.getElementById('modalBackdrop').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modalBackdrop').classList.remove('open');
+}
+document.getElementById('modalBackdrop').addEventListener('click', (e)=>{
+  if(e.target.id==='modalBackdrop') closeModal();
+});
+
+function quickAddModal(food){
+  const isFixed = food.fixedKcal != null;
+  openModal(`
+    <h3>${food.name}</h3>
+    ${isFixed ? `
+      <label>Anzahl</label>
+      <input type="number" id="qtyInput" value="1" min="0.5" step="0.5">
+    ` : `
+      <label>Menge (g)</label>
+      <input type="number" id="qtyInput" value="${food.defaultGrams}" min="1">
+    `}
+    <div class="modal-actions">
+      <button class="btn-secondary" id="modalCancel">Abbrechen</button>
+      <button class="btn-primary" id="modalAdd">Hinzufügen</button>
+    </div>
+  `);
+  document.getElementById('modalCancel').onclick = closeModal;
+  document.getElementById('modalAdd').onclick = async ()=>{
+    const qty = parseFloat(document.getElementById('qtyInput').value) || 1;
+    let entry;
+    if(isFixed){
+      entry = {name:food.name, grams:null, kcal:food.fixedKcal*qty, protein:food.fixedP*qty, fat:food.fixedF*qty, carb:food.fixedC*qty};
+    } else {
+      entry = {name:food.name, grams:qty, kcal:food.kcal100*qty/100, protein:food.p100*qty/100, fat:food.f100*qty/100, carb:food.c100*qty/100};
+    }
+    await addLogEntry(entry);
+    closeModal();
+  };
+}
+
+function addQuickFoodModal(){
+  openModal(`
+    <h3>Eigenes Lebensmittel</h3>
+    <label>Name</label>
+    <input type="text" id="nfName" placeholder="z.B. Hüttenkäse">
+    <label>Standard-Menge (g)</label>
+    <input type="number" id="nfGrams" value="100">
+    <div class="modal-grid">
+      <div><label>kcal / 100g</label><input type="number" id="nfKcal"></div>
+      <div><label>Protein / 100g</label><input type="number" id="nfP"></div>
+      <div><label>Fett / 100g</label><input type="number" id="nfF"></div>
+      <div><label>KH / 100g</label><input type="number" id="nfC"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="modalCancel">Abbrechen</button>
+      <button class="btn-primary" id="modalSave">Speichern</button>
+    </div>
+  `);
+  document.getElementById('modalCancel').onclick = closeModal;
+  document.getElementById('modalSave').onclick = async ()=>{
+    const name = document.getElementById('nfName').value.trim();
+    if(!name) return;
+    const grams = parseFloat(document.getElementById('nfGrams').value) || 100;
+    const kcal100 = parseFloat(document.getElementById('nfKcal').value) || 0;
+    const p100 = parseFloat(document.getElementById('nfP').value) || 0;
+    const f100 = parseFloat(document.getElementById('nfF').value) || 0;
+    const c100 = parseFloat(document.getElementById('nfC').value) || 0;
+    const newFood = {name, kcal100, p100, f100, c100, defaultGrams:grams};
+    const saved = await addQuickFoodRemote(newFood);
+    quickFoods.push(saved || newFood);
+    renderQuickGrid();
+    closeModal();
+  };
+}
+
+function searchResultModal(item){
+  openModal(`
+    <h3>${item.name}</h3>
+    <label>Menge (g)</label>
+    <input type="number" id="qtyInput" value="100" min="1">
+    <div class="modal-actions">
+      <button class="btn-secondary" id="modalCancel">Abbrechen</button>
+      <button class="btn-primary" id="modalAdd">Hinzufügen</button>
+    </div>
+  `);
+  document.getElementById('modalCancel').onclick = closeModal;
+  document.getElementById('modalAdd').onclick = async ()=>{
+    const qty = parseFloat(document.getElementById('qtyInput').value) || 100;
+    const entry = {
+      name:item.name, grams:qty,
+      kcal:item.kcal100*qty/100, protein:item.p100*qty/100, fat:item.f100*qty/100, carb:item.c100*qty/100
+    };
+    await addLogEntry(entry);
+    closeModal();
+  };
+}
+
+// ---------- SEARCH (Open Food Facts) ----------
+async function searchFood(query){
+  const statusEl = document.getElementById('searchStatus');
+  const resultsEl = document.getElementById('searchResults');
+  resultsEl.innerHTML = '';
+  statusEl.textContent = 'Suche läuft...';
+  try{
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=8&fields=product_name,nutriments`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const products = (data.products || []).filter(p => p.product_name && p.nutriments && p.nutriments['energy-kcal_100g']!=null);
+    if(products.length===0){
+      statusEl.textContent = 'Nichts gefunden — probier einen anderen Begriff oder leg es manuell als Schnellauswahl an.';
+      return;
+    }
+    statusEl.textContent = '';
+    resultsEl.innerHTML = products.slice(0,6).map((p,i)=>{
+      const n = p.nutriments;
+      return `<div class="result-item">
+        <div>
+          <div class="rn">${p.product_name}</div>
+          <div class="rd">${Math.round(n['energy-kcal_100g'])} kcal /100g · P${Math.round(n.proteins_100g||0)} F${Math.round(n.fat_100g||0)} K${Math.round(n.carbohydrates_100g||0)}</div>
+        </div>
+        <button data-result="${i}">+</button>
+      </div>`;
+    }).join('');
+    resultsEl.querySelectorAll('button[data-result]').forEach(btn=>{
+      btn.onclick = ()=>{
+        const p = products[btn.dataset.result];
+        const n = p.nutriments;
+        searchResultModal({
+          name:p.product_name, kcal100:n['energy-kcal_100g'],
+          p100:n.proteins_100g||0, f100:n.fat_100g||0, c100:n.carbohydrates_100g||0
+        });
+      };
+    });
+  }catch(e){
+    statusEl.textContent = 'Suche fehlgeschlagen — evtl. keine Internetverbindung.';
+  }
+}
+
+// ---------- EVENTS ----------
+document.getElementById('quickGrid').addEventListener('click', async (e)=>{
+  if(e.target.dataset.del !== undefined){
+    const idx = parseInt(e.target.dataset.del);
+    const f = quickFoods[idx];
+    if(f.id) await deleteQuickFoodRemote(f.id);
+    quickFoods.splice(idx,1);
+    renderQuickGrid();
+    return;
+  }
+  const item = e.target.closest('.quick-item');
+  if(item){
+    const idx = parseInt(item.dataset.idx);
+    quickAddModal(quickFoods[idx]);
+  }
+});
+
+document.getElementById('addQuickBtn').onclick = addQuickFoodModal;
+
+document.getElementById('logList').addEventListener('click', (e)=>{
+  if(e.target.dataset.rm !== undefined){
+    removeLogEntry(parseInt(e.target.dataset.rm));
+  }
+});
+
+document.getElementById('searchBtn').onclick = ()=>{
+  const q = document.getElementById('searchInput').value.trim();
+  if(q) searchFood(q);
+};
+document.getElementById('searchInput').addEventListener('keydown', (e)=>{
+  if(e.key==='Enter'){ e.preventDefault(); document.getElementById('searchBtn').click(); }
+});
+
+document.getElementById('addQuickBtn').disabled = false;
+document.getElementById('goalInput').addEventListener('change', async (e)=>{
+  dailyGoal = parseFloat(e.target.value) || 2500;
+  await saveSettings();
+  renderHeader();
+});
+
+document.getElementById('prevDay').onclick = async ()=>{
+  currentDate.setDate(currentDate.getDate()-1);
+  await loadLogForCurrentDate();
+  renderAll();
+};
+document.getElementById('nextDay').onclick = async ()=>{
+  currentDate.setDate(currentDate.getDate()+1);
+  await loadLogForCurrentDate();
+  renderAll();
+};
+
+// ---------- INIT ----------
+(async function init(){
+  if(!session){
+    document.getElementById('loginGate').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('loginGate').classList.add('hidden');
+  document.getElementById('appHeader').style.display = '';
+  document.getElementById('appMain').style.display = '';
+  document.getElementById('greeting').textContent = `Eingeloggt als ${session.displayName || session.name}`;
+
+  await loadSettings();
+  await loadQuickFoods();
+  await loadLogForCurrentDate();
+  renderAll();
+})();
+</script>
+</body>
+</html>
