@@ -6,6 +6,7 @@
 <title>Kalorien Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
   :root{
     --bg:#15171a; --bg-alt:#1c1f24; --bg-card:#20242a; --line:#2c3038;
@@ -77,6 +78,21 @@
   .search-row button{
     background:var(--accent); color:#1a1a1a; border:none; padding:0 16px; border-radius:8px; font-weight:600;
   }
+  #scanBtn{background:var(--bg-card); color:var(--accent); border:1px solid var(--accent); padding:0 14px; font-size:1.1rem;}
+
+  .scan-modal-backdrop{
+    position:fixed; inset:0; background:#000; display:none; z-index:150;
+    flex-direction:column;
+  }
+  .scan-modal-backdrop.open{display:flex;}
+  .scan-header{
+    display:flex; justify-content:space-between; align-items:center; padding:16px;
+    background:var(--bg-alt); border-bottom:1px solid var(--line);
+  }
+  .scan-header h3{font-size:0.95rem; color:var(--text); font-family:'Oswald',sans-serif; text-transform:uppercase;}
+  .scan-header button{background:none; border:none; color:var(--muted); font-size:1.3rem;}
+  #scanReader{flex:1; background:#000;}
+  .scan-status{padding:12px 16px; color:var(--muted); font-size:0.82rem; font-family:'JetBrains Mono',monospace; text-align:center;}
   .search-results{margin-top:10px;}
   .result-item{
     background:var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:10px 12px;
@@ -158,10 +174,11 @@
   <div class="quick-grid" id="quickGrid"></div>
   <button class="add-quick-btn" id="addQuickBtn">+ eigenes Lebensmittel zur Schnellauswahl</button>
 
-  <div class="section-title">Suche (Open Food Facts)</div>
+  <div class="section-title"><span>Suche (Open Food Facts)</span></div>
   <div class="search-row">
     <input type="text" id="searchInput" placeholder="z.B. Skyr, Vollkornbrot...">
     <button id="searchBtn">Suchen</button>
+    <button id="scanBtn" title="Barcode scannen">📷</button>
   </div>
   <div class="search-status" id="searchStatus"></div>
   <div class="search-results" id="searchResults"></div>
@@ -172,6 +189,15 @@
 
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal" id="modal"></div>
+</div>
+
+<div class="scan-modal-backdrop" id="scanModal">
+  <div class="scan-header">
+    <h3>Barcode scannen</h3>
+    <button id="scanCloseBtn">✕</button>
+  </div>
+  <div id="scanReader"></div>
+  <div class="scan-status" id="scanStatus">Kamera wird gestartet...</div>
 </div>
 
 <script>
@@ -568,6 +594,62 @@ async function searchFood(query){
     statusEl.textContent = 'Suche fehlgeschlagen — evtl. keine Internetverbindung.';
   }
 }
+
+// ---------- BARCODE SCAN ----------
+let html5QrCode = null;
+
+async function startScan(){
+  document.getElementById('scanModal').classList.add('open');
+  document.getElementById('scanStatus').textContent = 'Kamera wird gestartet...';
+  html5QrCode = new Html5Qrcode("scanReader");
+  try{
+    await html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 260, height: 150 } },
+      onScanSuccess,
+      ()=>{} // laufende Fehl-Scans ignorieren
+    );
+    document.getElementById('scanStatus').textContent = 'Barcode ins Bild halten...';
+  }catch(e){
+    document.getElementById('scanStatus').textContent = 'Kamera-Zugriff fehlgeschlagen — Berechtigung erteilt?';
+  }
+}
+
+async function stopScan(){
+  if(html5QrCode){
+    try{ await html5QrCode.stop(); html5QrCode.clear(); }catch(e){}
+    html5QrCode = null;
+  }
+  document.getElementById('scanModal').classList.remove('open');
+}
+
+async function onScanSuccess(decodedText){
+  await stopScan();
+  document.getElementById('searchStatus').textContent = 'Produkt wird geladen...';
+  try{
+    const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${decodedText}.json?fields=product_name,nutriments`);
+    const data = await res.json();
+    if(data.status !== 1 || !data.product || !data.product.product_name){
+      document.getElementById('searchStatus').textContent = `Kein Produkt zu Barcode ${decodedText} gefunden.`;
+      return;
+    }
+    const n = data.product.nutriments || {};
+    if(n['energy-kcal_100g']==null){
+      document.getElementById('searchStatus').textContent = `${data.product.product_name} gefunden, aber keine Kalorienangabe hinterlegt.`;
+      return;
+    }
+    document.getElementById('searchStatus').textContent = '';
+    searchResultModal({
+      name:data.product.product_name, kcal100:n['energy-kcal_100g'],
+      p100:n.proteins_100g||0, f100:n.fat_100g||0, c100:n.carbohydrates_100g||0
+    });
+  }catch(e){
+    document.getElementById('searchStatus').textContent = 'Produkt-Lookup fehlgeschlagen.';
+  }
+}
+
+document.getElementById('scanBtn').onclick = startScan;
+document.getElementById('scanCloseBtn').onclick = stopScan;
 
 // ---------- EVENTS ----------
 document.getElementById('quickGrid').addEventListener('click', async (e)=>{
