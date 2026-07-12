@@ -517,10 +517,23 @@ async function searchFood(query){
   resultsEl.innerHTML = '';
   statusEl.textContent = 'Suche läuft...';
   try{
-    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=8&fields=product_name,nutriments`;
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=30&fields=product_name,nutriments`;
     const res = await fetch(url);
     const data = await res.json();
-    const products = (data.products || []).filter(p => p.product_name && p.nutriments && p.nutriments['energy-kcal_100g']!=null);
+    let products = (data.products || []).filter(p => p.product_name && p.nutriments && p.nutriments['energy-kcal_100g']!=null);
+
+    // Client-side relevance re-ranking: die Legacy-API sortiert nach Popularität,
+    // nicht nach Treffgenauigkeit -> hier nach echten Token-Treffern im Produktnamen sortieren.
+    const tokens = query.toLowerCase().split(/\s+/).filter(t=>t.length>1);
+    const scored = products.map(p=>{
+      const name = p.product_name.toLowerCase();
+      let score = 0;
+      tokens.forEach(t=>{ if(name.includes(t)) score += 1; });
+      if(name.includes(query.toLowerCase())) score += 2;
+      return {p, score};
+    }).filter(x=>x.score>0);
+    scored.sort((a,b)=>b.score-a.score);
+    products = scored.length ? scored.map(x=>x.p) : products; // Fallback falls nichts matcht
     if(products.length===0){
       statusEl.textContent = 'Nichts gefunden — probier einen anderen Begriff oder leg es manuell als Schnellauswahl an.';
       return;
