@@ -39,8 +39,16 @@
   .bar-fill{height:100%; background:var(--accent); transition:width .3s;}
   .bar-fill.over{background:var(--red);}
 
-  .macros{display:flex; gap:14px; margin-top:12px; flex-wrap:wrap;}
-  .macro{font-size:0.78rem; font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:5px;}
+  .macros{display:flex; flex-direction:column; gap:10px; margin-top:12px;}
+  .macro-row{display:flex; align-items:center; gap:8px;}
+  .macro-row .mlabel{font-size:0.76rem; font-family:'JetBrains Mono',monospace; width:76px; display:flex; align-items:center; gap:5px; flex-shrink:0;}
+  .macro-row .mbar{flex:1; height:6px; background:var(--bg-card); border:1px solid var(--line); border-radius:3px; overflow:hidden;}
+  .macro-row .mbar-fill{height:100%; transition:width .3s;}
+  .macro-row .mval{font-size:0.74rem; font-family:'JetBrains Mono',monospace; color:var(--muted); width:76px; text-align:right; flex-shrink:0;}
+  .macro-row .mgoal-input{
+    width:52px; background:var(--bg-card); border:1px solid var(--line); color:var(--text);
+    padding:3px 5px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:0.74rem; text-align:right;
+  }
   .dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
 
   main{max-width:640px; margin:0 auto; padding:18px 16px;}
@@ -142,11 +150,7 @@
     </div>
   </div>
   <div class="bar"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
-  <div class="macros">
-    <div class="macro"><span class="dot" style="background:var(--protein)"></span>Protein <span id="pTotal">0</span>g</div>
-    <div class="macro"><span class="dot" style="background:var(--fat)"></span>Fett <span id="fTotal">0</span>g</div>
-    <div class="macro"><span class="dot" style="background:var(--carb)"></span>KH <span id="cTotal">0</span>g</div>
-  </div>
+  <div class="macros" id="macroRows"></div>
 </header>
 
 <main id="appMain" style="display:none;">
@@ -202,6 +206,7 @@ let currentDate = new Date();
 let quickFoods = [];
 let dayLog = [];
 let dailyGoal = 2500;
+let macroGoals = {protein:null, fat:null, carb:null};
 
 function dateKey(d){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -233,9 +238,11 @@ function mapQuickRow(r){
 
 async function loadSettings(){
   try{
-    const rows = await sbFetch(`/rest/v1/calorie_settings?profile_id=eq.${session.id}&select=daily_goal`);
-    if(rows && rows.length) dailyGoal = rows[0].daily_goal;
-    else {
+    const rows = await sbFetch(`/rest/v1/calorie_settings?profile_id=eq.${session.id}&select=daily_goal,protein_goal,fat_goal,carb_goal`);
+    if(rows && rows.length){
+      dailyGoal = rows[0].daily_goal;
+      macroGoals = {protein:rows[0].protein_goal, fat:rows[0].fat_goal, carb:rows[0].carb_goal};
+    } else {
       await sbFetch(`/rest/v1/calorie_settings`, {method:'POST', body:JSON.stringify({profile_id:session.id, daily_goal:2500})});
       dailyGoal = 2500;
     }
@@ -244,7 +251,8 @@ async function loadSettings(){
 async function saveSettings(){
   try{
     await sbFetch(`/rest/v1/calorie_settings?profile_id=eq.${session.id}`, {
-      method:'PATCH', headers:{'Prefer':'return=minimal'}, body:JSON.stringify({daily_goal:dailyGoal})
+      method:'PATCH', headers:{'Prefer':'return=minimal'},
+      body:JSON.stringify({daily_goal:dailyGoal, protein_goal:macroGoals.protein, fat_goal:macroGoals.fat, carb_goal:macroGoals.carb})
     });
   }catch(e){}
 }
@@ -309,14 +317,54 @@ function renderHeader(){
   }), {kcal:0,p:0,f:0,c:0});
 
   document.getElementById('consumedKcal').textContent = Math.round(totals.kcal);
-  document.getElementById('pTotal').textContent = Math.round(totals.p);
-  document.getElementById('fTotal').textContent = Math.round(totals.f);
-  document.getElementById('cTotal').textContent = Math.round(totals.c);
 
   const pct = Math.min(100, (totals.kcal/dailyGoal)*100 || 0);
   const fill = document.getElementById('barFill');
   fill.style.width = pct+'%';
   fill.classList.toggle('over', totals.kcal > dailyGoal);
+
+  renderMacroRows(totals);
+}
+
+function macroRowHTML(key, label, color, value, goal){
+  const pct = goal ? Math.min(100, (value/goal)*100) : 0;
+  const over = goal && value > goal;
+  const rightSide = goal
+    ? `<span class="mval" data-edit-macro="${key}" style="cursor:pointer; text-decoration:underline dotted;">${Math.round(value)} / ${goal}g</span>`
+    : `<input type="number" class="mgoal-input" data-macro="${key}" placeholder="Ziel g">`;
+  return `<div class="macro-row">
+    <span class="mlabel"><span class="dot" style="background:${color}"></span>${label}</span>
+    <div class="mbar"><div class="mbar-fill" style="width:${pct}%; background:${over?'var(--red)':color}"></div></div>
+    ${rightSide}
+  </div>`;
+}
+
+function renderMacroRows(totals){
+  const wrap = document.getElementById('macroRows');
+  wrap.innerHTML =
+    macroRowHTML('protein','Protein','var(--protein)', totals.p, macroGoals.protein) +
+    macroRowHTML('fat','Fett','var(--fat)', totals.f, macroGoals.fat) +
+    macroRowHTML('carb','KH','var(--carb)', totals.c, macroGoals.carb);
+
+  wrap.querySelectorAll('.mgoal-input').forEach(inp=>{
+    inp.addEventListener('change', async (e)=>{
+      const key = e.target.dataset.macro;
+      macroGoals[key] = parseFloat(e.target.value) || null;
+      await saveSettings();
+      renderHeader();
+    });
+  });
+  wrap.querySelectorAll('[data-edit-macro]').forEach(el=>{
+    el.addEventListener('click', (e)=>{
+      const key = e.target.dataset.editMacro;
+      const current = macroGoals[key];
+      macroGoals[key] = null;
+      renderHeader();
+      const input = wrap.querySelector(`.mgoal-input[data-macro="${key}"]`);
+      if(input){ input.value = current; input.focus(); }
+      macroGoals[key] = current; // restore until actually changed
+    });
+  });
 }
 
 function renderQuickGrid(){
