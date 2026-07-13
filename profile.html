@@ -48,6 +48,10 @@
     .auth-alt{font-size:.62rem;color:var(--muted);text-align:center;margin-top:4px}
     .auth-alt a{color:var(--orange);text-decoration:none;cursor:pointer}
     .auth-alt a:hover{text-decoration:underline}
+    .password-wrap{position:relative}
+    .password-wrap .form-input{padding-right:44px}
+    .password-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:.95rem;padding:6px;line-height:1}
+    .password-toggle:hover{color:var(--orange)}
 
     .profile-view{display:none;flex-direction:column;gap:20px}
     .profile-view.active{display:flex}
@@ -101,7 +105,10 @@
         </div>
         <div class="form-group">
           <label class="form-label">Passwort</label>
-          <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+          <div class="password-wrap">
+            <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+            <button type="button" class="password-toggle" data-target="loginPassword">👁</button>
+          </div>
         </div>
         <button class="auth-btn" id="loginBtn">Einloggen →</button>
         <p class="auth-msg" id="loginMsg"></p>
@@ -115,11 +122,17 @@
         </div>
         <div class="form-group">
           <label class="form-label">Passwort</label>
-          <input type="password" class="form-input" id="regPassword" placeholder="Mindestens 6 Zeichen" autocomplete="new-password">
+          <div class="password-wrap">
+            <input type="password" class="form-input" id="regPassword" placeholder="Mindestens 6 Zeichen" autocomplete="new-password">
+            <button type="button" class="password-toggle" data-target="regPassword">👁</button>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Passwort wiederholen</label>
-          <input type="password" class="form-input" id="regPasswordConfirm" placeholder="••••••••" autocomplete="new-password">
+          <div class="password-wrap">
+            <input type="password" class="form-input" id="regPasswordConfirm" placeholder="••••••••" autocomplete="new-password">
+            <button type="button" class="password-toggle" data-target="regPasswordConfirm">👁</button>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Anzeigename (optional)</label>
@@ -141,11 +154,17 @@
         </div>
         <div class="form-group">
           <label class="form-label">Neues Passwort</label>
-          <input type="password" class="form-input" id="fpNewPassword" placeholder="Mindestens 6 Zeichen" autocomplete="new-password">
+          <div class="password-wrap">
+            <input type="password" class="form-input" id="fpNewPassword" placeholder="Mindestens 6 Zeichen" autocomplete="new-password">
+            <button type="button" class="password-toggle" data-target="fpNewPassword">👁</button>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Neues Passwort wiederholen</label>
-          <input type="password" class="form-input" id="fpNewPasswordConfirm" placeholder="••••••••" autocomplete="new-password">
+          <div class="password-wrap">
+            <input type="password" class="form-input" id="fpNewPasswordConfirm" placeholder="••••••••" autocomplete="new-password">
+            <button type="button" class="password-toggle" data-target="fpNewPasswordConfirm">👁</button>
+          </div>
         </div>
         <button class="auth-btn" id="resetPasswordBtn">Passwort zurücksetzen →</button>
         <p class="auth-msg" id="resetMsg"></p>
@@ -211,6 +230,16 @@
   async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
 
   const SESSION_KEY='om_profile_session'; // stores {id, name}
+
+  // ── Passwort anzeigen/verbergen ──
+  document.querySelectorAll('.password-toggle').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const input=document.getElementById(btn.dataset.target);
+      const showing=input.type==='text';
+      input.type=showing?'password':'text';
+      btn.textContent=showing?'👁':'🙈';
+    });
+  });
 
   // ── Recovery code helpers ──
   function generateRecoveryCode(){

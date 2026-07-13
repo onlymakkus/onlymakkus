@@ -3,82 +3,113 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kalorien Tracker</title>
+<title>Tracker — onlymakkus.de</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
   :root{
-    --bg:#15171a; --bg-alt:#1c1f24; --bg-card:#20242a; --line:#2c3038;
-    --text:#e9e7e2; --muted:#8b919b; --accent:#f2b705;
+    --black:#0a0a08; --cream:#f2ede4; --orange:#ff4e1a; --muted:#9a9488;
+    --card:#141410; --card2:#1c1c18; --border:rgba(255,255,255,0.08);
     --protein:#5b8fd9; --fat:#e0a03d; --carb:#5fae72; --red:#d94c3d;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
-  body{background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; padding-bottom:60px;}
-  h1,h2,.display{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:0.03em;}
-  .mono{font-family:'JetBrains Mono',monospace;}
+  body{background:var(--black); color:var(--cream); font-family:'DM Mono',monospace; padding-bottom:60px;}
+  h1,h2,.display{font-family:'Bebas Neue',sans-serif; text-transform:uppercase; letter-spacing:0.03em;}
+  .mono{font-family:'DM Mono',monospace;}
+  em, .accent-serif{font-family:'Instrument Serif',serif; font-style:italic; letter-spacing:0;}
+
+  .section-label{
+    display:flex; align-items:center; gap:10px; justify-content:center;
+    font-size:.62rem; letter-spacing:.3em; text-transform:uppercase; color:var(--orange);
+    margin:26px 0 12px;
+  }
+  .section-label::before,.section-label::after{content:'';flex:0 0 32px; height:1px; background:var(--border);}
+  .section-label.left{justify-content:flex-start;}
+  .section-label.left::before{display:none;}
+  .section-label.left::after{flex:1;}
+
+  .ticker{
+    overflow:hidden; white-space:nowrap; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+    padding:7px 0; background:var(--card); margin-top:14px;
+  }
+  .ticker-track{display:inline-block; animation:scrollTicker 22s linear infinite; font-size:.68rem; letter-spacing:.25em; color:var(--muted);}
+  .ticker-track span{margin:0 22px;}
+  .ticker-track span b{color:var(--orange);}
+  @keyframes scrollTicker{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
 
   header{
-    padding:20px 16px 16px; background:linear-gradient(180deg,var(--bg-alt),var(--bg));
-    border-bottom:2px solid var(--accent); position:sticky; top:0; z-index:20;
+    padding:22px 16px 0; background:var(--black);
+    border-bottom:1px solid var(--border); position:sticky; top:0; z-index:20;
   }
+  .navrow{display:flex; align-items:center; justify-content:space-between; padding-bottom:16px;}
+  .navrow .brand{font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:.05em;}
+  .navrow .brand .o{color:var(--orange);}
+  .navrow a.back{color:var(--muted); font-size:.72rem; text-decoration:none; letter-spacing:.08em;}
+
   .datebar{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
-  .datebar button{background:var(--bg-card); border:1px solid var(--line); color:var(--text); width:34px; height:34px; border-radius:6px; font-size:1rem;}
-  .datebar .datelabel{font-family:'JetBrains Mono',monospace; font-size:0.85rem; color:var(--muted);}
+  .datebar button{background:var(--card); border:1px solid var(--border); color:var(--cream); width:34px; height:34px; border-radius:2px; font-size:1rem;}
+  .datebar .datelabel{font-family:'DM Mono',monospace; font-size:0.85rem; color:var(--muted);}
 
   .kcal-row{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
-  .kcal-row .big{font-family:'Oswald',sans-serif; font-size:2.1rem; font-weight:700;}
+  .kcal-row .big{font-family:'Bebas Neue',sans-serif; font-size:2.6rem; letter-spacing:.02em;}
   .kcal-row .of{color:var(--muted); font-size:0.95rem;}
   .goal-edit{display:flex; align-items:center; gap:6px; margin-left:auto;}
   .goal-edit input{
-    width:70px; background:var(--bg-card); border:1px solid var(--line); color:var(--text);
-    padding:5px 7px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:0.85rem;
+    width:70px; background:var(--card); border:1px solid var(--border); color:var(--cream);
+    padding:5px 7px; border-radius:2px; font-family:'DM Mono',monospace; font-size:0.85rem;
   }
-  .goal-edit label{font-size:0.7rem; color:var(--muted); font-family:'JetBrains Mono',monospace;}
+  .goal-edit label{font-size:0.65rem; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; font-family:'DM Mono',monospace;}
 
-  .bar{height:8px; background:var(--bg-card); border-radius:4px; margin-top:10px; overflow:hidden; border:1px solid var(--line);}
-  .bar-fill{height:100%; background:var(--accent); transition:width .3s;}
+  .bar{height:6px; background:var(--card); border-radius:0; margin-top:12px; overflow:hidden; border:1px solid var(--border);}
+  .bar-fill{height:100%; background:var(--orange); transition:width .3s;}
   .bar-fill.over{background:var(--red);}
 
-  .macros{display:flex; flex-direction:column; gap:10px; margin-top:12px;}
+  .macros{display:flex; flex-direction:column; gap:10px; margin-top:14px; padding-bottom:14px;}
   .macro-row{display:flex; align-items:center; gap:8px;}
-  .macro-row .mlabel{font-size:0.76rem; font-family:'JetBrains Mono',monospace; width:76px; display:flex; align-items:center; gap:5px; flex-shrink:0;}
-  .macro-row .mbar{flex:1; height:6px; background:var(--bg-card); border:1px solid var(--line); border-radius:3px; overflow:hidden;}
+  .macro-row .mlabel{font-size:0.72rem; letter-spacing:.08em; text-transform:uppercase; font-family:'DM Mono',monospace; width:76px; display:flex; align-items:center; gap:5px; flex-shrink:0;}
+  .macro-row .mbar{flex:1; height:5px; background:var(--card); border:1px solid var(--border); overflow:hidden;}
   .macro-row .mbar-fill{height:100%; transition:width .3s;}
-  .macro-row .mval{font-size:0.74rem; font-family:'JetBrains Mono',monospace; color:var(--muted); width:76px; text-align:right; flex-shrink:0;}
+  .macro-row .mval{font-size:0.74rem; font-family:'DM Mono',monospace; color:var(--muted); width:76px; text-align:right; flex-shrink:0;}
   .macro-row .mgoal-input{
-    width:52px; background:var(--bg-card); border:1px solid var(--line); color:var(--text);
-    padding:3px 5px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:0.74rem; text-align:right;
+    width:52px; background:var(--card); border:1px solid var(--border); color:var(--cream);
+    padding:3px 5px; border-radius:2px; font-family:'DM Mono',monospace; font-size:0.74rem; text-align:right;
   }
-  .dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
+  .dot{width:7px; height:7px; border-radius:50%; display:inline-block;}
 
-  main{max-width:640px; margin:0 auto; padding:18px 16px;}
-  .section-title{font-size:0.95rem; margin:22px 0 10px; display:flex; justify-content:space-between; align-items:center;}
-  .section-title span.hint{font-size:0.72rem; color:var(--muted); font-family:'JetBrains Mono',monospace; text-transform:none; letter-spacing:0;}
+  main{max-width:640px; margin:0 auto; padding:6px 16px 18px;}
+  .section-title{font-size:0.95rem; margin:0 0 10px; display:flex; justify-content:space-between; align-items:center;}
+  .section-title span.hint{font-size:0.68rem; color:var(--muted); font-family:'DM Mono',monospace; text-transform:none; letter-spacing:0;}
 
-  .quick-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .quick-grid{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); border:1px solid var(--border);}
   .quick-item{
-    background:var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:10px 12px;
-    text-align:left; color:var(--text); cursor:pointer; position:relative;
+    background:var(--card); border:none; padding:12px 13px;
+    text-align:left; color:var(--cream); cursor:pointer; position:relative; overflow:hidden;
   }
-  .quick-item .qn{font-size:0.88rem; font-weight:500;}
-  .quick-item .qd{font-size:0.72rem; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-top:3px;}
+  .quick-item::before{
+    content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--orange);
+    transform:scaleX(0); transform-origin:left; transition:transform .25s;
+  }
+  .quick-item:active::before{transform:scaleX(1);}
+  .quick-item .qn{font-size:0.86rem; font-weight:500;}
+  .quick-item .qd{font-size:0.7rem; color:var(--muted); font-family:'DM Mono',monospace; margin-top:4px;}
   .quick-item .del{position:absolute; top:4px; right:6px; background:none; border:none; color:var(--muted); font-size:0.9rem;}
 
   .add-quick-btn{
-    width:100%; background:none; border:1px dashed var(--line); color:var(--muted);
-    padding:10px; border-radius:8px; margin-top:8px; font-size:0.82rem;
+    width:100%; background:none; border:1px dashed var(--border); color:var(--muted);
+    padding:11px; margin-top:10px; font-size:0.76rem; letter-spacing:.05em; font-family:'DM Mono',monospace;
   }
 
   .search-row{display:flex; gap:8px;}
   .search-row input{
-    flex:1; background:var(--bg-card); border:1px solid var(--line); color:var(--text);
-    padding:10px 12px; border-radius:8px; font-size:0.9rem;
+    flex:1; background:var(--card); border:1px solid var(--border); color:var(--cream);
+    padding:10px 12px; font-size:0.9rem; font-family:'DM Mono',monospace;
   }
   .search-row button{
-    background:var(--accent); color:#1a1a1a; border:none; padding:0 16px; border-radius:8px; font-weight:600;
+    background:var(--orange); color:var(--black); border:none; padding:0 16px; font-weight:600;
+    font-family:'DM Mono',monospace; letter-spacing:.03em;
   }
-  #scanBtn{background:var(--bg-card); color:var(--accent); border:1px solid var(--accent); padding:0 14px; font-size:1.1rem;}
+  #scanBtn{background:var(--card); color:var(--orange); border:1px solid var(--orange); padding:0 14px; font-size:1.1rem;}
 
   .scan-modal-backdrop{
     position:fixed; inset:0; background:#000; display:none; z-index:150;
@@ -87,58 +118,64 @@
   .scan-modal-backdrop.open{display:flex;}
   .scan-header{
     display:flex; justify-content:space-between; align-items:center; padding:16px;
-    background:var(--bg-alt); border-bottom:1px solid var(--line);
+    background:var(--card); border-bottom:1px solid var(--border);
   }
-  .scan-header h3{font-size:0.95rem; color:var(--text); font-family:'Oswald',sans-serif; text-transform:uppercase;}
+  .scan-header h3{font-size:1.1rem; color:var(--cream); font-family:'Bebas Neue',sans-serif; text-transform:uppercase; letter-spacing:.05em;}
   .scan-header button{background:none; border:none; color:var(--muted); font-size:1.3rem;}
   #scanReader{flex:1; background:#000;}
-  .scan-status{padding:12px 16px; color:var(--muted); font-size:0.82rem; font-family:'JetBrains Mono',monospace; text-align:center;}
+  .scan-status{padding:12px 16px; color:var(--muted); font-size:0.8rem; font-family:'DM Mono',monospace; text-align:center;}
   .search-results{margin-top:10px;}
   .result-item{
-    background:var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:10px 12px;
-    display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:10px;
+    background:var(--card); border:1px solid var(--border); padding:10px 12px;
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:10px;
   }
-  .result-item .rn{font-size:0.86rem;}
-  .result-item .rd{font-size:0.72rem; color:var(--muted); font-family:'JetBrains Mono',monospace;}
-  .result-item button{background:var(--bg); border:1px solid var(--accent); color:var(--accent); border-radius:6px; padding:6px 10px; font-size:0.78rem;}
-  .search-status{font-size:0.78rem; color:var(--muted); margin-top:8px; font-family:'JetBrains Mono',monospace;}
+  .result-item .rn{font-size:0.85rem;}
+  .result-item .rd{font-size:0.7rem; color:var(--muted); font-family:'DM Mono',monospace;}
+  .result-item button{background:var(--black); border:1px solid var(--orange); color:var(--orange); padding:6px 10px; font-size:0.78rem;}
+  .search-status{font-size:0.76rem; color:var(--muted); margin-top:8px; font-family:'DM Mono',monospace;}
 
   .log-item{
-    background:var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:10px 12px;
-    display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;
+    background:var(--card); border:1px solid var(--border); border-left:2px solid var(--orange); padding:10px 12px;
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:1px;
+    position:relative;
   }
-  .log-item .ln{font-size:0.86rem;}
-  .log-item .ld{font-size:0.72rem; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-top:2px;}
+  .log-item::after{
+    content:''; position:absolute; left:12px; right:12px; bottom:-1px; height:1px;
+    background:repeating-linear-gradient(90deg, var(--border) 0 4px, transparent 4px 8px);
+  }
+  .log-item:last-child::after{display:none;}
+  .log-item .ln{font-size:0.85rem;}
+  .log-item .ld{font-size:0.7rem; color:var(--muted); font-family:'DM Mono',monospace; margin-top:2px;}
   .log-item .lx{background:none; border:none; color:var(--muted); font-size:1rem;}
-  .empty{color:var(--muted); font-size:0.85rem; padding:14px 0; text-align:center;}
+  .empty{color:var(--muted); font-size:0.85rem; padding:16px 0; text-align:center; font-family:'Instrument Serif',serif; font-style:italic;}
 
   .modal-backdrop{
-    position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:flex-end; justify-content:center; z-index:100;
+    position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:flex-end; justify-content:center; z-index:100;
   }
   .modal-backdrop.open{display:flex;}
   .modal{
-    background:var(--bg-alt); border-top:2px solid var(--accent); border-radius:14px 14px 0 0;
+    background:var(--card); border-top:2px solid var(--orange);
     width:100%; max-width:640px; padding:20px 18px 26px;
   }
-  .modal h3{font-size:1rem; margin-bottom:14px; font-family:'Oswald',sans-serif; text-transform:uppercase;}
-  .modal label{display:block; font-size:0.72rem; color:var(--muted); font-family:'JetBrains Mono',monospace; margin:10px 0 4px;}
+  .modal h3{font-size:1.3rem; margin-bottom:14px; font-family:'Bebas Neue',sans-serif; text-transform:uppercase; letter-spacing:.04em;}
+  .modal label{display:block; font-size:0.68rem; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; font-family:'DM Mono',monospace; margin:10px 0 4px;}
   .modal input{
-    width:100%; background:var(--bg-card); border:1px solid var(--line); color:var(--text);
-    padding:9px 11px; border-radius:6px; font-size:0.9rem;
+    width:100%; background:var(--card2); border:1px solid var(--border); color:var(--cream);
+    padding:9px 11px; font-size:0.9rem; font-family:'DM Mono',monospace;
   }
   .modal-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
   .modal-actions{display:flex; gap:10px; margin-top:18px;}
-  .modal-actions button{flex:1; padding:11px; border-radius:8px; border:none; font-weight:600; font-size:0.88rem;}
-  .btn-primary{background:var(--accent); color:#1a1a1a;}
-  .btn-secondary{background:var(--bg-card); color:var(--muted); border:1px solid var(--line) !important;}
-.login-gate{
-    position:fixed; inset:0; background:var(--bg); z-index:200;
+  .modal-actions button{flex:1; padding:11px; border:none; font-weight:600; font-size:0.85rem; font-family:'DM Mono',monospace; letter-spacing:.03em;}
+  .btn-primary{background:var(--orange); color:var(--black);}
+  .btn-secondary{background:var(--card2); color:var(--muted); border:1px solid var(--border) !important;}
+  .login-gate{
+    position:fixed; inset:0; background:var(--black); z-index:200;
     display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px;
   }
   .login-gate.hidden{display:none;}
-  .login-gate h2{font-size:1.3rem; margin-bottom:10px;}
-  .login-gate p{color:var(--muted); font-size:0.88rem; max-width:320px; margin-bottom:18px;}
-  .login-gate a{background:var(--accent); color:#1a1a1a; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.88rem;}
+  .login-gate h2{font-size:2rem; margin-bottom:10px; font-family:'Bebas Neue',sans-serif; letter-spacing:.03em;}
+  .login-gate p{color:var(--muted); font-size:0.88rem; max-width:320px; margin-bottom:18px; font-family:'DM Mono',monospace;}
+  .login-gate a{background:var(--orange); color:var(--black); padding:10px 20px; text-decoration:none; font-weight:600; font-size:0.85rem; font-family:'DM Mono',monospace; letter-spacing:.03em;}
 </style>
 </head>
 <body>
@@ -151,12 +188,17 @@
 
 
 <header id="appHeader" style="display:none;">
+  <div class="navrow">
+    <a class="back" href="index.html">‹ ZURÜCK</a>
+    <div class="brand">TRACK<span class="o">.</span>ER</div>
+    <span style="width:60px;"></span>
+  </div>
   <div class="datebar">
     <button id="prevDay">‹</button>
     <div class="datelabel" id="dateLabel">Heute</div>
     <button id="nextDay">›</button>
   </div>
-  <div class="mono" id="greeting" style="font-size:0.72rem; color:var(--muted); margin-bottom:8px;"></div>
+  <div class="mono" id="greeting" style="font-size:0.7rem; color:var(--muted); margin-bottom:8px; letter-spacing:.04em;"></div>
   <div class="kcal-row">
     <div class="big"><span id="consumedKcal">0</span></div>
     <div class="of">/ <span id="goalDisplay">2500</span> kcal</div>
@@ -167,14 +209,17 @@
   </div>
   <div class="bar"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
   <div class="macros" id="macroRows"></div>
+  <div class="ticker">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
 </header>
 
 <main id="appMain" style="display:none;">
-  <div class="section-title"><span>Schnellauswahl</span><span class="hint">antippen = hinzufügen</span></div>
+  <div class="section-label left">Schnellauswahl<span class="hint" style="margin-left:auto; letter-spacing:0; text-transform:none; font-size:.68rem;">antippen = hinzufügen</span></div>
   <div class="quick-grid" id="quickGrid"></div>
   <button class="add-quick-btn" id="addQuickBtn">+ eigenes Lebensmittel zur Schnellauswahl</button>
 
-  <div class="section-title"><span>Suche (Open Food Facts)</span></div>
+  <div class="section-label left">Suche <span class="accent-serif" style="color:var(--muted); font-size:.85rem; margin-left:6px;">Open Food Facts</span></div>
   <div class="search-row">
     <input type="text" id="searchInput" placeholder="z.B. Skyr, Vollkornbrot...">
     <button id="searchBtn">Suchen</button>
@@ -183,7 +228,7 @@
   <div class="search-status" id="searchStatus"></div>
   <div class="search-results" id="searchResults"></div>
 
-  <div class="section-title">Log <span class="hint" id="logDateHint"></span></div>
+  <div class="section-label left">Log<span class="hint" id="logDateHint" style="margin-left:auto; letter-spacing:0; text-transform:none; font-size:.68rem;"></span></div>
   <button class="add-quick-btn" id="manualEntryBtn">+ Manueller Eintrag (z.B. auswärts essen)</button>
   <div id="logList"></div>
 </main>
@@ -352,6 +397,20 @@ function renderHeader(){
   fill.classList.toggle('over', totals.kcal > dailyGoal);
 
   renderMacroRows(totals);
+  renderTicker(totals);
+}
+
+function renderTicker(totals){
+  const remaining = Math.max(0, dailyGoal - totals.kcal);
+  const items = [
+    `<b>${Math.round(totals.kcal)}</b> KCAL HEUTE`,
+    `NOCH <b>${Math.round(remaining)}</b> KCAL ÜBRIG`,
+    `P <b>${Math.round(totals.p)}G</b> · F <b>${Math.round(totals.f)}G</b> · KH <b>${Math.round(totals.c)}G</b>`,
+    `${dayLog.length} EINTRAG${dayLog.length===1?'':'E'} · ${fmtDate(currentDate).toUpperCase()}`,
+  ];
+  const track = document.getElementById('tickerTrack');
+  const html = items.map(t=>`<span>${t}</span>`).join('');
+  track.innerHTML = html + html; // doppelt für nahtlose Endlos-Schleife
 }
 
 function macroRowHTML(key, label, color, value, goal){
@@ -568,7 +627,7 @@ async function searchFood(query){
     scored.sort((a,b)=>b.score-a.score);
     products = scored.length ? scored.map(x=>x.p) : products; // Fallback falls nichts matcht
     if(products.length===0){
-      statusEl.innerHTML = 'Nichts gefunden. Wenn du den Barcode zur Hand hast, kannst du das Produkt auch <button id="contributeFromSearchBtn" style="background:none; border:1px solid var(--accent); color:var(--accent); border-radius:6px; padding:3px 9px; font-size:0.76rem;">per Scan anlegen</button>.';
+      statusEl.innerHTML = 'Nichts gefunden. Wenn du den Barcode zur Hand hast, kannst du das Produkt auch <button id="contributeFromSearchBtn" style="background:none; border:1px solid var(--orange); color:var(--orange); padding:3px 9px; font-size:0.76rem;">per Scan anlegen</button>.';
       document.getElementById('contributeFromSearchBtn').onclick = ()=>{ statusEl.textContent=''; startScan(); };
       return;
     }
@@ -657,7 +716,7 @@ document.getElementById('scanCloseBtn').onclick = stopScan;
 // ---------- CONTRIBUTE MISSING PRODUCT TO OFF ----------
 function showContributeOffer(barcode, msg){
   const statusEl = document.getElementById('searchStatus');
-  statusEl.innerHTML = `${msg} <button id="contributeBtn" style="margin-left:6px; background:none; border:1px solid var(--accent); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.76rem;">+ Produkt anlegen (mit Foto)</button>`;
+  statusEl.innerHTML = `${msg} <button id="contributeBtn" style="margin-left:6px; background:none; border:1px solid var(--orange); color:var(--orange); padding:4px 10px; font-size:0.76rem;">+ Produkt anlegen (mit Foto)</button>`;
   document.getElementById('contributeBtn').onclick = ()=> openContributeModal(barcode);
 }
 
