@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,13 +8,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
-  :root{
+  :root, [data-theme="dark"]{
     --black:#0a0a08; --cream:#f2ede4; --orange:#ff4e1a; --muted:#9a9488;
     --card:#141410; --card2:#1c1c18; --border:rgba(255,255,255,0.08);
     --protein:#5b8fd9; --fat:#e0a03d; --carb:#5fae72; --red:#d94c3d;
   }
+  [data-theme="light"]{
+    --black:#FBF6EE; --cream:#2A2420; --orange:#FF6E35; --muted:#8A8078;
+    --card:#FFFFFF; --card2:#FFF6EE; --border:rgba(42,36,32,0.1);
+    --protein:#3d6cad; --fat:#b8791f; --carb:#3d8850; --red:#c23a2c;
+  }
   *{box-sizing:border-box; margin:0; padding:0;}
-  body{background:var(--black); color:var(--cream); font-family:'DM Mono',monospace; padding-bottom:60px;}
+  body{background:var(--black); color:var(--cream); font-family:'DM Mono',monospace; padding-bottom:60px; transition:background .3s,color .3s;}
   h1,h2,.display{font-family:'Bebas Neue',sans-serif; text-transform:uppercase; letter-spacing:0.03em;}
   .mono{font-family:'DM Mono',monospace;}
   em, .accent-serif{font-family:'Instrument Serif',serif; font-style:italic; letter-spacing:0;}
@@ -46,6 +51,8 @@
   .navrow .brand{font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:.05em;}
   .navrow .brand .o{color:var(--orange);}
   .navrow a.back{color:var(--muted); font-size:.72rem; text-decoration:none; letter-spacing:.08em;}
+  .theme-toggle{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:transform .2s;}
+  .theme-toggle:hover{transform:scale(1.1);}
 
   .datebar{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
   .datebar button{background:var(--card); border:1px solid var(--border); color:var(--cream); width:34px; height:34px; border-radius:2px; font-size:1rem;}
@@ -191,7 +198,7 @@
   <div class="navrow">
     <a class="back" href="health.html">‹ ZURÜCK</a>
     <div class="brand">TRACK<span class="o">.</span>ER</div>
-    <span style="width:60px;"></span>
+    <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
   </div>
   <div class="datebar">
     <button id="prevDay">‹</button>
@@ -251,6 +258,19 @@
 const SB_URL = 'https://bsubsesbcxdaqofmkiqg.supabase.co';
 const SB_KEY = 'sb_publishable_fA2Dca6SVp0eB8k_WuqLrw_zplTnXBU'; // gleicher anon key wie auf den anderen Seiten
 const OFF_EDGE_FUNCTION_URL = SB_URL + '/functions/v1/add-off-product';
+
+const THEME_KEY='om_cf_theme';
+const htmlEl=document.documentElement;
+const themeToggle=document.getElementById('themeToggle');
+function applyTheme(t){
+  htmlEl.setAttribute('data-theme',t);
+  themeToggle.textContent=t==='dark'?'🌙':'☀️';
+  localStorage.setItem(THEME_KEY,t);
+}
+applyTheme(localStorage.getItem(THEME_KEY)||'dark');
+themeToggle.addEventListener('click',()=>{
+  applyTheme(htmlEl.getAttribute('data-theme')==='dark'?'light':'dark');
+});
 
 async function sbFetch(p, o={}) {
   const r = await fetch(SB_URL+p, {
