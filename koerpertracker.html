@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-:root{
+:root, [data-theme="dark"]{
   --bg: #0a0a08;
   --panel: #141410;
   --panel-2: #1c1c18;
@@ -22,6 +22,18 @@
   --text-dim: #9a9488;
   --mono: 'DM Mono', 'Courier New', monospace;
 }
+[data-theme="light"]{
+  --bg: #FBF6EE;
+  --panel: #FFFFFF;
+  --panel-2: #FFF6EE;
+  --steel: rgba(42,36,32,0.18);
+  --line: rgba(42,36,32,0.1);
+  --rust: #FF6E35;
+  --rust-dim: #e85a1f;
+  --brass: rgba(42,36,32,0.4);
+  --text: #2A2420;
+  --text-dim: #8A8078;
+}
 body{
   background: var(--bg);
   background-image:
@@ -30,6 +42,7 @@ body{
   font-family: var(--mono);
   min-height:100vh;
   padding-bottom:60px;
+  transition: background .3s, color .3s;
 }
 h1,h2,h3, .display{
   font-family: 'Bebas Neue', Impact, sans-serif;
@@ -58,6 +71,9 @@ h1,h2,h3, .display{
 .navrow .back{ color:var(--text-dim); text-decoration:none; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; font-family:var(--mono); }
 .navrow .back:hover{ color:var(--rust); }
 .navrow .greeting{ color:var(--text-dim); font-size:.66rem; letter-spacing:.04em; font-family:var(--mono); }
+.navrow-right{ display:flex; align-items:center; gap:14px; }
+.theme-toggle{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--panel);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:transform .2s;}
+.theme-toggle:hover{transform:scale(1.1);}
 
 /* HEADER — measuring tape */
 header{
@@ -177,6 +193,7 @@ main{
   letter-spacing: 0.02em;
   color-scheme: dark;
 }
+[data-theme="light"] .field input[type="date"]{ color-scheme: light; }
 .field input[type="date"]::-webkit-calendar-picker-indicator{
   filter: invert(60%) sepia(20%) saturate(500%) hue-rotate(340deg);
   opacity: 0.8;
@@ -289,7 +306,10 @@ footer{
 
   <div class="navrow">
     <a class="back" href="health.html">‹ ZURÜCK</a>
-    <span class="greeting" id="greeting"></span>
+    <div class="navrow-right">
+      <span class="greeting" id="greeting"></span>
+      <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
+    </div>
   </div>
 
   <header>
@@ -389,6 +409,19 @@ async function sbFetch(p, o={}) {
   return t ? JSON.parse(t) : null;
 }
 
+const THEME_KEY='om_cf_theme';
+const htmlEl=document.documentElement;
+const themeToggle=document.getElementById('themeToggle');
+function applyTheme(t){
+  htmlEl.setAttribute('data-theme',t);
+  themeToggle.textContent=t==='dark'?'🌙':'☀️';
+  localStorage.setItem(THEME_KEY,t);
+  if(chart) renderChart();
+}
+themeToggle.addEventListener('click',()=>{
+  applyTheme(htmlEl.getAttribute('data-theme')==='dark'?'light':'dark');
+});
+
 // ---------- SESSION ----------
 let session = null;
 try{
@@ -409,6 +442,7 @@ let entries = [];
 let goal = null;
 let activeMetric = 'weight';
 let chart = null;
+applyTheme(localStorage.getItem(THEME_KEY)||'dark');
 
 // ---------- STORAGE (Supabase) ----------
 async function loadData(){
@@ -613,6 +647,12 @@ function renderChart(){
     return;
   }
 
+  const cs = getComputedStyle(htmlEl);
+  const rust = cs.getPropertyValue('--rust').trim();
+  const textDim = cs.getPropertyValue('--text-dim').trim();
+  const lineCol = cs.getPropertyValue('--line').trim();
+  const isLight = htmlEl.getAttribute('data-theme')==='light';
+
   chart = new Chart(canvas, {
     type: 'line',
     data: {
@@ -620,10 +660,10 @@ function renderChart(){
       datasets: [{
         label: metric.label + ' (' + metric.unit + ')',
         data: pts.map(e => e[metric.key]),
-        borderColor: '#ff4e1a',
-        backgroundColor: 'rgba(255,78,26,0.12)',
-        pointBackgroundColor: '#f2ede4',
-        pointBorderColor: '#ff4e1a',
+        borderColor: rust,
+        backgroundColor: isLight ? 'rgba(255,110,53,0.10)' : 'rgba(255,78,26,0.12)',
+        pointBackgroundColor: isLight ? '#FFFFFF' : '#f2ede4',
+        pointBorderColor: rust,
         pointRadius: 3,
         tension: 0.25,
         fill: true,
@@ -634,8 +674,8 @@ function renderChart(){
       maintainAspectRatio: false,
       plugins: { legend: { display:false } },
       scales: {
-        x: { ticks:{ color:'#9a9488', font:{ family:'DM Mono', size:10 } }, grid:{ color:'rgba(255,255,255,0.08)' } },
-        y: { ticks:{ color:'#9a9488', font:{ family:'DM Mono', size:10 } }, grid:{ color:'rgba(255,255,255,0.08)' } }
+        x: { ticks:{ color:textDim, font:{ family:'DM Mono', size:10 } }, grid:{ color:lineCol } },
+        y: { ticks:{ color:textDim, font:{ family:'DM Mono', size:10 } }, grid:{ color:lineCol } }
       }
     }
   });

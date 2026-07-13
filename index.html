@@ -83,30 +83,14 @@
     .statement-text { font-family: 'Instrument Serif'; font-size: clamp(1.8rem, 5vw, 4rem); font-style: italic; line-height: 1.3; max-width: 800px; margin: 0 auto; }
     .statement-text em { color: var(--orange); font-style: normal; font-family: 'Bebas Neue'; font-size: 1.2em; vertical-align: -0.05em; }
 
-    /* CHALLENGE PREVIEW */
-    .challenge-preview { padding: 80px 40px; background: var(--card); }
-    .challenge-inner { max-width: 1200px; margin: 0 auto; }
-    .ch-header { display: flex; flex-direction: column; align-items: center; gap: 24px; margin-bottom: 48px; text-align: center; }
-    @media (max-width: 700px) { .ch-header { grid-template-columns: 1fr; } }
-    .ch-title { font-family: 'Bebas Neue'; font-size: clamp(3rem, 8vw, 6rem); line-height: 0.95; text-align: center; }
-    .ch-title span { color: var(--orange); }
-    .ch-sub { font-size: 0.75rem; color: var(--muted); line-height: 2; margin-bottom: 24px; }
-    .ch-btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: var(--orange); color: var(--black); font-family: 'DM Mono'; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; transition: transform 0.2s, background 0.2s; }
-    .ch-btn:hover { transform: translate(-2px,-2px); background: #ff6b3d; }
-
-    /* MINI TRACKER */
-    .mini-tracker { display: flex; flex-direction: column; gap: 2px; }
-    .mt-row { background: #0f0f0d; padding: 14px 18px; display: grid; grid-template-columns: 36px 1fr 56px 56px 120px; gap: 10px; align-items: center; }
-    .mt-rank { font-family: 'Bebas Neue'; font-size: 1.1rem; color: var(--muted); }
-    .mt-name { font-size: 0.78rem; }
-    .mt-val { font-size: 0.68rem; text-align: center; color: var(--muted); }
-    .mt-val.done { color: var(--orange); }
-    .mt-bar-wrap { height: 4px; background: rgba(255,255,255,0.06); overflow: hidden; }
-    .mt-bar-fill { height: 100%; background: linear-gradient(90deg, var(--orange), #ffaa00); }
-    .mt-empty { padding: 24px; text-align: center; font-size: 0.7rem; color: #444; font-style: italic; }
-    .mt-header { background: transparent; padding: 6px 18px; }
-    .mt-head { font-size: 0.52rem; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.18); text-align: center; }
-    .mt-head:nth-child(2) { text-align: left; }
+    /* LIVE STATUS STRIP */
+    .live-strip { padding: 60px 40px 0; max-width: 1200px; margin: 0 auto; }
+    .live-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 1px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.06); }
+    .live-item { background: var(--card); padding: 22px 24px; }
+    .live-label { display: flex; align-items: center; gap: 8px; font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 6px var(--orange); animation: livepulse 2s infinite; }
+    @keyframes livepulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+    .live-value { font-family: 'Bebas Neue'; font-size: 1.8rem; color: var(--cream); line-height: 1; }
 
     /* PAGES SECTION */
     .pages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0; border-top: 1px solid var(--border); }
@@ -131,11 +115,10 @@
     @media (max-width: 600px) {
       nav { padding: 16px 20px; }
       .hero { padding: 100px 20px 60px; }
-      .section, .challenge-preview { padding: 60px 20px; }
+      .section, .live-strip { padding: 60px 20px; }
+      .live-strip { padding-top: 40px; }
       .statement { padding: 60px 20px; }
       footer { flex-direction: column; gap: 12px; }
-      .mt-row { grid-template-columns: 28px 1fr 50px 50px; }
-      .mt-bar-wrap { display: none; }
     }
 
     @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
@@ -191,6 +174,24 @@
   </div>
 </div>
 
+<!-- LIVE STATUS -->
+<div class="live-strip">
+  <div class="live-panel">
+    <div class="live-item">
+      <div class="live-label"><span class="live-dot"></span>Profile</div>
+      <div class="live-value" id="liveProfiles">—</div>
+    </div>
+    <div class="live-item">
+      <div class="live-label"><span class="live-dot"></span>Gaming-Runden</div>
+      <div class="live-value" id="liveGames">—</div>
+    </div>
+    <div class="live-item">
+      <div class="live-label"><span class="live-dot"></span>Challenge-Einträge</div>
+      <div class="live-value" id="liveChallenge">—</div>
+    </div>
+  </div>
+</div>
+
 <!-- ABOUT CARDS -->
 <div class="section">
   <p class="section-label">was dich erwartet</p>
@@ -203,9 +204,9 @@
     </div>
     <div class="card">
       <div class="card-num">02</div>
-      <div class="card-title">CrossFit & Challenges</div>
-      <p class="card-text">Schwitzen, leiden, weitermachen. Und dann noch eine Runde. Weil irgendwer die Gruppe motivieren muss.</p>
-      <span class="card-tag">schmerzhaft</span>
+      <div class="card-title">CrossFit, Health & Gaming</div>
+      <p class="card-text">Challenges, Ranking, Kalorien- und Körper-Tracking, dazu fünf Spiele und ein Text-Adventure — alles an einem Ort, alles mit einem Profil.</p>
+      <span class="card-tag">durchdacht</span>
     </div>
     <div class="card">
       <div class="card-num">03</div>
@@ -240,6 +241,20 @@
       <div class="page-card-arrow">→</div>
     </a>
 
+    <a href="health.html" class="page-card">
+      <div class="page-card-num">03</div>
+      <div class="page-card-label">HEALTH</div>
+      <p class="page-card-desc">Kalorien tracken, Gewicht und Körperumfänge über Zeit festhalten.</p>
+      <div class="page-card-arrow">→</div>
+    </a>
+
+    <a href="profile.html" class="page-card">
+      <div class="page-card-num">04</div>
+      <div class="page-card-label">PROFIL</div>
+      <p class="page-card-desc">Ein Login für alles — CrossFit, Gaming und Health. Registrieren oder einloggen.</p>
+      <div class="page-card-arrow">→</div>
+    </a>
+
   </div>
 </div>
 
@@ -251,6 +266,28 @@
 </footer>
 
 <script>
+  // ── LIVE STATUS ──────────────────────────────────────────────
+  const SB_URL = 'https://bsubsesbcxdaqofmkiqg.supabase.co';
+  const SB_KEY = 'sb_publishable_fA2Dca6SVp0eB8k_WuqLrw_zplTnXBU';
+  async function sbCount(table){
+    try{
+      const r = await fetch(`${SB_URL}/rest/v1/${table}?select=id`, {
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer '+SB_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
+      });
+      const range = r.headers.get('content-range');
+      if(range){ const total = range.split('/')[1]; return total==='*' ? null : parseInt(total,10); }
+      return null;
+    }catch(e){ return null; }
+  }
+  (async function loadLiveStats(){
+    const [profiles, games, entries] = await Promise.all([
+      sbCount('profiles'), sbCount('snake_scores'), sbCount('challenge_entries')
+    ]);
+    document.getElementById('liveProfiles').textContent = profiles ?? '—';
+    document.getElementById('liveGames').textContent = games ?? '—';
+    document.getElementById('liveChallenge').textContent = entries ?? '—';
+  })();
+
   // Cursor
   const cursor = document.getElementById('cursor');
   document.addEventListener('mousemove', e => { cursor.style.left = e.clientX+'px'; cursor.style.top = e.clientY+'px'; });
