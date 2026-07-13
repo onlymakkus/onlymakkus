@@ -38,6 +38,27 @@ h1,h2,h3, .display{
 }
 .mono{ font-family: var(--mono); }
 
+/* LOGIN GATE */
+.login-gate{
+  position:fixed; inset:0; background:var(--bg); z-index:200;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px;
+}
+.login-gate.hidden{ display:none; }
+.login-gate h2{ font-size:2rem; margin-bottom:10px; }
+.login-gate p{ color:var(--text-dim); font-size:0.88rem; max-width:320px; margin-bottom:18px; }
+.login-gate a{ background:var(--rust); color:#14100d; padding:10px 20px; text-decoration:none; font-weight:600; font-size:0.85rem; font-family:var(--mono); letter-spacing:.03em; }
+.login-gate a:hover{ background:#ff6b3d; }
+
+/* NAVROW */
+.navrow{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:16px 20px; border-bottom:1px solid var(--line);
+  max-width:900px; margin:0 auto;
+}
+.navrow .back{ color:var(--text-dim); text-decoration:none; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; font-family:var(--mono); }
+.navrow .back:hover{ color:var(--rust); }
+.navrow .greeting{ color:var(--text-dim); font-size:.66rem; letter-spacing:.04em; font-family:var(--mono); }
+
 /* HEADER — measuring tape */
 header{
   position:relative;
@@ -185,6 +206,7 @@ main{
 .btn.ghost:hover{ border-color: var(--rust); color: var(--text); }
 .btn.small{ padding: 6px 12px; font-size: 13px; }
 .btn.danger:hover{ background: var(--rust-dim); color: var(--text); }
+.btn:disabled{ opacity:.5; cursor:not-allowed; }
 
 .row-actions{ display:flex; gap:10px; }
 
@@ -257,83 +279,123 @@ footer{
 </head>
 <body>
 
-<header>
-  <div class="tape"></div>
-  <h1>MASS<span>BAND</span></h1>
-  <div class="subtitle">Gewicht &amp; Umfänge — dein Verlauf, in Zahlen</div>
-</header>
+<div class="login-gate" id="loginGate">
+  <h2>Erst einloggen</h2>
+  <p>Der Körper-Tracker speichert deine Einträge an dein Profil gebunden. Logg dich auf profile.html ein und komm dann zurück.</p>
+  <a href="profile.html">Zu profile.html</a>
+</div>
 
-<main>
+<div id="appWrap" style="display:none;">
 
-  <div class="stats" id="statsRow"></div>
-
-  <div class="panel">
-    <div class="panel-title">Gewicht eintragen</div>
-    <div class="grid-inputs">
-      <div class="field date-field">
-        <label>Datum</label>
-        <input type="date" id="in-w-date">
-      </div>
-      <div class="field">
-        <label>Gewicht (kg)</label>
-        <input type="number" step="0.1" id="in-weight" placeholder="82.4">
-      </div>
-    </div>
-    <div class="row-actions">
-      <button class="btn" id="saveWeightBtn">Gewicht speichern</button>
-      <button class="btn ghost" id="goalBtn">Zielgewicht setzen</button>
-    </div>
+  <div class="navrow">
+    <a class="back" href="health.html">‹ ZURÜCK</a>
+    <span class="greeting" id="greeting"></span>
   </div>
 
-  <div class="panel">
-    <div class="panel-title">Maße eintragen</div>
-    <div class="grid-inputs">
-      <div class="field date-field">
-        <label>Datum</label>
-        <input type="date" id="in-m-date">
+  <header>
+    <div class="tape"></div>
+    <h1>MASS<span>BAND</span></h1>
+    <div class="subtitle">Gewicht &amp; Umfänge — dein Verlauf, in Zahlen</div>
+  </header>
+
+  <main>
+
+    <div class="stats" id="statsRow"></div>
+
+    <div class="panel">
+      <div class="panel-title">Gewicht eintragen</div>
+      <div class="grid-inputs">
+        <div class="field date-field">
+          <label>Datum</label>
+          <input type="date" id="in-w-date">
+        </div>
+        <div class="field">
+          <label>Gewicht (kg)</label>
+          <input type="number" step="0.1" id="in-weight" placeholder="82.4">
+        </div>
       </div>
-      <div class="field">
-        <label>Taille (cm)</label>
-        <input type="number" step="0.1" id="in-taille" placeholder="88">
-      </div>
-      <div class="field">
-        <label>Hüfte (cm)</label>
-        <input type="number" step="0.1" id="in-huefte" placeholder="98">
-      </div>
-      <div class="field">
-        <label>Brust (cm)</label>
-        <input type="number" step="0.1" id="in-brust" placeholder="102">
-      </div>
-      <div class="field">
-        <label>Oberarm (cm)</label>
-        <input type="number" step="0.1" id="in-arm" placeholder="34">
-      </div>
-      <div class="field">
-        <label>Oberschenkel (cm)</label>
-        <input type="number" step="0.1" id="in-bein" placeholder="58">
+      <div class="row-actions">
+        <button class="btn" id="saveWeightBtn">Gewicht speichern</button>
+        <button class="btn ghost" id="goalBtn">Zielgewicht setzen</button>
       </div>
     </div>
-    <div class="row-actions">
-      <button class="btn" id="saveMeasureBtn">Maße speichern</button>
+
+    <div class="panel">
+      <div class="panel-title">Maße eintragen</div>
+      <div class="grid-inputs">
+        <div class="field date-field">
+          <label>Datum</label>
+          <input type="date" id="in-m-date">
+        </div>
+        <div class="field">
+          <label>Taille (cm)</label>
+          <input type="number" step="0.1" id="in-taille" placeholder="88">
+        </div>
+        <div class="field">
+          <label>Hüfte (cm)</label>
+          <input type="number" step="0.1" id="in-huefte" placeholder="98">
+        </div>
+        <div class="field">
+          <label>Brust (cm)</label>
+          <input type="number" step="0.1" id="in-brust" placeholder="102">
+        </div>
+        <div class="field">
+          <label>Oberarm (cm)</label>
+          <input type="number" step="0.1" id="in-arm" placeholder="34">
+        </div>
+        <div class="field">
+          <label>Oberschenkel (cm)</label>
+          <input type="number" step="0.1" id="in-bein" placeholder="58">
+        </div>
+      </div>
+      <div class="row-actions">
+        <button class="btn" id="saveMeasureBtn">Maße speichern</button>
+      </div>
     </div>
-  </div>
 
-  <div class="panel">
-    <div class="panel-title">Verlauf</div>
-    <div class="chart-tabs" id="chartTabs"></div>
-    <div class="chart-wrap"><canvas id="progressChart"></canvas></div>
-  </div>
+    <div class="panel">
+      <div class="panel-title">Verlauf</div>
+      <div class="chart-tabs" id="chartTabs"></div>
+      <div class="chart-wrap"><canvas id="progressChart"></canvas></div>
+    </div>
 
-  <div class="panel">
-    <div class="panel-title">Einträge</div>
-    <div class="history-wrap" id="historyWrap"></div>
-  </div>
+    <div class="panel">
+      <div class="panel-title">Einträge</div>
+      <div class="history-wrap" id="historyWrap"></div>
+    </div>
 
-</main>
+  </main>
 
-<footer>onlymakkus — massband · Daten werden nur lokal in deinem Account gespeichert</footer>
+  <footer>onlymakkus — massband · Einträge sind an dein Profil gebunden, nicht öffentlich sichtbar</footer>
+
+</div>
 
 <script>
+const SB_URL = 'https://bsubsesbcxdaqofmkiqg.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
+
+async function sbFetch(p, o={}) {
+  const r = await fetch(SB_URL+p, {
+    ...o,
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer '+SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': o.prefer || '',
+      ...o.headers
+    }
+  });
+  const t = await r.text();
+  return t ? JSON.parse(t) : null;
+}
+
+// ---------- SESSION ----------
+let session = null;
+try{
+  const saved = localStorage.getItem('om_profile_session');
+  if(saved) session = JSON.parse(saved);
+}catch(e){}
+
 const METRICS = [
   { key:'weight', label:'Gewicht', unit:'kg', short:'GEW' },
   { key:'taille', label:'Taille', unit:'cm', short:'TAI' },
@@ -348,45 +410,60 @@ let goal = null;
 let activeMetric = 'weight';
 let chart = null;
 
-const STORE_KEY = 'massband-entries';
-const GOAL_KEY = 'massband-goal';
-
+// ---------- STORAGE (Supabase) ----------
 async function loadData(){
   try{
-    const res = await window.storage.get(STORE_KEY);
-    entries = res ? JSON.parse(res.value) : [];
+    const rows = await sbFetch(`/rest/v1/body_metrics_entries?profile_id=eq.${session.id}&order=date.asc`);
+    entries = (rows||[]).map(r=>{
+      const e = { id:r.id, date:r.date };
+      METRICS.forEach(m=>{ if(r[m.key] !== null && r[m.key] !== undefined) e[m.key] = r[m.key]; });
+      return e;
+    });
   }catch(e){ entries = []; }
+
   try{
-    const res = await window.storage.get(GOAL_KEY);
-    goal = res ? JSON.parse(res.value) : null;
+    const rows = await sbFetch(`/rest/v1/body_metrics_goal?profile_id=eq.${session.id}&select=weight_goal_kg`);
+    goal = (rows && rows[0] && rows[0].weight_goal_kg !== null) ? rows[0].weight_goal_kg : null;
   }catch(e){ goal = null; }
-  entries.sort((a,b)=> new Date(a.date) - new Date(b.date));
+
   render();
 }
 
-async function saveEntries(){
-  try{ await window.storage.set(STORE_KEY, JSON.stringify(entries)); }
-  catch(e){ console.error('Speichern fehlgeschlagen', e); alert('Eintrag konnte nicht gespeichert werden.'); }
+async function upsertEntry(date, values){
+  try{
+    const existing = await sbFetch(`/rest/v1/body_metrics_entries?profile_id=eq.${session.id}&date=eq.${date}&select=id`);
+    if(existing && existing.length){
+      await sbFetch(`/rest/v1/body_metrics_entries?id=eq.${existing[0].id}`, {
+        method:'PATCH', prefer:'return=minimal', body: JSON.stringify(values)
+      });
+    } else {
+      await sbFetch(`/rest/v1/body_metrics_entries`, {
+        method:'POST', prefer:'return=minimal', body: JSON.stringify({ profile_id: session.id, date, ...values })
+      });
+    }
+  }catch(e){
+    console.error('Speichern fehlgeschlagen', e);
+    alert('Eintrag konnte nicht gespeichert werden.');
+  }
 }
 
 async function saveGoal(){
-  try{ await window.storage.set(GOAL_KEY, JSON.stringify(goal)); }
-  catch(e){ console.error('Ziel konnte nicht gespeichert werden', e); }
+  try{
+    const existing = await sbFetch(`/rest/v1/body_metrics_goal?profile_id=eq.${session.id}&select=profile_id`);
+    if(existing && existing.length){
+      await sbFetch(`/rest/v1/body_metrics_goal?profile_id=eq.${session.id}`, {
+        method:'PATCH', prefer:'return=minimal', body: JSON.stringify({ weight_goal_kg: goal })
+      });
+    } else {
+      await sbFetch(`/rest/v1/body_metrics_goal`, {
+        method:'POST', prefer:'return=minimal', body: JSON.stringify({ profile_id: session.id, weight_goal_kg: goal })
+      });
+    }
+  }catch(e){ console.error('Ziel konnte nicht gespeichert werden', e); }
 }
 
 document.getElementById('in-w-date').valueAsDate = new Date();
 document.getElementById('in-m-date').valueAsDate = new Date();
-
-async function upsertEntry(date, values){
-  const existingIdx = entries.findIndex(e => e.date === date);
-  if(existingIdx >= 0){
-    entries[existingIdx] = { ...entries[existingIdx], ...values };
-  } else {
-    entries.push({ date, ...values });
-  }
-  entries.sort((a,b)=> new Date(a.date) - new Date(b.date));
-  await saveEntries();
-}
 
 document.getElementById('saveWeightBtn').addEventListener('click', async ()=>{
   const date = document.getElementById('in-w-date').value;
@@ -394,11 +471,14 @@ document.getElementById('saveWeightBtn').addEventListener('click', async ()=>{
   const v = document.getElementById('in-weight').value;
   if(v === ''){ alert('Bitte ein Gewicht eintragen.'); return; }
 
+  const btn = document.getElementById('saveWeightBtn');
+  btn.disabled = true; btn.textContent = '…';
   await upsertEntry(date, { weight: parseFloat(v) });
+  btn.disabled = false; btn.textContent = 'Gewicht speichern';
 
   document.getElementById('in-weight').value = '';
   document.getElementById('in-w-date').valueAsDate = new Date();
-  render();
+  await loadData();
 });
 
 document.getElementById('saveMeasureBtn').addEventListener('click', async ()=>{
@@ -412,11 +492,14 @@ document.getElementById('saveMeasureBtn').addEventListener('click', async ()=>{
   });
   if(!hasAny){ alert('Bitte mindestens ein Maß eintragen.'); return; }
 
+  const btn = document.getElementById('saveMeasureBtn');
+  btn.disabled = true; btn.textContent = '…';
   await upsertEntry(date, values);
+  btn.disabled = false; btn.textContent = 'Maße speichern';
 
   METRICS.filter(m=>m.key!=='weight').forEach(m=>{ document.getElementById('in-'+m.key).value=''; });
   document.getElementById('in-m-date').valueAsDate = new Date();
-  render();
+  await loadData();
 });
 
 document.getElementById('goalBtn').addEventListener('click', async ()=>{
@@ -430,9 +513,14 @@ document.getElementById('goalBtn').addEventListener('click', async ()=>{
 
 async function deleteEntry(date){
   if(!confirm('Diesen Eintrag löschen?')) return;
-  entries = entries.filter(e => e.date !== date);
-  await saveEntries();
-  render();
+  const row = entries.find(e => e.date === date);
+  if(!row || !row.id) return;
+  try{
+    await sbFetch(`/rest/v1/body_metrics_entries?id=eq.${row.id}`, { method:'DELETE', prefer:'return=minimal' });
+    await loadData();
+  }catch(e){
+    alert('Löschen fehlgeschlagen.');
+  }
 }
 
 function fmtDate(d){
@@ -597,7 +685,17 @@ function render(){
   renderHistory();
 }
 
-loadData();
+// ---------- INIT ----------
+(async function init(){
+  if(!session){
+    document.getElementById('loginGate').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('loginGate').classList.add('hidden');
+  document.getElementById('appWrap').style.display = '';
+  document.getElementById('greeting').textContent = `Eingeloggt als ${session.displayName || session.name}`;
+  await loadData();
+})();
 </script>
 
 </body>
