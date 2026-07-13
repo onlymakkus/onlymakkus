@@ -17,6 +17,9 @@
 
     nav{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
     .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--body-text);text-decoration:none}
+    .nav-right{display:flex;gap:20px;align-items:center}
+    .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--body-text);text-decoration:none;opacity:.5;transition:opacity .2s}
+    .nav-link:hover{opacity:1}
     .theme-toggle{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:transform .2s}
     .theme-toggle:hover{transform:scale(1.1)}
 
@@ -82,7 +85,12 @@
 
 <nav>
   <a class="nav-logo" href="index.html">← OM</a>
-  <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
+  <div class="nav-right">
+    <a class="nav-link" href="crossfit.html">CrossFit</a>
+    <a class="nav-link" href="gaming.html">Gaming</a>
+    <a class="nav-link" href="health.html">Health</a>
+    <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
+  </div>
 </nav>
 
 <main>

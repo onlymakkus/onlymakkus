@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health — onlymakkus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+    :root, [data-theme="dark"]{
+      --black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--orange2:#ff6b3d;--muted:#9a9488;
+      --card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08);
+      --body-bg:var(--black);--body-text:var(--cream);color-scheme:dark;
+    }
+
+    [data-theme="light"]{color-scheme:light;
+      --black:#2A2420;--cream:#2A2420;--orange:#FF6E35;--orange2:#e85a1f;--muted:#8A8078;
+      --card:#FFFFFF;--card2:#FFF6EE;--border:rgba(42,36,32,0.1);
+      --body-bg:#FBF6EE;--body-text:#2A2420;
+    }
+
+    html{scroll-behavior:smooth}
+    body{background:var(--body-bg);color:var(--body-text);font-family:'DM Mono',monospace;overflow-x:hidden;cursor:none;transition:background .3s,color .3s}
+    .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
+    .cursor.big{width:36px;height:36px}
+    [data-theme="light"] .cursor{mix-blend-mode:normal;background:var(--orange)}
+
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;mix-blend-mode:difference}
+    [data-theme="light"] nav{mix-blend-mode:normal;background:rgba(251,246,238,.88);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--body-text);text-decoration:none}
+    .nav-right{display:flex;gap:20px;align-items:center}
+    .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--body-text);text-decoration:none;opacity:.5;transition:opacity .2s;cursor:pointer;background:none;border:none;font-family:'DM Mono'}
+    .nav-link:hover{opacity:1}
+    .theme-toggle{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:transform .2s,background .3s}
+    .theme-toggle:hover{transform:scale(1.1)}
+    [data-theme="light"] .theme-toggle{mix-blend-mode:normal}
+
+    .hero{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 40px 60px;text-align:center;position:relative;overflow:hidden}
+    .hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#0a0a08 40%,#061a12 100%)}
+    [data-theme="light"] .hero-bg{background:linear-gradient(135deg,#FBF6EE 40%,#EAF5EE 100%)}
+    .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(78,255,150,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(78,255,150,.04) 1px,transparent 1px);background-size:60px 60px}
+    [data-theme="light"] .hero-grid{background-image:linear-gradient(rgba(53,180,110,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(53,180,110,.06) 1px,transparent 1px)}
+    .hero-tag{font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:var(--orange);margin-bottom:16px;position:relative}
+    .hero-title{font-family:'Bebas Neue';font-size:clamp(4rem,15vw,10rem);line-height:.9;position:relative}
+    .hero-title span{color:var(--orange)}
+    .hero-sub{margin-top:18px;font-size:.78rem;color:var(--muted);max-width:440px;line-height:1.8;position:relative}
+
+    .marquee-wrap{overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:14px 0;background:var(--card)}
+    .marquee-track{display:flex;gap:60px;animation:marquee 22s linear infinite;white-space:nowrap}
+    .marquee-item{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
+    .dot{color:var(--orange);margin-right:10px}
+
+    .section{padding:80px 40px;max-width:1100px;margin:0 auto}
+    .section-label{font-size:.6rem;letter-spacing:.35em;text-transform:uppercase;color:var(--orange);margin-bottom:44px;display:flex;align-items:center;justify-content:center;gap:16px}
+    .section-label::before,.section-label::after{content:'';flex:0 0 40px;height:1px;background:var(--border)}
+
+    .hub-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2px}
+    [data-theme="light"] .hub-cards{gap:16px}
+    .hub-card{background:var(--card);padding:48px 36px;text-decoration:none;color:var(--body-text);display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;transition:background .3s,box-shadow .3s;cursor:none}
+    [data-theme="light"] .hub-card{cursor:pointer;box-shadow:0 2px 12px rgba(42,36,32,.05)}
+    .hub-card:hover{background:var(--card2)}
+    [data-theme="light"] .hub-card:hover{box-shadow:0 8px 28px rgba(255,110,53,.15)}
+    .hub-card-num{font-family:'Bebas Neue';font-size:5rem;color:rgba(255,255,255,.04);line-height:1;position:absolute;top:16px;right:20px}
+    [data-theme="light"] .hub-card-num{color:rgba(42,36,32,.04)}
+    .hub-card-icon{font-size:2.2rem}
+    .hub-card-title{font-family:'Bebas Neue';font-size:2.6rem;line-height:.95;letter-spacing:.02em}
+    .hub-card-sub{font-family:'Instrument Serif';font-style:italic;font-size:1rem;color:var(--orange)}
+    .hub-card-desc{font-size:.7rem;color:var(--muted);line-height:1.9}
+    .hub-card-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+    .tag{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;border:1px solid rgba(255,255,255,.1);padding:3px 10px;color:var(--muted)}
+    [data-theme="light"] .tag{border-color:rgba(42,36,32,.15)}
+    .hub-card-arrow{font-size:1.1rem;color:var(--orange);margin-top:auto;transition:transform .2s}
+    .hub-card:hover .hub-card-arrow{transform:translate(4px,-4px)}
+    .hub-card.soon{opacity:.55;cursor:not-allowed}
+    .hub-card.soon:hover{background:var(--card)}
+
+    footer{padding:36px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
+    footer a{color:var(--muted);text-decoration:none}
+
+    @media(max-width:600px){nav{padding:16px 20px}.hero{padding:100px 20px 50px}.section{padding:60px 20px}}
+    @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+</style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+
+<nav>
+  <a class="nav-logo" href="index.html">← OM</a>
+  <div class="nav-right">
+    <a class="nav-link" href="crossfit.html">CrossFit</a>
+    <a class="nav-link" href="gaming.html">Gaming</a>
+    <a class="nav-link" href="profile.html">Profil</a>
+    <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <p class="hero-tag">// kalorien, gewicht, fortschritt</p>
+  <h1 class="hero-title">HEA<span>LTH</span></h1>
+  <p class="hero-sub">Dein Körper in Zahlen — Kalorien tracken, Gewicht und Umfänge festhalten. Getrennt von CrossFit, verbunden mit deinem Profil.</p>
+</section>
+
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item"><span class="dot">●</span>kalorien</span>
+    <span class="marquee-item"><span class="dot">●</span>makros</span>
+    <span class="marquee-item"><span class="dot">●</span>gewicht</span>
+    <span class="marquee-item"><span class="dot">●</span>körperumfänge</span>
+    <span class="marquee-item"><span class="dot">●</span>kalorien</span>
+    <span class="marquee-item"><span class="dot">●</span>makros</span>
+    <span class="marquee-item"><span class="dot">●</span>gewicht</span>
+    <span class="marquee-item"><span class="dot">●</span>körperumfänge</span>
+  </div>
+</div>
+
+<div class="section">
+  <p class="section-label">tools</p>
+  <div class="hub-cards">
+    <a href="tracker.html" class="hub-card">
+      <div class="hub-card-num">01</div>
+      <div class="hub-card-icon">🍽️</div>
+      <div class="hub-card-title">KALORIEN</div>
+      <div class="hub-card-sub">Ernährungstracker</div>
+      <p class="hub-card-desc">Kalorien und Makros tracken, Schnellzugriff auf häufige Lebensmittel, Barcode-Scan.</p>
+      <div class="hub-card-tags"><span class="tag">täglich</span><span class="tag">profil gebunden</span></div>
+      <div class="hub-card-arrow">→</div>
+    </a>
+    <div class="hub-card soon">
+      <div class="hub-card-num">02</div>
+      <div class="hub-card-icon">📏</div>
+      <div class="hub-card-title">KÖRPERMASSE</div>
+      <div class="hub-card-sub">Gewicht & Umfänge</div>
+      <p class="hub-card-desc">Gewicht und Körperumfänge über Zeit festhalten und den Verlauf sehen.</p>
+      <div class="hub-card-tags"><span class="tag">bald verfügbar</span></div>
+      <div class="hub-card-arrow">→</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>© 2026 onlymakkus.de</span>
+  <a href="impressum.html">Impressum</a>
+  <a href="datenschutz.html">Datenschutz</a>
+</footer>
+
+<script>
+  const THEME_KEY='om_cf_theme';
+  const html=document.documentElement;
+  const themeToggle=document.getElementById('themeToggle');
+  function applyTheme(t){
+    html.setAttribute('data-theme',t);
+    themeToggle.textContent=t==='dark'?'🌙':'☀️';
+    localStorage.setItem(THEME_KEY,t);
+  }
+  applyTheme(localStorage.getItem(THEME_KEY)||'dark');
+  themeToggle.addEventListener('click',()=>{
+    applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark');
+  });
+
+  const cursor=document.getElementById('cursor');
+  document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
+  document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
+</script>
+</body>
+</html>
