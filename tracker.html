@@ -34,15 +34,6 @@
   .section-label.left::before{display:none;}
   .section-label.left::after{flex:1;}
 
-  .ticker{
-    overflow:hidden; white-space:nowrap; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
-    padding:7px 0; background:var(--card); margin-top:14px;
-  }
-  .ticker-track{display:inline-block; animation:scrollTicker 22s linear infinite; font-size:.68rem; letter-spacing:.25em; color:var(--muted);}
-  .ticker-track span{margin:0 22px;}
-  .ticker-track span b{color:var(--orange);}
-  @keyframes scrollTicker{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
-
   header{
     padding:22px 16px 0; background:var(--black);
     border-bottom:1px solid var(--border); position:sticky; top:0; z-index:20;
@@ -216,9 +207,6 @@
   </div>
   <div class="bar"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
   <div class="macros" id="macroRows"></div>
-  <div class="ticker">
-    <div class="ticker-track" id="tickerTrack"></div>
-  </div>
 </header>
 
 <main id="appMain" style="display:none;">
@@ -417,20 +405,6 @@ function renderHeader(){
   fill.classList.toggle('over', totals.kcal > dailyGoal);
 
   renderMacroRows(totals);
-  renderTicker(totals);
-}
-
-function renderTicker(totals){
-  const remaining = Math.max(0, dailyGoal - totals.kcal);
-  const items = [
-    `<b>${Math.round(totals.kcal)}</b> KCAL HEUTE`,
-    `NOCH <b>${Math.round(remaining)}</b> KCAL ÜBRIG`,
-    `P <b>${Math.round(totals.p)}G</b> · F <b>${Math.round(totals.f)}G</b> · KH <b>${Math.round(totals.c)}G</b>`,
-    `${dayLog.length} EINTRAG${dayLog.length===1?'':'E'} · ${fmtDate(currentDate).toUpperCase()}`,
-  ];
-  const track = document.getElementById('tickerTrack');
-  const html = items.map(t=>`<span>${t}</span>`).join('');
-  track.innerHTML = html + html; // doppelt für nahtlose Endlos-Schleife
 }
 
 function macroRowHTML(key, label, color, value, goal){
