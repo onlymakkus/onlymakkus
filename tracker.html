@@ -272,7 +272,12 @@ async function sbFetch(p, o={}) {
     }
   });
   const t = await r.text();
-  return t ? JSON.parse(t) : null;
+  const data = t ? JSON.parse(t) : null;
+  if(!r.ok){
+    const msg = (data && (data.message || data.hint || data.error)) || r.statusText || 'Unbekannter Fehler';
+    throw new Error(`sbFetch ${r.status} @ ${p}: ${msg}`);
+  }
+  return data;
 }
 
 // ---------- SESSION ----------
@@ -327,7 +332,10 @@ async function loadSettings(){
       await sbFetch(`/rest/v1/calorie_settings`, {method:'POST', body:JSON.stringify({profile_id:session.id, daily_goal:2500})});
       dailyGoal = 2500;
     }
-  }catch(e){}
+  }catch(e){
+    console.error('loadSettings fehlgeschlagen:', e.message);
+    document.getElementById('greeting').textContent += ' — Einstellungen konnten nicht geladen werden (siehe Konsole)';
+  }
 }
 async function saveSettings(){
   try{
@@ -335,7 +343,10 @@ async function saveSettings(){
       method:'PATCH', headers:{'Prefer':'return=minimal'},
       body:JSON.stringify({daily_goal:dailyGoal, protein_goal:macroGoals.protein, fat_goal:macroGoals.fat, carb_goal:macroGoals.carb})
     });
-  }catch(e){}
+  }catch(e){
+    console.error('saveSettings fehlgeschlagen:', e.message);
+    alert('Speichern des Ziels fehlgeschlagen: ' + e.message);
+  }
 }
 
 async function loadQuickFoods(){
