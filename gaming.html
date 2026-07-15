@@ -67,6 +67,27 @@
     .feature-card:hover .feature-arrow{transform:translate(4px,-4px)}
     @media(max-width:700px){.feature-card{grid-template-columns:1fr}.feature-visual{min-height:180px;padding:24px}.feature-glyph{font-size:3rem}}
 
+    /* CAROUSEL */
+    .carousel-wrap{position:relative;padding:0 60px}
+    .carousel-track{position:relative;overflow:hidden}
+    .carousel-slides{display:flex;transition:transform .5s cubic-bezier(.34,1.2,.4,1)}
+    .carousel-slide{flex:0 0 100%;min-width:100%}
+    .carousel-slide .feature-card{border-color:rgba(143,219,106,.15)}
+    .carousel-slide[data-game="schwarmkern"] .feature-card{border-color:rgba(255,78,26,.2);background:linear-gradient(135deg,var(--card) 0%,#180d05 100%)}
+    .carousel-slide[data-game="schwarmkern"] .feature-badge{color:var(--orange)}
+    .carousel-slide[data-game="schwarmkern"] .feature-title span{color:var(--orange)}
+    .carousel-slide[data-game="schwarmkern"] .feature-tag{border-color:rgba(255,78,26,.25);color:var(--orange)}
+    .carousel-slide[data-game="schwarmkern"] .feature-arrow{color:var(--orange)}
+    .carousel-slide[data-game="schwarmkern"] .feature-glyph{color:#ff4e1a;text-shadow:0 0 30px rgba(255,78,26,.4)}
+    .carousel-nav{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;background:var(--card);border:1px solid var(--border);color:var(--cream);display:flex;align-items:center;justify-content:center;cursor:none;font-size:1.1rem;transition:all .2s;z-index:10}
+    .carousel-nav:hover{border-color:var(--orange);color:var(--orange);transform:translateY(-50%) scale(1.1)}
+    .carousel-nav.prev{left:0}
+    .carousel-nav.next{right:0}
+    .carousel-dots{display:flex;gap:8px;justify-content:center;margin-top:20px}
+    .carousel-dot{width:8px;height:8px;border-radius:50%;background:var(--border);border:none;cursor:none;transition:all .3s;padding:0}
+    .carousel-dot.active{background:var(--orange);width:24px;border-radius:4px}
+    @media(max-width:700px){.carousel-wrap{padding:0 8px}.carousel-nav{width:34px;height:34px;font-size:.9rem}}
+
     /* COMPACT GRID for remaining games */
     .compact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2px;margin-top:2px}
     .compact-card{background:var(--card);padding:28px 24px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:8px;transition:background .25s,transform .25s,box-shadow .25s;cursor:none;position:relative;overflow:hidden}
@@ -105,9 +126,8 @@
 <nav>
   <a class="nav-logo" href="index.html">← OM</a>
   <div class="nav-links">
-    <a class="nav-link" href="crossfit.html">CrossFit</a>
-    <a class="nav-link" href="health.html">Health</a>
     <a class="nav-link" href="profile.html">Profil</a>
+    <a class="nav-link" href="crossfit.html">CrossFit</a>
   </div>
 </nav>
 <section class="hero">
@@ -135,19 +155,44 @@
   </div>
 </div>
 <div class="section">
-  <p class="section-label">das highlight</p>
-  <a href="funke.html" class="feature-card">
-    <div class="feature-visual">
-      <div class="feature-glyph">▓▒░</div>
+  <p class="section-label">die highlights</p>
+  <div class="carousel-wrap">
+    <button class="carousel-nav prev" id="carouselPrev">‹</button>
+    <div class="carousel-track">
+      <div class="carousel-slides" id="carouselSlides">
+        <div class="carousel-slide" data-game="funke">
+          <a href="funke.html" class="feature-card">
+            <div class="feature-visual">
+              <div class="feature-glyph">▓▒░</div>
+            </div>
+            <div class="feature-content">
+              <div class="feature-badge">Text-Adventure</div>
+              <div class="feature-title">DER LETZTE<br><span>FUNKE</span></div>
+              <p class="feature-desc">Drei Jahre nach dem großen Absturz. Keine Ausrüstung, kein Tutorial — nur du und das, was du entscheidest. Ein episches Terminal-Adventure mit echten Konsequenzen.</p>
+              <div class="feature-tags"><span class="feature-tag">story</span><span class="feature-tag">entscheidungen</span><span class="feature-tag">mehrere kapitel</span></div>
+              <div class="feature-arrow">→ Jetzt spielen</div>
+            </div>
+          </a>
+        </div>
+        <div class="carousel-slide" data-game="schwarmkern">
+          <a href="schwarmkern.html" class="feature-card">
+            <div class="feature-visual">
+              <div class="feature-glyph">◆●◆</div>
+            </div>
+            <div class="feature-content">
+              <div class="feature-badge">Wave Survivor</div>
+              <div class="feature-title">SCHWARM<br><span>KERN</span></div>
+              <p class="feature-desc">Der Schwarm kommt aus jeder Richtung. Halte den Kern am Leben, so lange es geht — mit permanenten Upgrades zwischen den Runs, die dich jedes Mal stärker machen.</p>
+              <div class="feature-tags"><span class="feature-tag">survivor</span><span class="feature-tag">waves</span><span class="feature-tag">meta-progression</span></div>
+              <div class="feature-arrow">→ Jetzt spielen</div>
+            </div>
+          </a>
+        </div>
+      </div>
     </div>
-    <div class="feature-content">
-      <div class="feature-badge">Text-Adventure</div>
-      <div class="feature-title">DER LETZTE<br><span>FUNKE</span></div>
-      <p class="feature-desc">Drei Jahre nach dem großen Absturz. Keine Ausrüstung, kein Tutorial — nur du und das, was du entscheidest. Ein episches Terminal-Adventure mit echten Konsequenzen.</p>
-      <div class="feature-tags"><span class="feature-tag">story</span><span class="feature-tag">entscheidungen</span><span class="feature-tag">mehrere kapitel</span></div>
-      <div class="feature-arrow">→ Jetzt spielen</div>
-    </div>
-  </a>
+    <button class="carousel-nav next" id="carouselNext">›</button>
+    <div class="carousel-dots" id="carouselDots"></div>
+  </div>
 </div>
 
 <div class="section" style="padding-top:0;">
@@ -229,6 +274,62 @@ document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseent
   initMatrix();
   window.addEventListener('resize',initMatrix);
   setInterval(drawMatrix,40);
+
+  // ── HIGHLIGHT CAROUSEL ──
+  (function(){
+    const slidesWrap=document.getElementById('carouselSlides');
+    const slides=slidesWrap.querySelectorAll('.carousel-slide');
+    const dotsWrap=document.getElementById('carouselDots');
+    const prevBtn=document.getElementById('carouselPrev');
+    const nextBtn=document.getElementById('carouselNext');
+    let current=0;
+    let autoTimer=null;
+    const AUTO_INTERVAL=6000;
+
+    slides.forEach((_,i)=>{
+      const dot=document.createElement('button');
+      dot.className='carousel-dot'+(i===0?' active':'');
+      dot.addEventListener('click',()=>goTo(i));
+      dot.addEventListener('mouseenter',()=>cursor.classList.add('big'));
+      dot.addEventListener('mouseleave',()=>cursor.classList.remove('big'));
+      dotsWrap.appendChild(dot);
+    });
+
+    function render(){
+      slidesWrap.style.transform=`translateX(-${current*100}%)`;
+      dotsWrap.querySelectorAll('.carousel-dot').forEach((d,i)=>d.classList.toggle('active',i===current));
+    }
+    function goTo(i){
+      current=(i+slides.length)%slides.length;
+      render();
+      resetAuto();
+    }
+    function next(){ goTo(current+1); }
+    function prev(){ goTo(current-1); }
+    function resetAuto(){
+      if(autoTimer)clearInterval(autoTimer);
+      autoTimer=setInterval(next,AUTO_INTERVAL);
+    }
+
+    prevBtn.addEventListener('click',prev);
+    nextBtn.addEventListener('click',next);
+    [prevBtn,nextBtn].forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
+
+    const wrap=document.querySelector('.carousel-wrap');
+    wrap.addEventListener('mouseenter',()=>{if(autoTimer)clearInterval(autoTimer)});
+    wrap.addEventListener('mouseleave',resetAuto);
+
+    // Swipe support for touch
+    let touchStartX=0;
+    slidesWrap.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX},{passive:true});
+    slidesWrap.addEventListener('touchend',e=>{
+      const diff=e.changedTouches[0].clientX-touchStartX;
+      if(Math.abs(diff)>40){ diff>0?prev():next(); }
+    },{passive:true});
+
+    render();
+    resetAuto();
+  })();
 </script>
 </body>
 </html>
