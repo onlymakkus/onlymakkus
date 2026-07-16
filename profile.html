@@ -194,6 +194,29 @@
         <button class="secondary-btn" id="saveDisplayNameBtn">Speichern</button>
         <p class="auth-msg" id="displayNameMsg"></p>
       </div>
+      <form id="changePasswordForm" style="display:flex;flex-direction:column;gap:12px;">
+        <div class="form-group">
+          <label class="form-label">Passwort ändern</label>
+          <div class="password-wrap">
+            <input type="password" class="form-input" id="currentPassword" placeholder="Aktuelles Passwort" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+            <button type="button" class="password-toggle" data-target="currentPassword">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="password-wrap">
+            <input type="password" class="form-input" id="newPassword" placeholder="Neues Passwort (mind. 6 Zeichen)" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+            <button type="button" class="password-toggle" data-target="newPassword">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="password-wrap">
+            <input type="password" class="form-input" id="newPasswordConfirm" placeholder="Neues Passwort wiederholen" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+            <button type="button" class="password-toggle" data-target="newPasswordConfirm">👁</button>
+          </div>
+        </div>
+        <button class="secondary-btn" id="changePasswordBtn" type="submit">Passwort ändern</button>
+        <p class="auth-msg" id="changePasswordMsg"></p>
+      </form>
       <div style="display:flex;gap:8px;">
         <a href="challenge.html" class="auth-btn" style="flex:1;text-align:center;text-decoration:none;">Challenge →</a>
         <a href="gaming.html" class="auth-btn" style="flex:1;text-align:center;text-decoration:none;">Gaming →</a>
@@ -441,6 +464,40 @@
       msg.textContent='❌ Fehler beim Zurücksetzen';msg.className='auth-msg err';
     }
     btn.disabled=false;btn.textContent='Passwort zurücksetzen →';
+  });
+
+  // ── Change password (logged in) ──
+  document.getElementById('changePasswordForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const session=JSON.parse(localStorage.getItem(SESSION_KEY));
+    const current=document.getElementById('currentPassword').value;
+    const next=document.getElementById('newPassword').value;
+    const nextConfirm=document.getElementById('newPasswordConfirm').value;
+    const msg=document.getElementById('changePasswordMsg');
+    const btn=document.getElementById('changePasswordBtn');
+
+    if(!current){msg.textContent='⚠ Aktuelles Passwort eingeben';msg.className='auth-msg err';return}
+    if(next.length<6){msg.textContent='⚠ Neues Passwort muss mind. 6 Zeichen haben';msg.className='auth-msg err';return}
+    if(next!==nextConfirm){msg.textContent='⚠ Neue Passwörter stimmen nicht überein';msg.className='auth-msg err';return}
+
+    btn.disabled=true;btn.textContent='…';
+    try{
+      const rows=await sbFetch(`/rest/v1/profiles?id=eq.${session.id}&select=password_hash`);
+      const profile=rows && rows[0];
+      if(!profile || !dcodeIO.bcrypt.compareSync(current, profile.password_hash)){
+        msg.textContent='❌ Aktuelles Passwort ist falsch';msg.className='auth-msg err';
+        btn.disabled=false;btn.textContent='Passwort ändern';return;
+      }
+      const newHash=dcodeIO.bcrypt.hashSync(next,10);
+      await sbFetch(`/rest/v1/profiles?id=eq.${session.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({password_hash:newHash})});
+      msg.textContent='✓ Passwort geändert';msg.className='auth-msg ok';
+      document.getElementById('currentPassword').value='';
+      document.getElementById('newPassword').value='';
+      document.getElementById('newPasswordConfirm').value='';
+    }catch(err){
+      msg.textContent='❌ Fehler beim Ändern';msg.className='auth-msg err';
+    }
+    btn.disabled=false;btn.textContent='Passwort ändern';
   });
 
   // ── Regenerate recovery code (logged in) ──
