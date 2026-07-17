@@ -59,6 +59,12 @@
     .lb-row.lb-header{background:transparent;padding:6px 20px}
     .lb-rank{font-family:'Bebas Neue';font-size:1.2rem}
     .lb-name{font-size:.82rem}
+    .lb-surplus{display:inline-block;margin-left:6px;font-size:.6rem;color:var(--green);border:1px solid rgba(34,197,94,.35);padding:1px 5px;vertical-align:middle}
+    .undo-wrap{display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap}
+    .undo-text{font-size:.66rem;color:var(--muted)}
+    .undo-btn{margin-left:auto;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono';font-size:.62rem;letter-spacing:.08em;padding:7px 14px;cursor:pointer;transition:all .2s}
+    .undo-btn:hover{border-color:rgba(255,78,26,.4);color:var(--orange)}
+    .undo-btn:disabled{opacity:.5;cursor:default}
     .lb-val{font-size:.72rem;text-align:center;color:var(--muted)}
     .lb-val.done{color:var(--orange)}
     .lb-prog{display:flex;align-items:center;gap:8px}
@@ -104,7 +110,8 @@
     .form-msg.err{color:#ff4444}
     footer{padding:32px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
     footer a{color:var(--muted);text-decoration:none}
-    @media(max-width:600px){.lb-row{grid-template-columns:36px 1fr 56px}.lb-prog,.lb-status{display:none}}
+    @media(max-width:600px){.lb-row{grid-template-columns:36px 1fr 76px}.lb-prog,.lb-status{display:none}}
+    @media(hover:none){body{cursor:auto}.cursor{display:none}.undo-btn{margin-left:0}}
     @media(max-width:640px){
       .nav-links{display:none}
       .hamburger-btn{display:flex}
@@ -173,6 +180,10 @@
       </div>
       <input type="text" id="fWebsite" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
       <p class="form-msg" id="formMsg"></p>
+      <div class="undo-wrap" id="undoWrap" style="display:none">
+        <span class="undo-text" id="undoText"></span>
+        <button class="undo-btn" id="undoBtn" type="button">↩ Rückgängig</button>
+      </div>
     </div>
     <div class="points-info">
       <span class="points-info-icon">💡</span>
@@ -193,12 +204,22 @@
   document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
 
   const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co';
-  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
-  async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
+  const SB_KEY='sb_publishable_fA2Dca6SVp0eB8k_WuqLrw_zplTnXBU';
+  async function sbFetch(p,o={}){
+    const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});
+    const t=await r.text();
+    if(!r.ok)throw new Error('Supabase '+r.status+(t?' — '+t.slice(0,200):''));
+    return t?JSON.parse(t):null;
+  }
+
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const safeUrl=u=>{try{const p=new URL(u,location.href);return(p.protocol==='http:'||p.protocol==='https:')?p.href:null}catch{return null}};
 
   const medals=['🥇','🥈','🥉'];
   const pageLoadTime=Date.now();
   let ACTIVE=null, GOAL=60;
+  let LAST_ADD=null;
+  let undoTimer=null;
 
   function slugify(name){return name.toLowerCase().replace(/[^a-z0-9]+/g,'').trim()}
 
@@ -215,7 +236,8 @@
       if(row.is_december_vote){
         document.getElementById('pageTitle').innerHTML='DEZEMBER<span> BOSS</span>';
         document.getElementById('pageSub').textContent='Die Challenge steht noch nicht fest — schau im Ranking-Bereich fürs Voting vorbei!';
-        document.getElementById('entryFormWrap')?.style.setProperty('display','none');
+        document.getElementById('entryForm')?.style.setProperty('display','none');
+        document.getElementById('loginGate')?.style.setProperty('display','none');
         return false;
       }
       const ex=row.exercises;
@@ -255,33 +277,23 @@
         currentProfile=JSON.parse(saved);
         document.getElementById('loginGate').style.display='none';
         document.getElementById('entryForm').style.display='block';
-        document.getElementById('loggedInName').textContent=currentProfile.displayName||currentProfile.name;
-        refreshCurrentProfile();
+        document.getElementById('loggedInName').textContent=currentProfile.name;
       }catch(e){currentProfile=null}
     }
-  }
-
-  // Holt frischen Anzeigenamen/Discriminator aus der DB, falls seit letztem Login geändert
-  async function refreshCurrentProfile(){
-    try{
-      const rows=await sbFetch(`/rest/v1/profiles?id=eq.${currentProfile.id}&select=id,name,discriminator,display_name`);
-      if(rows && rows[0]){
-        currentProfile={id:rows[0].id,name:rows[0].name,discriminator:rows[0].discriminator,displayName:rows[0].display_name||rows[0].name};
-        localStorage.setItem(SESSION_KEY,JSON.stringify(currentProfile));
-        document.getElementById('loggedInName').textContent=currentProfile.displayName;
-      }
-    }catch(e){}
   }
 
   async function init(){
     checkLoginState();
     const ok=await loadActiveChallenge();
     if(!ok)return;
-    document.getElementById('pageTitle').innerHTML=ACTIVE.label.toUpperCase();
+    document.getElementById('pageTitle').textContent=ACTIVE.label.toUpperCase();
     document.getElementById('pageSub').textContent=`Ziel: ${GOAL} ${ACTIVE.unit} gesamt`;
-    document.getElementById('chTips').innerHTML=ACTIVE.tips.map(([label,text])=>`<div class="active-tip"><div class="active-tip-label">${label}</div><div class="active-tip-text">${text}</div></div>`).join('')+(ACTIVE.videoUrl?`<a href="${ACTIVE.videoUrl}" target="_blank" rel="noopener" class="active-video"><div class="active-video-label">🎥 Video-Anleitung</div><div class="active-video-text">Zur Übungsausführung ansehen →</div></a>`:'');
+    const vurl=ACTIVE.videoUrl?safeUrl(ACTIVE.videoUrl):null;
+    document.getElementById('chTips').innerHTML=
+      ACTIVE.tips.map(([label,text])=>`<div class="active-tip"><div class="active-tip-label">${esc(label)}</div><div class="active-tip-text">${esc(text)}</div></div>`).join('')
+      +(vurl?`<a href="${esc(vurl)}" target="_blank" rel="noopener" class="active-video"><div class="active-video-label">🎥 Video-Anleitung</div><div class="active-video-text">Zur Übungsausführung ansehen →</div></a>`:'');
     document.getElementById('fl1Label').textContent='Wert ('+ACTIVE.unit+')';
-    document.getElementById('lh1').textContent='Fortschritt';
+    document.getElementById('lh1').textContent='Wert';
     renderLeaderboard();
   }
 
@@ -291,11 +303,15 @@
     const loading=document.createElement('div');loading.className='lb-empty';loading.textContent='Lädt…';table.appendChild(loading);
 
     let data=[];
-    try{ data=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${ACTIVE.id}&select=*`); }
+    try{ data=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${ACTIVE.id}&select=*`)||[]; }
     catch(e){loading.textContent='⚠ Fehler beim Laden.';return}
 
+    // Sortierung über den gedeckelten Wert — Überschuss verändert die Rangliste nicht.
+    // Tiebreak bleibt completed_ts (wer zuerst 100% hatte, steht vorn).
+    const capped=e=>Math.min(e.value1||0,GOAL);
     data.sort((a,b)=>{
-      if(b.value1!==a.value1)return b.value1-a.value1;
+      const ca=capped(a),cb=capped(b);
+      if(cb!==ca)return cb-ca;
       return (a.completed_ts||Infinity)-(b.completed_ts||Infinity);
     });
 
@@ -303,22 +319,28 @@
     if(!data.length){const el=document.createElement('div');el.className='lb-empty';el.textContent='Noch niemand dabei — sei der Erste! 💪';table.appendChild(el);return}
 
     data.forEach((e,i)=>{
-      const done=e.value1>=GOAL;
-      const pct=Math.min(100,Math.round((e.value1/GOAL)*100));
+      const v=e.value1||0;
+      const done=v>=GOAL;
+      const surplus=Math.max(0,v-GOAL);
+      const pct=Math.min(100,Math.round((v/GOAL)*100));
       const rc=i===0?'var(--gold)':i===1?'var(--silver)':i===2?'var(--bronze)':'var(--muted)';
       const row=document.createElement('div');row.className='lb-row';
-      row.innerHTML=`<div class="lb-rank" style="color:${rc}">${medals[i]||'#'+(i+1)}</div><div class="lb-name">${e.name}</div><div class="lb-val ${done?'done':''}">${e.value1}${ACTIVE.unit}${done?' ✓':''}</div><div class="lb-prog"><div class="lb-bar"><div class="lb-fill" style="width:${pct}%"></div></div><span class="lb-pct">${pct}%</span></div><div class="lb-status">${done?'🏆 Fertig!':e.value1>0?'🔥 dabei':'—'}</div>`;
+      row.innerHTML=`<div class="lb-rank" style="color:${rc}">${medals[i]||'#'+(i+1)}</div>`
+        +`<div class="lb-name">${esc(e.name)}</div>`
+        +`<div class="lb-val ${done?'done':''}">${v}${esc(ACTIVE.unit)}${done?' ✓':''}${surplus?`<span class="lb-surplus" title="${surplus}${esc(ACTIVE.unit)} über dem Ziel">+${surplus}</span>`:''}</div>`
+        +`<div class="lb-prog"><div class="lb-bar"><div class="lb-fill" style="width:${pct}%"></div></div><span class="lb-pct">${pct}%</span></div>`
+        +`<div class="lb-status">${done?(surplus?'🚀 Übererfüllt!':'🏆 Fertig!'):v>0?'🔥 dabei':'—'}</div>`;
       table.appendChild(row);
     });
   }
 
   document.getElementById('submitBtn').addEventListener('click',async()=>{
-    if(!ACTIVE){alert('Für diesen Monat ist keine Challenge aktiv.');return}
-    if(!currentProfile){alert('Bitte zuerst einloggen.');return}
+    const msg=document.getElementById('formMsg');
+    if(!ACTIVE){msg.textContent='⚠ Für diesen Monat ist keine Challenge aktiv.';msg.className='form-msg err';return}
+    if(!currentProfile){msg.textContent='⚠ Bitte zuerst einloggen.';msg.className='form-msg err';return}
     const website=document.getElementById('fWebsite').value;
     if(website)return; // honeypot triggered — silently drop, no feedback to bot
     const v1=Math.max(0,parseInt(document.getElementById('fLeft').value)||0);
-    const msg=document.getElementById('formMsg');
 
     if(Date.now()-pageLoadTime<1500){msg.textContent='⚠ Bitte kurz warten und erneut versuchen';msg.className='form-msg err';return}
     if(!v1){msg.textContent='⚠ Bitte einen Wert eingeben';msg.className='form-msg err';return}
@@ -332,30 +354,71 @@
 
       if(existing&&existing.length>0){
         const prev=existing[0];
-        const wasNotDone=!(prev.value1>=GOAL);
-        const newV1=Math.min(GOAL,prev.value1+v1);
+        const prevV1=prev.value1||0;
+        const wasNotDone=!(prevV1>=GOAL);
+        // Kein Deckel mehr: der echte Wert landet in der DB.
+        // Punkte (ranking.html) und Rangliste deckeln weiterhin bei 100%.
+        const newV1=prevV1+v1;
         const isDone=newV1>=GOAL;
         const patch={value1:newV1};
         if(wasNotDone&&isDone)patch.completed_ts=Date.now();
         await sbFetch(`/rest/v1/challenge_entries?id=eq.${prev.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(patch)});
-        sbFetch('/rest/v1/challenge_entry_history',{method:'POST',prefer:'return=minimal',body:JSON.stringify({entry_id:prev.id,profile_id:currentProfile.id,name:currentProfile.displayName||currentProfile.name,challenge:ACTIVE.id,old_value1:prev.value1,new_value1:newV1,change_amount:v1})}).catch(()=>{});
+        LAST_ADD={entryId:prev.id,amount:v1,prevValue:prevV1,prevCompletedTs:prev.completed_ts??null};
         const reactions=['💪 Aktualisiert! Schmerz ist temporär, Ruhm ist ewig.','🔥 Gespeichert! Das Ranking zittert.','😤 Update durch! Zeig ihnen was du drauf hast.','🏆 Eingetragen! Du bist auf dem richtigen Weg. Wahrscheinlich.','⚡ Gespeichert! Jemand im Ranking wird gerade nervös.'];
-      msg.textContent=reactions[Math.floor(Math.random()*reactions.length)];msg.className='form-msg ok';
+        const surplusNow=Math.max(0,newV1-GOAL);
+        msg.textContent=(wasNotDone&&isDone&&surplusNow)
+          ? `🚀 Ziel übertroffen — ${surplusNow} ${ACTIVE.unit} extra!`
+          : reactions[Math.floor(Math.random()*reactions.length)];
+        msg.className='form-msg ok';
       } else {
-        const newV1=Math.min(GOAL,v1);
+        const newV1=v1;
         const isDone=newV1>=GOAL;
-        const entry={challenge:ACTIVE.id,name:currentProfile.displayName||currentProfile.name,profile_id:currentProfile.id,value1:newV1,value2:0};
+        // value2 und pin_hash sind Altlasten und werden bewusst nicht mehr befüllt (beide nullable).
+        const entry={challenge:ACTIVE.id,name:currentProfile.name,profile_id:currentProfile.id,value1:newV1};
         if(isDone)entry.completed_ts=Date.now();
         const created=await sbFetch('/rest/v1/challenge_entries',{method:'POST',prefer:'return=representation',body:JSON.stringify(entry)});
         const newId=created&&created[0]?created[0].id:null;
-        sbFetch('/rest/v1/challenge_entry_history',{method:'POST',prefer:'return=minimal',body:JSON.stringify({entry_id:newId,profile_id:currentProfile.id,name:currentProfile.displayName||currentProfile.name,challenge:ACTIVE.id,old_value1:0,new_value1:newV1,change_amount:v1})}).catch(()=>{});
+        if(newId)LAST_ADD={entryId:newId,amount:v1,prevValue:null,prevCompletedTs:null};
         const firstReactions=['🎉 Willkommen im Club der Leidenden!','💀 Eingetragen! Es gibt kein Zurück mehr.','🔥 Dabei! Willkommen im Leiden.','😈 Erster Eintrag! Der Körper wird sich beschweren.','🏅 Eingetragen! Ab jetzt zählt jede Minute.'];
         msg.textContent=firstReactions[Math.floor(Math.random()*firstReactions.length)];msg.className='form-msg ok';
       }
       document.getElementById('fLeft').value='';
+      showUndo();
       await renderLeaderboard();
     }catch(e){msg.textContent='❌ Fehler: '+e.message;msg.className='form-msg err'}
     btn.textContent='Eintragen →';btn.disabled=false;
+    setTimeout(()=>msg.textContent='',4000);
+  });
+
+  // ---- Undo: macht den letzten Eintrag dieser Session rückgängig ----
+  function showUndo(){
+    if(!LAST_ADD)return;
+    const wrap=document.getElementById('undoWrap');
+    document.getElementById('undoText').textContent=`Zuletzt +${LAST_ADD.amount} ${ACTIVE.unit} eingetragen`;
+    wrap.style.display='flex';
+    clearTimeout(undoTimer);
+    undoTimer=setTimeout(()=>{wrap.style.display='none';LAST_ADD=null},30000);
+  }
+
+  document.getElementById('undoBtn').addEventListener('click',async()=>{
+    if(!LAST_ADD)return;
+    const btn=document.getElementById('undoBtn');
+    const msg=document.getElementById('formMsg');
+    btn.disabled=true;btn.textContent='…';
+    try{
+      if(LAST_ADD.prevValue===null){
+        // War der allererste Eintrag — Zeile komplett entfernen
+        await sbFetch(`/rest/v1/challenge_entries?id=eq.${LAST_ADD.entryId}`,{method:'DELETE',prefer:'return=minimal'});
+      } else {
+        await sbFetch(`/rest/v1/challenge_entries?id=eq.${LAST_ADD.entryId}`,{method:'PATCH',prefer:'return=minimal',
+          body:JSON.stringify({value1:LAST_ADD.prevValue,completed_ts:LAST_ADD.prevCompletedTs})});
+      }
+      msg.textContent='↩ Rückgängig gemacht.';msg.className='form-msg ok';
+      LAST_ADD=null;
+      document.getElementById('undoWrap').style.display='none';
+      await renderLeaderboard();
+    }catch(e){msg.textContent='❌ Rückgängig fehlgeschlagen: '+e.message;msg.className='form-msg err'}
+    btn.disabled=false;btn.textContent='↩ Rückgängig';
     setTimeout(()=>msg.textContent='',4000);
   });
 

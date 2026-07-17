@@ -156,67 +156,38 @@
   document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
   document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
 
-  const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
-  async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
-
-  function getActiveId(){
-    const now=new Date(),m=now.getMonth()+1,y=now.getFullYear();
-    if(y===2026){if(m<=6)return'sideplank';if(m===7)return'plank';if(m===8)return'pushups';if(m===9)return'burpees';if(m===10)return'hollow';if(m===11)return'bearplank';if(m===12)return'sideplank'}
-    return'sideplank';
+  const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co',SB_KEY='sb_publishable_fA2Dca6SVp0eB8k_WuqLrw_zplTnXBU';
+  async function sbFetch(p,o={}){
+    const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});
+    if(!r.ok){const t=await r.text().catch(()=>'');throw new Error('Supabase '+r.status+': '+t.slice(0,200))}
+    const t=await r.text();return t?JSON.parse(t):null;
   }
 
   async function init(){await checkAndFinalizeChallenge();renderHallOfFame();renderSeasonRanking()}
 
-  const PLACEMENT_BONUS=[5,3,2],PARTICIPATION_PTS=1,PROGRESS_STEP_PTS=1,PROGRESS_STEP_SIZE=0.10,DEC_MULTIPLIER=2;
+  // Punkte-Regeln leben jetzt ausschliesslich in der DB-Funktion finalize_challenge().
+  // Bewusst KEINE Konstanten mehr hier — sonst driften Frontend und DB auseinander.
   function slugify(name){return name.toLowerCase().replace(/[^a-z0-9]+/g,'').trim()}
   const MONTH_LABELS={1:'Januar',2:'Februar',3:'März',4:'April',5:'Mai',6:'Juni',7:'Juli',8:'August',9:'September',10:'Oktober',11:'November',12:'Dezember'};
 
+  // Abrechnung läuft in der Datenbank (finalize_challenge), nicht mehr hier.
+  // Normalerweise erledigt das der pg_cron-Job am 1. um 00:05 UTC — dieser
+  // Aufruf ist nur Rückfall, falls der Job mal nicht durchgelaufen ist.
+  // Die Funktion sperrt sich selbst (Advisory Lock) und rechnet nie doppelt ab,
+  // deshalb ist ein Aufruf zu viel harmlos.
   async function checkAndFinalizeChallenge(){
-    const now=new Date(),currentMonth=now.getMonth()+1,currentYear=now.getFullYear(),currentDay=now.getDate();
-    if(currentDay!==1)return;
-    const lastMonth=currentMonth===1?12:currentMonth-1;
-    const lastMonthYear=currentMonth===1?currentYear-1:currentYear;
+    if(new Date().getDate()!==1)return;
     try{
-      const rows=await sbFetch(`/rest/v1/season_months?season_year=eq.${lastMonthYear}&month=eq.${lastMonth}&select=*,exercises(*)`);
-      if(!rows||!rows.length||rows[0].is_december_vote||!rows[0].exercises)return;
-      const ex=rows[0].exercises;
-      const challengeId=slugify(ex.name);
-      const goal=rows[0].custom_goal||ex.default_goal;
-
-      const existing=await sbFetch(`/rest/v1/season_results?challenge=eq.${challengeId}&select=id&limit=1`);
-      if(existing&&existing.length>0)return;
-      const entries=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${challengeId}&select=*`);
-      if(!entries||!entries.length)return;
-      const isDecChallenge=lastMonth===12;
-      entries.sort((a,b)=>{if(b.value1!==a.value1)return b.value1-a.value1;return(a.completed_ts||Infinity)-(b.completed_ts||Infinity)});
-      for(let i=0;i<entries.length;i++){
-        const e=entries[i];
-        if(!(e.value1>0))continue;
-        const pct=Math.min(1,e.value1/(goal||60));
-        const progressSteps=Math.floor(pct/PROGRESS_STEP_SIZE);
-        let pts=PARTICIPATION_PTS+(progressSteps*PROGRESS_STEP_PTS);
-        if(i<PLACEMENT_BONUS.length)pts+=PLACEMENT_BONUS[i];
-        if(isDecChallenge)pts*=DEC_MULTIPLIER;
-        const rank=i+1;
-        await sbFetch('/rest/v1/season_results',{method:'POST',prefer:'return=minimal',body:JSON.stringify({challenge:challengeId,name:e.name,profile_id:e.profile_id||null,rank,points:pts})});
-
-        // Eindeutiger Abgleich: bevorzugt über profile_id (fälschungssicher),
-        // fällt nur bei alten, noch nicht-migrierten Einträgen auf Namen zurück
-        let exr;
-        if(e.profile_id){
-          exr=await sbFetch(`/rest/v1/season_ranking?profile_id=eq.${e.profile_id}&select=*`);
-        } else {
-          exr=await sbFetch(`/rest/v1/season_ranking?name=eq.${encodeURIComponent(e.name)}&profile_id=is.null&select=*`);
-        }
-
-        if(exr&&exr.length>0){
-          const prev=exr[0];
-          await sbFetch(`/rest/v1/season_ranking?id=eq.${prev.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({total_points:prev.total_points+pts,wins:prev.wins+(rank===1?1:0),updated_at:new Date().toISOString()})});
-        } else {
-          await sbFetch('/rest/v1/season_ranking',{method:'POST',prefer:'return=minimal',body:JSON.stringify({name:e.name,profile_id:e.profile_id||null,total_points:pts,wins:rank===1?1:0})});
-        }
-      }
-    }catch(e){console.error('Finalize error:',e)}
+      const res=await sbFetch('/rest/v1/rpc/finalize_last_month',{
+        method:'POST',
+        body:JSON.stringify({})
+      });
+      const r=Array.isArray(res)?res[0]:res;
+      if(r&&r.status==='ok')console.info(`Challenge "${r.challenge_id}" abgerechnet: ${r.abgerechnet} Teilnehmer`);
+    }catch(e){
+      // Nicht schlimm: Ranking wird trotzdem angezeigt, Cron holt es nach.
+      console.warn('Abrechnung nicht möglich:',e.message);
+    }
   }
 
   async function renderHallOfFame(){
