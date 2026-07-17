@@ -46,6 +46,40 @@
     .pts-item strong{color:var(--orange);font-family:'Bebas Neue';font-size:.9rem}
     .season-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:48px}
     @media(max-width:700px){.season-grid{grid-template-columns:1fr}}
+
+    /* --- Aktuelle Challenge --- */
+    .current-section{margin-bottom:44px}
+    .cur-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+    .cur-name{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:.02em;line-height:1}
+    .cur-goal{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)}
+    .cur-row{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;
+      padding:11px 12px;border-bottom:1px solid var(--border)}
+    .cur-row:last-child{border-bottom:none}
+    .cur-row.me{background:rgba(255,78,26,.07);border-left:2px solid var(--orange);padding-left:10px}
+    .cur-rank{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;color:var(--muted);text-align:center}
+    .cur-rank.top{color:var(--orange)}
+    .cur-name-cell{font-size:.86rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .cur-bar{height:3px;background:var(--border);margin-top:5px;position:relative;overflow:hidden}
+    .cur-bar-fill{height:100%;background:var(--orange);transition:width .4s ease}
+    .cur-val{font-family:'DM Mono',monospace;font-size:.76rem;white-space:nowrap}
+    .cur-val .pct{color:var(--muted);font-size:.66rem;margin-left:5px}
+    .cur-done{color:#22c55e}
+
+    /* --- Saison-Akkordeon (gleiches Muster wie uebungen.html) --- */
+    .season-block{border:1px solid var(--border);margin-bottom:12px}
+    .season-head{display:flex;justify-content:space-between;align-items:center;gap:12px;
+      padding:13px 15px;cursor:pointer;background:none;border:none;width:100%;
+      font-family:inherit;color:var(--cream);text-align:left;-webkit-tap-highlight-color:transparent}
+    .season-head:hover{background:rgba(255,255,255,.03)}
+    .season-title{font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:.04em}
+    .season-meta{font-family:'DM Mono',monospace;font-size:.66rem;color:var(--muted);
+      display:flex;align-items:center;gap:9px}
+    .season-arrow{transition:transform .3s ease;color:var(--muted);font-size:.7rem}
+    .season-block.open .season-arrow{transform:rotate(90deg)}
+    .season-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+    .season-block.open .season-body{grid-template-rows:1fr}
+    .season-body-inner{overflow:hidden}
+    .season-body-pad{padding:0 15px 13px}
     .col-title{font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
     .hof-row{background:var(--card2);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
     .hof-month{font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
@@ -122,8 +156,12 @@
       <div class="pts-item">🥇 Platz 1 <strong>+5</strong> Pts</div>
       <div class="pts-item">🥈 Platz 2 <strong>+3</strong> Pts</div>
       <div class="pts-item">🥉 Platz 3 <strong>+2</strong> Pts</div>
-      <div class="pts-item" style="color:#c084fc">🎄 Dez. ×2</div>
+      <div class="pts-item" style="color:#c084fc">🎄 Dez.: Platzierung ×2</div>
     </div>
+    <section class="current-section" id="currentSection">
+      <div class="col-title">🔥 Aktuelle Challenge</div>
+      <div id="currentWrap"><div class="ov-empty">Lädt…</div></div>
+    </section>
     <div class="season-grid">
       <div>
         <div class="col-title">🏅 Hall of Fame — Monatssieger</div>
@@ -163,11 +201,29 @@
     const t=await r.text();return t?JSON.parse(t):null;
   }
 
-  async function init(){await checkAndFinalizeChallenge();renderHallOfFame();renderSeasonRanking()}
+  async function init(){
+    // Session direkt lesen: initVoting() laeuft unabhaengig und evtl. spaeter.
+    // Ohne das waere die eigene Zeile beim ersten Rendern nicht markiert.
+    try{
+      const saved=localStorage.getItem(SESSION_KEY);
+      if(saved)currentProfile=JSON.parse(saved);
+    }catch(e){currentProfile=null}
+
+    await checkAndFinalizeChallenge();
+    renderCurrentChallenge();
+    renderHallOfFame();
+    renderSeasonRanking();
+  }
 
   // Punkte-Regeln leben jetzt ausschliesslich in der DB-Funktion finalize_challenge().
   // Bewusst KEINE Konstanten mehr hier — sonst driften Frontend und DB auseinander.
   function slugify(name){return name.toLowerCase().replace(/[^a-z0-9]+/g,'').trim()}
+  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+  // Frueh deklariert: renderCurrentChallenge() markiert die eigene Zeile
+  // und laeuft vor initVoting().
+  const SESSION_KEY='om_profile_session';
+  let currentProfile=null;
   const MONTH_LABELS={1:'Januar',2:'Februar',3:'März',4:'April',5:'Mai',6:'Juni',7:'Juli',8:'August',9:'September',10:'Oktober',11:'November',12:'Dezember'};
 
   // Abrechnung läuft in der Datenbank (finalize_challenge), nicht mehr hier.
@@ -190,40 +246,141 @@
     }
   }
 
+  // Aktuelle Challenge — sortiert IDENTISCH zu challenge.html und zur
+  // DB-Funktion finalize_challenge(): gedeckelter Wert, dann wer den
+  // Wert zuerst erreicht hat. Drei Stellen, eine Regel.
+  async function renderCurrentChallenge(){
+    const wrap=document.getElementById('currentWrap');
+    const sec=document.getElementById('currentSection');
+    try{
+      const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1;
+      const rows=await sbFetch(`/rest/v1/season_months?season_year=eq.${y}&month=eq.${m}&select=*,exercises(*)`);
+      if(!rows||!rows.length){sec.style.display='none';return}
+      const row=rows[0];
+
+      if(row.is_december_vote){
+        wrap.innerHTML='<div class="ov-empty">🎄 Dezember-Voting läuft — die Challenge steht noch nicht fest.</div>';
+        return;
+      }
+      if(!row.exercises){wrap.innerHTML='<div class="ov-empty">Keine Übung hinterlegt.</div>';return}
+
+      const goal=row.custom_goal||row.exercises.default_goal||60;
+      const unit=row.exercises.default_unit||'';
+      const entries=await sbFetch(`/rest/v1/challenge_entries?season_month_id=eq.${row.id}&select=*`)||[];
+
+      const head=`<div class="cur-head">
+        <div class="cur-name">${esc(row.exercises.name)}</div>
+        <div class="cur-goal">Ziel ${goal} ${esc(unit)} · ${MONTH_LABELS[m]} ${y}</div>
+      </div>`;
+
+      if(!entries.length){
+        wrap.innerHTML=head+'<div class="ov-empty">Noch niemand dabei — sei der Erste! 💪</div>';
+        return;
+      }
+
+      const capped=e=>Math.min(e.value1||0,goal);
+      const reached=e=>{
+        const t=e.last_progress_ts||e.created_at;
+        const ms=t?Date.parse(t):NaN;
+        return Number.isNaN(ms)?Infinity:ms;
+      };
+      entries.sort((a,b)=>{
+        const ca=capped(a),cb=capped(b);
+        if(cb!==ca)return cb-ca;
+        const ra=reached(a),rb=reached(b);
+        if(ra!==rb)return ra-rb;
+        return (a.id||0)-(b.id||0);
+      });
+
+      const myId=currentProfile?currentProfile.id:null;
+      wrap.innerHTML=head+entries.map((e,i)=>{
+        const v=e.value1||0, pct=Math.min(100,Math.round(v/goal*100)), done=v>=goal;
+        const surplus=Math.max(0,v-goal);
+        const mine=myId&&e.profile_id===myId;
+        return `<div class="cur-row${mine?' me':''}">
+          <div class="cur-rank${i<3?' top':''}">${i+1}</div>
+          <div>
+            <div class="cur-name-cell">${esc(e.name)}${mine?' <span style="color:var(--orange);font-size:.7rem">· du</span>':''}</div>
+            <div class="cur-bar"><div class="cur-bar-fill" style="width:${pct}%"></div></div>
+          </div>
+          <div class="cur-val${done?' cur-done':''}">${v}${esc(unit)}${done?' ✓':''}${surplus?` <span style="color:#22c55e">+${surplus}</span>`:''}<span class="pct">${pct}%</span></div>
+        </div>`;
+      }).join('');
+    }catch(e){
+      console.warn('Aktuelle Challenge:',e.message);
+      wrap.innerHTML='<div class="ov-empty">Fehler beim Laden.</div>';
+    }
+  }
+
+  // Monatssieger je Saison, aufklappbar. Liest v_month_results —
+  // die Zuordnung laeuft ueber season_month_id, nicht mehr ueber den Slug.
   async function renderHallOfFame(){
     const hofList=document.getElementById('hofList');
     try{
       const now=new Date(),currentYear=now.getFullYear(),currentMonth=now.getMonth()+1;
-      const months=await sbFetch(`/rest/v1/season_months?season_year=eq.${currentYear}&select=*,exercises(*)&order=month.asc`);
-      if(!months||!months.length){hofList.innerHTML='<div class="hof-empty">Für dieses Jahr ist noch keine Saison angelegt.</div>';return}
-      const results=await sbFetch('/rest/v1/season_results?select=challenge,name,rank,points&order=created_at.asc');
-      hofList.innerHTML=months.map(row=>{
-        const isActive=row.month===currentMonth;
-        const label=MONTH_LABELS[row.month]+(row.is_december_vote?' 🎄':'');
-        if(row.is_december_vote){
-          return `<div class="hof-row" style="border-left:3px solid var(--orange);"><span class="hof-month" style="color:var(--orange);">${label}</span><span class="hof-empty">${isActive?'— Voting läuft':'— noch nicht dran'}</span></div>`;
-        }
-        if(!row.exercises)return `<div class="hof-row"><span class="hof-month">${label}</span><span class="hof-empty">— keine Übung hinterlegt</span></div>`;
-        const challengeId=slugify(row.exercises.name);
-        const winner=results?results.find(r=>r.challenge===challengeId&&r.rank===1):null;
-        return `<div class="hof-row"><span class="hof-month">${label}</span>${winner?`<span class="hof-winner">🏆 ${winner.name} <span class="hof-pts">+${winner.points} Pts</span></span>`:`<span class="hof-empty">${isActive?'— läuft noch':'— noch nicht gestartet'}</span>`}</div>`;
+      const months=await sbFetch('/rest/v1/season_months?select=*,exercises(name)&order=season_year.desc,month.asc');
+      if(!months||!months.length){hofList.innerHTML='<div class="hof-empty">Noch keine Saison angelegt.</div>';return}
+      const results=await sbFetch('/rest/v1/v_month_results?rank=eq.1&select=season_month_id,person,points')||[];
+      const winnerOf={};
+      results.forEach(r=>{winnerOf[r.season_month_id]=r});
+
+      const years=[...new Set(months.map(r=>r.season_year))].sort((a,b)=>b-a);
+      hofList.innerHTML=years.map(year=>{
+        const rows=months.filter(r=>r.season_year===year);
+        const siege=rows.filter(r=>winnerOf[r.id]).length;
+        const open=year===currentYear;
+        const inner=rows.map(row=>{
+          const isActive=row.season_year===currentYear&&row.month===currentMonth;
+          const label=MONTH_LABELS[row.month]+(row.is_december_vote?' 🎄':'');
+          if(row.is_december_vote){
+            return `<div class="hof-row" style="border-left:3px solid var(--orange);"><span class="hof-month" style="color:var(--orange);">${label}</span><span class="hof-empty">${isActive?'— Voting läuft':'— noch nicht dran'}</span></div>`;
+          }
+          if(!row.exercises)return `<div class="hof-row"><span class="hof-month">${label}</span><span class="hof-empty">— keine Übung hinterlegt</span></div>`;
+          const w=winnerOf[row.id];
+          return `<div class="hof-row"><span class="hof-month">${label}</span>${
+            w?`<span class="hof-winner">🏆 ${esc(w.person)} <span class="hof-pts">+${w.points} Pts</span></span>`
+              :`<span class="hof-empty">${isActive?'— läuft noch':'— noch nicht gestartet'}</span>`}</div>`;
+        }).join('');
+        return `<div class="season-block${open?' open':''}" data-year="${year}">
+          <button class="season-head" aria-expanded="${open}">
+            <span class="season-title">Saison ${year}</span>
+            <span class="season-meta"><span>${siege}/${rows.length} entschieden</span><span class="season-arrow">▶</span></span>
+          </button>
+          <div class="season-body"><div class="season-body-inner"><div class="season-body-pad">${inner}</div></div></div>
+        </div>`;
       }).join('');
-    }catch(e){hofList.innerHTML='<div class="hof-empty">Fehler beim Laden.</div>'}
+
+      hofList.querySelectorAll('.season-head').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          const blk=btn.closest('.season-block');
+          const nowOpen=blk.classList.toggle('open');
+          btn.setAttribute('aria-expanded',nowOpen);
+        });
+      });
+    }catch(e){
+      console.warn('Hall of Fame:',e.message);
+      hofList.innerHTML='<div class="hof-empty">Fehler beim Laden.</div>';
+    }
   }
 
+  // Gesamtranking LIVE aus den Monatsergebnissen (v_season_ranking).
+  // Bewusst nicht aus season_ranking — das ist ein Cache und war
+  // schon einmal aus dem Tritt geraten.
   async function renderSeasonRanking(){
     const overallList=document.getElementById('overallList');
     try{
-      const data=await sbFetch('/rest/v1/season_ranking?select=*&order=total_points.desc&limit=10');
+      const year=new Date().getFullYear();
+      const data=await sbFetch(`/rest/v1/v_season_ranking?season_year=eq.${year}&select=*&order=total_points.desc&limit=10`);
       const medals=['🥇','🥈','🥉'];
       if(!data||!data.length){overallList.innerHTML='<div class="ov-empty">Noch keine Punkte vergeben — erste Challenge läuft!</div>';return}
-      overallList.innerHTML=data.map((e,i)=>`<div class="ov-row"><div class="ov-rank" style="color:${i===0?'var(--gold)':i===1?'var(--silver)':i===2?'var(--bronze)':'var(--muted)'}">${medals[i]||'#'+(i+1)}</div><div class="ov-name">${e.name}</div><div><div class="ov-pts">${e.total_points}</div><div class="ov-pts-label">Punkte · ${e.wins} Siege</div></div></div>`).join('');
-    }catch(e){overallList.innerHTML='<div class="ov-empty">Fehler beim Laden.</div>'}
+      overallList.innerHTML=data.map((e,i)=>`<div class="ov-row"><div class="ov-rank" style="color:${i===0?'var(--gold)':i===1?'var(--silver)':i===2?'var(--bronze)':'var(--muted)'}">${medals[i]||'#'+(i+1)}</div><div class="ov-name">${esc(e.person)}</div><div><div class="ov-pts">${e.total_points}</div><div class="ov-pts-label">Punkte · ${e.wins} Siege</div></div></div>`).join('');
+    }catch(e){
+      console.warn('Saison-Ranking:',e.message);
+      overallList.innerHTML='<div class="ov-empty">Fehler beim Laden.</div>';
+    }
   }
 
   let CHALLENGES=[]; // wird dynamisch aus der aktuellen Saison geladen
-  const SESSION_KEY='om_profile_session';
-  let currentProfile=null;
 
   function currentSeasonYear(){ return new Date().getFullYear(); }
 
