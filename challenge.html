@@ -247,6 +247,7 @@
       }
       ACTIVE={
         id:slugify(ex.name),
+        monthId:row.id,          // season_months.id — daran haengen die Eintraege jetzt
         label:ex.name,
         goal:row.custom_goal||ex.default_goal,
         unit:ex.default_unit,
@@ -303,16 +304,25 @@
     const loading=document.createElement('div');loading.className='lb-empty';loading.textContent='Lädt…';table.appendChild(loading);
 
     let data=[];
-    try{ data=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${ACTIVE.id}&select=*`)||[]; }
+    try{ data=await sbFetch(`/rest/v1/challenge_entries?season_month_id=eq.${ACTIVE.monthId}&select=*`)||[]; }
     catch(e){loading.textContent='⚠ Fehler beim Laden.';return}
 
     // Sortierung über den gedeckelten Wert — Überschuss verändert die Rangliste nicht.
-    // Tiebreak bleibt completed_ts (wer zuerst 100% hatte, steht vorn).
+    // Tiebreak: wer den Wert zuerst erreicht hat. Muss identisch zur
+    // DB-Funktion finalize_challenge() sein, sonst zeigt die Seite eine
+    // andere Reihenfolge als die spätere Abrechnung.
     const capped=e=>Math.min(e.value1||0,GOAL);
+    const reached=e=>{
+      const t=e.last_progress_ts||e.created_at;
+      const ms=t?Date.parse(t):NaN;
+      return Number.isNaN(ms)?Infinity:ms;
+    };
     data.sort((a,b)=>{
       const ca=capped(a),cb=capped(b);
       if(cb!==ca)return cb-ca;
-      return (a.completed_ts||Infinity)-(b.completed_ts||Infinity);
+      const ra=reached(a),rb=reached(b);
+      if(ra!==rb)return ra-rb;
+      return (a.id||0)-(b.id||0);
     });
 
     while(table.children.length>1)table.removeChild(table.lastChild);
@@ -360,10 +370,10 @@
         // Punkte (ranking.html) und Rangliste deckeln weiterhin bei 100%.
         const newV1=prevV1+v1;
         const isDone=newV1>=GOAL;
-        const patch={value1:newV1};
+        const patch={value1:newV1,last_progress_ts:new Date().toISOString()};
         if(wasNotDone&&isDone)patch.completed_ts=Date.now();
         await sbFetch(`/rest/v1/challenge_entries?id=eq.${prev.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(patch)});
-        LAST_ADD={entryId:prev.id,amount:v1,prevValue:prevV1,prevCompletedTs:prev.completed_ts??null};
+        LAST_ADD={entryId:prev.id,amount:v1,prevValue:prevV1,prevCompletedTs:prev.completed_ts??null,prevProgressTs:prev.last_progress_ts??null};
         const reactions=['💪 Aktualisiert! Schmerz ist temporär, Ruhm ist ewig.','🔥 Gespeichert! Das Ranking zittert.','😤 Update durch! Zeig ihnen was du drauf hast.','🏆 Eingetragen! Du bist auf dem richtigen Weg. Wahrscheinlich.','⚡ Gespeichert! Jemand im Ranking wird gerade nervös.'];
         const surplusNow=Math.max(0,newV1-GOAL);
         msg.textContent=(wasNotDone&&isDone&&surplusNow)
@@ -374,11 +384,12 @@
         const newV1=v1;
         const isDone=newV1>=GOAL;
         // value2 und pin_hash sind Altlasten und werden bewusst nicht mehr befüllt (beide nullable).
-        const entry={challenge:ACTIVE.id,name:currentProfile.name,profile_id:currentProfile.id,value1:newV1};
+        // challenge (Slug) bleibt für Altbestand/Anzeige, maßgeblich ist season_month_id.
+        const entry={challenge:ACTIVE.id,season_month_id:ACTIVE.monthId,name:currentProfile.name,profile_id:currentProfile.id,value1:newV1,last_progress_ts:new Date().toISOString()};
         if(isDone)entry.completed_ts=Date.now();
         const created=await sbFetch('/rest/v1/challenge_entries',{method:'POST',prefer:'return=representation',body:JSON.stringify(entry)});
         const newId=created&&created[0]?created[0].id:null;
-        if(newId)LAST_ADD={entryId:newId,amount:v1,prevValue:null,prevCompletedTs:null};
+        if(newId)LAST_ADD={entryId:newId,amount:v1,prevValue:null,prevCompletedTs:null,prevProgressTs:null};
         const firstReactions=['🎉 Willkommen im Club der Leidenden!','💀 Eingetragen! Es gibt kein Zurück mehr.','🔥 Dabei! Willkommen im Leiden.','😈 Erster Eintrag! Der Körper wird sich beschweren.','🏅 Eingetragen! Ab jetzt zählt jede Minute.'];
         msg.textContent=firstReactions[Math.floor(Math.random()*firstReactions.length)];msg.className='form-msg ok';
       }
@@ -410,8 +421,10 @@
         // War der allererste Eintrag — Zeile komplett entfernen
         await sbFetch(`/rest/v1/challenge_entries?id=eq.${LAST_ADD.entryId}`,{method:'DELETE',prefer:'return=minimal'});
       } else {
+        // Auch den Zeitstempel zurückrollen: sonst würde Eintragen +
+        // Rückgängigmachen den Tiebreak verschlechtern.
         await sbFetch(`/rest/v1/challenge_entries?id=eq.${LAST_ADD.entryId}`,{method:'PATCH',prefer:'return=minimal',
-          body:JSON.stringify({value1:LAST_ADD.prevValue,completed_ts:LAST_ADD.prevCompletedTs})});
+          body:JSON.stringify({value1:LAST_ADD.prevValue,completed_ts:LAST_ADD.prevCompletedTs,last_progress_ts:LAST_ADD.prevProgressTs})});
       }
       msg.textContent='↩ Rückgängig gemacht.';msg.className='form-msg ok';
       LAST_ADD=null;
