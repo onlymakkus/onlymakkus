@@ -57,6 +57,51 @@
     .password-toggle:hover{color:var(--orange)}
 
     .profile-view{display:none;flex-direction:column;gap:20px}
+
+    /* --- Saison-Bilanz --- */
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    @media(max-width:520px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+    .stat-box{border:1px solid var(--border);padding:12px 8px;text-align:center}
+    .stat-val{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;line-height:1;color:var(--orange)}
+    .stat-lbl{font-family:'DM Mono',monospace;font-size:.56rem;letter-spacing:.09em;
+      text-transform:uppercase;color:var(--muted);margin-top:5px}
+
+    /* --- History --- */
+    .hist-section{display:flex;flex-direction:column;gap:10px}
+    .hist-label{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.14em;
+      text-transform:uppercase;color:var(--orange)}
+    .hist-empty{font-size:.78rem;color:var(--muted);padding:14px 0;text-align:center}
+    .hist-season{border:1px solid var(--border)}
+    .hist-season+.hist-season{margin-top:10px}
+    .hist-head{display:flex;justify-content:space-between;align-items:center;gap:10px;
+      padding:12px 14px;cursor:pointer;background:none;border:none;width:100%;
+      font-family:inherit;color:var(--cream);text-align:left;-webkit-tap-highlight-color:transparent}
+    .hist-head:hover{background:rgba(255,255,255,.03)}
+    .hist-season-title{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.04em}
+    .hist-season-meta{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);
+      display:flex;align-items:center;gap:8px}
+    .hist-arrow{transition:transform .3s ease;color:var(--muted);font-size:.65rem}
+    .hist-season.open .hist-arrow{transform:rotate(90deg)}
+    .hist-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+    .hist-season.open .hist-body{grid-template-rows:1fr}
+    .hist-body-inner{overflow:hidden}
+    .hist-body-pad{padding:0 14px 12px}
+    .hist-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;
+      padding:10px 0;border-bottom:1px solid var(--border)}
+    .hist-row:last-child{border-bottom:none}
+    .hist-month{font-size:.82rem}
+    .hist-ex{font-family:'DM Mono',monospace;font-size:.63rem;color:var(--muted);margin-top:2px}
+    .hist-bar{height:3px;background:var(--border);margin-top:6px;overflow:hidden}
+    .hist-bar-fill{height:100%;background:var(--orange);transition:width .4s ease}
+    .hist-bar-fill.done{background:#22c55e}
+    .hist-right{text-align:right;white-space:nowrap}
+    .hist-place{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;line-height:1}
+    .hist-place.p1{color:var(--gold,#ffd700)}
+    .hist-place.p2{color:var(--silver,#c0c0c0)}
+    .hist-place.p3{color:var(--bronze,#cd7f32)}
+    .hist-pts{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);margin-top:3px}
+    .hist-live{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--orange);
+      letter-spacing:.06em;text-transform:uppercase}
     .profile-view.active{display:flex}
     .profile-header{text-align:center}
     .profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:1.8rem;margin:0 auto 12px}
@@ -188,6 +233,13 @@
         <div class="profile-since" id="profileSince">—</div>
         <div class="profile-since" id="profileHandle" style="margin-top:2px;"></div>
       </div>
+
+      <div class="stats-row" id="statsRow"></div>
+
+      <div class="hist-section">
+        <div class="hist-label">Deine Challenges</div>
+        <div id="histList"><div class="hist-empty">Lädt…</div></div>
+      </div>
       <div class="form-group">
         <label class="form-label">Anzeigename ändern</label>
         <input type="text" class="form-input" id="editDisplayName" placeholder="Neuer Anzeigename">
@@ -257,10 +309,89 @@
   themeToggle.addEventListener('click',()=>applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
 
   const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co';
-  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
-  async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
+  const SB_KEY='sb_publishable_fA2Dca6SVp0eB8k_WuqLrw_zplTnXBU';
+  // Prueft den HTTP-Status. Ohne das wurde ein Supabase-Fehler zu `null` —
+  // beim Login hiess das "Kein Profil gefunden", bei der Registrierung
+  // "Name ist frei". Beide Aufrufer fangen bereits, also wird daraus
+  // jetzt eine ehrliche Fehlermeldung statt stiller Datenmurks.
+  async function sbFetch(p,o={}){
+    const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});
+    if(!r.ok){const t=await r.text().catch(()=>'');throw new Error('Supabase '+r.status+': '+t.slice(0,200))}
+    const t=await r.text();return t?JSON.parse(t):null;
+  }
 
   const SESSION_KEY='om_profile_session'; // stores {id, name}
+  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  const MONTH_LABELS={1:'Januar',2:'Februar',3:'März',4:'April',5:'Mai',6:'Juni',7:'Juli',8:'August',9:'September',10:'Oktober',11:'November',12:'Dezember'};
+
+  // Persoenliche History. Laeuft bewusst voellig getrennt vom Login:
+  // schlaegt sie fehl, bleibt das Profil trotzdem benutzbar.
+  async function renderHistory(profileId){
+    const list=document.getElementById('histList');
+    const stats=document.getElementById('statsRow');
+    try{
+      const [hist,season]=await Promise.all([
+        sbFetch(`/rest/v1/v_profile_history?profile_id=eq.${profileId}&select=*&order=season_year.desc,month.desc`),
+        sbFetch(`/rest/v1/v_season_ranking?profile_id=eq.${profileId}&select=*&order=season_year.desc`)
+      ]);
+
+      const cur=(season||[]).find(s=>s.season_year===new Date().getFullYear())||null;
+      stats.innerHTML=cur?[
+        [cur.total_points,'Punkte'],
+        [cur.wins,'Siege'],
+        [cur.teilnahmen,'Challenges'],
+        ['#'+cur.beste_platzierung,'Beste']
+      ].map(([v,l])=>`<div class="stat-box"><div class="stat-val">${esc(v)}</div><div class="stat-lbl">${l}</div></div>`).join(''):'';
+
+      if(!hist||!hist.length){
+        list.innerHTML='<div class="hist-empty">Noch keine Challenge mitgemacht — <a href="challenge.html" style="color:var(--orange)">jetzt starten</a> 💪</div>';
+        return;
+      }
+
+      const years=[...new Set(hist.map(h=>h.season_year))].sort((a,b)=>b-a);
+      const curYear=new Date().getFullYear();
+      list.innerHTML=years.map(year=>{
+        const rows=hist.filter(h=>h.season_year===year);
+        const pts=rows.reduce((s,r)=>s+(r.punkte||0),0);
+        const open=year===curYear;
+        const inner=rows.map(r=>{
+          const goal=r.goal||60, v=r.wert||0;
+          const pct=Math.min(100,Math.round(v/goal*100)), done=v>=goal;
+          const right=r.abgerechnet
+            ? `<div class="hist-place${r.platz<=3?' p'+r.platz:''}">${r.platz===1?'🥇':r.platz===2?'🥈':r.platz===3?'🥉':'#'+r.platz}</div>
+               <div class="hist-pts">${r.punkte} Pkt</div>`
+            : `<div class="hist-live">läuft</div><div class="hist-pts">${pct}%</div>`;
+          return `<div class="hist-row">
+            <div>
+              <div class="hist-month">${MONTH_LABELS[r.month]||r.month} ${r.season_year}</div>
+              <div class="hist-ex">${esc(r.exercise_name||'—')} · ${v}/${goal} ${esc(r.unit||'')}${done?' ✓':''}</div>
+              <div class="hist-bar"><div class="hist-bar-fill${done?' done':''}" style="width:${pct}%"></div></div>
+            </div>
+            <div class="hist-right">${right}</div>
+          </div>`;
+        }).join('');
+        return `<div class="hist-season${open?' open':''}">
+          <button class="hist-head" aria-expanded="${open}">
+            <span class="hist-season-title">Saison ${year}</span>
+            <span class="hist-season-meta"><span>${rows.length} Challenge${rows.length===1?'':'s'} · ${pts} Pkt</span><span class="hist-arrow">▶</span></span>
+          </button>
+          <div class="hist-body"><div class="hist-body-inner"><div class="hist-body-pad">${inner}</div></div></div>
+        </div>`;
+      }).join('');
+
+      list.querySelectorAll('.hist-head').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          const blk=btn.closest('.hist-season');
+          const nowOpen=blk.classList.toggle('open');
+          btn.setAttribute('aria-expanded',nowOpen);
+        });
+      });
+    }catch(e){
+      console.warn('History:',e.message);
+      list.innerHTML='<div class="hist-empty">Verlauf konnte nicht geladen werden.</div>';
+      stats.innerHTML='';
+    }
+  }
 
   // ── Passwort anzeigen/verbergen ──
   document.querySelectorAll('.password-toggle').forEach(btn=>{
@@ -378,6 +509,14 @@
         ? `name=eq.${encodeURIComponent(name)}&discriminator=eq.${discriminator}`
         : `name=eq.${encodeURIComponent(name)}&discriminator=is.null`;
       const created=await sbFetch(`/rest/v1/profiles?${filter}&select=id,name,discriminator,display_name,created_at`);
+      // Ohne diese Pruefung wuerde created[0] als TypeError knallen — NACHDEM
+      // das Profil schon angelegt wurde. Der Nutzer sieht "Fehler beim Erstellen",
+      // registriert sich nochmal und hat plotzlich zwei Profile.
+      if(!created||!created.length){
+        const err=new Error('Profil wurde angelegt, konnte aber nicht geladen werden — bitte einloggen statt neu registrieren.');
+        err.userFacing=true;
+        throw err;
+      }
       const profile=created[0];
 
       const recoveryCode=generateRecoveryCode();
@@ -388,7 +527,15 @@
       msg.textContent='✓ Profil erstellt!';msg.className='auth-msg ok';
       showRecoveryModal(recoveryCode,()=>showProfile(profile),handle);
     }catch(e){
-      msg.textContent='❌ Fehler beim Erstellen';msg.className='auth-msg err';
+      // Nur eigene, fuer Nutzer gedachte Meldungen anzeigen. Rohe Supabase-Fehler
+      // ("Supabase 503: {...}") gehoeren nicht ins UI, sondern in die Konsole.
+      if(e && e.userFacing){
+        msg.textContent='⚠ '+e.message;
+      } else {
+        console.warn('Registrierung:',e && e.message);
+        msg.textContent='❌ Fehler beim Erstellen';
+      }
+      msg.className='auth-msg err';
     }
     btn.disabled=false;btn.textContent='Profil erstellen →';
   });
@@ -550,6 +697,8 @@
     }
     // Session immer synchron zum aktuellen DB-Stand halten
     localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name,discriminator:profile.discriminator,displayName}));
+    // Bewusst ohne await: das Profil ist sofort da, die History kommt nach.
+    renderHistory(profile.id);
   }
 
   // ── Auto-login from session ──
