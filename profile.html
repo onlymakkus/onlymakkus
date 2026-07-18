@@ -110,8 +110,33 @@
     /* --- Erfolge --- */
     .ach-section{display:flex;flex-direction:column;gap:10px}
     .ach-count{color:var(--muted);font-size:.9em;letter-spacing:0}
-    #achGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-    @media(max-width:400px){#achGrid{grid-template-columns:1fr}}
+    /* Oberklappe standardmaessig offen; .collapsed klappt sie zu */
+    #achBlock.settings-block .settings-body{grid-template-rows:1fr}
+    #achBlock.settings-block.collapsed .settings-body{grid-template-rows:0fr}
+    .ach-outer-arrow{transform:rotate(90deg)}
+    #achBlock.collapsed .ach-outer-arrow{transform:rotate(0deg)}
+    #achBlock .settings-body-pad{display:flex;flex-direction:column;gap:8px;padding-top:8px}
+
+    /* Unterkategorien */
+    .ach-cat{border:1px solid var(--border);border-radius:6px}
+    .ach-cat-head{display:flex;justify-content:space-between;align-items:center;gap:10px;
+      padding:11px 13px;cursor:pointer;background:none;border:none;width:100%;
+      font-family:inherit;color:var(--body-text);text-align:left;-webkit-tap-highlight-color:transparent;border-radius:6px}
+    .ach-cat-head:hover:not([disabled]){background:rgba(255,255,255,.03)}
+    .ach-cat-head[disabled]{cursor:default;opacity:.5}
+    .ach-cat-title{font-size:.85rem;font-weight:600}
+    .ach-cat-meta{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);
+      display:flex;align-items:center;gap:8px}
+    .ach-cat-arrow{transition:transform .3s ease;color:var(--muted);font-size:.6rem}
+    .ach-cat.open .ach-cat-arrow{transform:rotate(90deg)}
+    .ach-cat-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+    .ach-cat.open .ach-cat-body{grid-template-rows:1fr}
+    .ach-cat-body-inner{overflow:hidden}
+    .ach-cat-body-pad{padding:0 11px 12px}
+    .ach-soon{font-family:'DM Mono',monospace;font-size:.66rem;color:var(--muted);
+      text-align:center;padding:10px 0}
+    .ach-grid-inner{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    @media(max-width:400px){.ach-grid-inner{grid-template-columns:1fr}}
     .ach-card{border:1px solid var(--border);padding:11px 12px;display:flex;gap:10px;
       align-items:flex-start;border-radius:6px;position:relative;overflow:hidden}
     .ach-card.locked{opacity:.45}
@@ -285,8 +310,15 @@
       </div>
 
       <div class="ach-section">
-        <div class="hist-label">Erfolge <span id="achCount" class="ach-count"></span></div>
-        <div id="achGrid"><div class="hist-empty">Lädt…</div></div>
+        <div class="settings-block" id="achBlock">
+          <button class="settings-head" id="achHead" aria-expanded="true" type="button">
+            <span class="settings-title">Erfolge <span id="achCount" class="ach-count"></span></span>
+            <span class="settings-arrow ach-outer-arrow">▶</span>
+          </button>
+          <div class="settings-body"><div class="settings-body-inner"><div class="settings-body-pad">
+            <div id="achGrid"><div class="hist-empty">Lädt…</div></div>
+          </div></div></div>
+        </div>
       </div>
       <div style="display:flex;gap:8px;">
         <a href="challenge.html" class="auth-btn" style="flex:1;text-align:center;text-decoration:none;">Challenge →</a>
@@ -384,16 +416,23 @@
 
   // Erfolgs-Definitionen. Die codes MUESSEN exakt zu grant_achievements() passen —
   // laufen sie auseinander, zeigt das Profil einen Erfolg als "unbekannt".
+  // cat = Kategorie (fitness | gaming | allgemein). Nur Anzeige, die SQL-Funktion
+  // kennt keine Kategorien — neue Erfolge brauchen also nur hier + in der Regel eine Zeile.
+  const ACH_CATEGORIES=[
+    {key:'fitness',   icon:'💪', label:'Fitness'},
+    {key:'gaming',    icon:'🎮', label:'Gaming'},
+    {key:'allgemein', icon:'⭐', label:'Allgemein'},
+  ];
   const ACHIEVEMENTS=[
-    {code:'first_challenge', icon:'🎯', name:'Dabei',          desc:'Erste Challenge mitgemacht'},
-    {code:'first_complete',  icon:'✅', name:'Durchgezogen',    desc:'Erste Challenge zu 100% geschafft'},
-    {code:'five_challenges', icon:'🖐️', name:'Stammgast',       desc:'An 5 Challenges teilgenommen'},
-    {code:'streak_three',    icon:'🔥', name:'Dranbleiber',     desc:'3 Monate in Folge dabei'},
-    {code:'first_win',       icon:'🥇', name:'Erster Sieg',     desc:'Einen Monat gewonnen'},
-    {code:'three_wins',      icon:'👑', name:'Seriensieger',    desc:'3 Monate gewonnen'},
-    {code:'all_podium',      icon:'🏅', name:'Komplettes Podest',desc:'Platz 1, 2 und 3 je einmal erreicht'},
-    {code:'fifty_points',    icon:'💯', name:'Punktesammler',   desc:'50 Saisonpunkte geknackt'},
-    {code:'overachiever',    icon:'🚀', name:'Überflieger',     desc:'Über 150% vom Ziel erreicht'},
+    {code:'first_challenge', cat:'fitness', icon:'🎯', name:'Dabei',          desc:'Erste Challenge mitgemacht'},
+    {code:'first_complete',  cat:'fitness', icon:'✅', name:'Durchgezogen',    desc:'Erste Challenge zu 100% geschafft'},
+    {code:'five_challenges', cat:'fitness', icon:'🖐️', name:'Stammgast',       desc:'An 5 Challenges teilgenommen'},
+    {code:'streak_three',    cat:'fitness', icon:'🔥', name:'Dranbleiber',     desc:'3 Monate in Folge dabei'},
+    {code:'first_win',       cat:'fitness', icon:'🥇', name:'Erster Sieg',     desc:'Einen Monat gewonnen'},
+    {code:'three_wins',      cat:'fitness', icon:'👑', name:'Seriensieger',    desc:'3 Monate gewonnen'},
+    {code:'all_podium',      cat:'fitness', icon:'🏅', name:'Komplettes Podest',desc:'Platz 1, 2 und 3 je einmal erreicht'},
+    {code:'fifty_points',    cat:'fitness', icon:'💯', name:'Punktesammler',   desc:'50 Saisonpunkte geknackt'},
+    {code:'overachiever',    cat:'fitness', icon:'🚀', name:'Überflieger',     desc:'Über 150% vom Ziel erreicht'},
   ];
 
   async function renderAchievements(profileId){
@@ -406,7 +445,7 @@
       const have=Object.keys(unlocked).length;
       count.textContent=`${have}/${ACHIEVEMENTS.length}`;
 
-      grid.innerHTML=ACHIEVEMENTS.map(a=>{
+      const card=a=>{
         const at=unlocked[a.code];
         const date=at?new Date(at).toLocaleDateString('de-DE',{day:'2-digit',month:'short',year:'numeric'}):null;
         return `<div class="ach-card ${at?'unlocked':'locked'}">
@@ -417,7 +456,34 @@
             ${date?`<div class="ach-date">✓ ${date}</div>`:''}
           </div>
         </div>`;
+      };
+
+      // Pro Kategorie eine eigene Unterklappe
+      grid.innerHTML=ACH_CATEGORIES.map((cat,i)=>{
+        const items=ACHIEVEMENTS.filter(a=>a.cat===cat.key);
+        const done=items.filter(a=>unlocked[a.code]).length;
+        const empty=items.length===0;
+        // Erste nicht-leere Kategorie standardmaessig offen
+        const open=!empty && i===0;
+        const inner = empty
+          ? `<div class="ach-soon">kommt bald 🔜</div>`
+          : `<div class="ach-grid-inner">${items.map(card).join('')}</div>`;
+        return `<div class="ach-cat${open?' open':''}${empty?' is-empty':''}">
+          <button class="ach-cat-head" aria-expanded="${open}" type="button"${empty?' disabled':''}>
+            <span class="ach-cat-title">${cat.icon} ${esc(cat.label)}</span>
+            <span class="ach-cat-meta">${empty?'bald':`${done}/${items.length}`}<span class="ach-cat-arrow">▶</span></span>
+          </button>
+          <div class="ach-cat-body"><div class="ach-cat-body-inner"><div class="ach-cat-body-pad">${inner}</div></div></div>
+        </div>`;
       }).join('');
+
+      grid.querySelectorAll('.ach-cat-head:not([disabled])').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          const blk=btn.closest('.ach-cat');
+          const now=blk.classList.toggle('open');
+          btn.setAttribute('aria-expanded',now);
+        });
+      });
     }catch(e){
       console.warn('Erfolge:',e.message);
       grid.innerHTML='<div class="hist-empty">Erfolge konnten nicht geladen werden.</div>';
@@ -782,6 +848,13 @@
     const blk=document.getElementById('settingsBlock');
     const open=blk.classList.toggle('open');
     document.getElementById('settingsHead').setAttribute('aria-expanded',open);
+  });
+
+  // ── Erfolge-Oberklappe auf/zu (startet offen; .collapsed = zu) ──
+  document.getElementById('achHead').addEventListener('click',()=>{
+    const blk=document.getElementById('achBlock');
+    const collapsed=blk.classList.toggle('collapsed');
+    document.getElementById('achHead').setAttribute('aria-expanded',!collapsed);
   });
 
   document.getElementById('logoutBtn').addEventListener('click',()=>{
