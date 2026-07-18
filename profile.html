@@ -137,6 +137,20 @@
       text-align:center;padding:10px 0}
     .ach-grid-inner{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
     @media(max-width:400px){.ach-grid-inner{grid-template-columns:1fr}}
+    /* Tiers: vier nebeneinander als aufsteigende Reihe */
+    .ach-grid-inner.tiers{grid-template-columns:repeat(4,1fr);gap:6px}
+    .ach-grid-inner.tiers .ach-card{flex-direction:column;align-items:center;text-align:center;padding:10px 6px;gap:6px}
+    .ach-grid-inner.tiers .ach-name{font-size:.72rem}
+    .ach-grid-inner.tiers .ach-desc{font-size:.52rem}
+    .ach-grid-inner.tiers .ach-date{font-size:.5rem}
+    @media(max-width:440px){.ach-grid-inner.tiers{grid-template-columns:repeat(2,1fr)}}
+    .season-current-label,.season-past-label{font-family:'DM Mono',monospace;font-size:.6rem;
+      letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:2px 0 2px}
+    .season-past-label{margin-top:14px;color:var(--orange)}
+    .past-season-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)}
+    .past-season-row:last-child{border-bottom:none}
+    .past-year{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--muted);min-width:42px}
+    .past-tiers{display:flex;gap:6px;font-size:1.1rem}
     .ach-card{border:1px solid var(--border);padding:11px 12px;display:flex;gap:10px;
       align-items:flex-start;border-radius:6px;position:relative;overflow:hidden}
     .ach-card.locked{opacity:.45}
@@ -420,8 +434,17 @@
   // kennt keine Kategorien — neue Erfolge brauchen also nur hier + in der Regel eine Zeile.
   const ACH_CATEGORIES=[
     {key:'fitness',   icon:'💪', label:'Fitness'},
+    {key:'saison',    icon:'📅', label:'Saison'},
     {key:'gaming',    icon:'🎮', label:'Gaming'},
     {key:'allgemein', icon:'⭐', label:'Allgemein'},
+  ];
+  // Saison-Tiers: pro Saison, Code traegt das Jahr (z.B. season_gold_2026).
+  // Deshalb NICHT in ACHIEVEMENTS (feste Codes) — werden je Jahr generiert.
+  const SEASON_TIERS=[
+    {suffix:'bronze', icon:'🥉', name:'Bronze',  threshold:1,  desc:'1 Challenge zu 100%'},
+    {suffix:'silver', icon:'🥈', name:'Silber',  threshold:4,  desc:'4 Challenges zu 100%'},
+    {suffix:'gold',   icon:'🥇', name:'Gold',    threshold:9,  desc:'9 Challenges zu 100%'},
+    {suffix:'platin', icon:'💎', name:'Platin',  threshold:12, desc:'12 Challenges zu 100%'},
   ];
   const ACHIEVEMENTS=[
     {code:'first_challenge', cat:'fitness', icon:'🎯', name:'Dabei',          desc:'Erste Challenge mitgemacht'},
@@ -442,8 +465,12 @@
       const rows=await sbFetch(`/rest/v1/achievements?profile_id=eq.${profileId}&select=code,unlocked_at`);
       const unlocked={};
       (rows||[]).forEach(r=>{unlocked[r.code]=r.unlocked_at});
-      const have=Object.keys(unlocked).length;
-      count.textContent=`${have}/${ACHIEVEMENTS.length}`;
+      // Zaehler zaehlt NUR dauerhaft erreichbare Erfolge (Fitness, spaeter
+      // Gaming/Allgemein). Saison-Tiers sind Meta-Erfolge: sie werden mit jeder
+      // Saison unerreichbar, wuerden den Zaehler also nie voll werden lassen.
+      const haveCounted=ACHIEVEMENTS.filter(a=>unlocked[a.code]).length;
+      const totalCounted=ACHIEVEMENTS.length;
+      count.textContent=`${haveCounted}/${totalCounted}`;
 
       const card=a=>{
         const at=unlocked[a.code];
@@ -459,19 +486,69 @@
       };
 
       // Pro Kategorie eine eigene Unterklappe
+      const currentYear=new Date().getFullYear();
       grid.innerHTML=ACH_CATEGORIES.map((cat,i)=>{
-        const items=ACHIEVEMENTS.filter(a=>a.cat===cat.key);
-        const done=items.filter(a=>unlocked[a.code]).length;
-        const empty=items.length===0;
-        // Erste nicht-leere Kategorie standardmaessig offen
+        let items, done, total, inner, empty=false;
+
+        if(cat.key==='saison'){
+          // Aktuelle Saison: vier Tiers als aufsteigende Reihe.
+          // Plus: alle in Vorjahren verdienten Tiers als Trophaeen.
+          const curTiers=SEASON_TIERS.map(t=>({
+            ...t, code:`season_${t.suffix}_${currentYear}`, year:currentYear,
+            at:unlocked[`season_${t.suffix}_${currentYear}`]
+          }));
+          done=curTiers.filter(t=>t.at).length;
+          total=curTiers.length;
+
+          // verdiente Tiers aus Vorjahren (nach code-Muster in unlocked)
+          const pastCodes=Object.keys(unlocked).filter(k=>/^season_(bronze|silver|gold|platin)_\d{4}$/.test(k) && !k.endsWith('_'+currentYear));
+          const pastByYear={};
+          pastCodes.forEach(code=>{
+            const [,suffix,year]=code.match(/^season_(\w+)_(\d{4})$/);
+            (pastByYear[year]=pastByYear[year]||[]).push({suffix,code,at:unlocked[code]});
+          });
+
+          const tierCard=t=>{
+            const date=t.at?new Date(t.at).toLocaleDateString('de-DE',{day:'2-digit',month:'short',year:'numeric'}):null;
+            return `<div class="ach-card tier ${t.at?'unlocked':'locked'}">
+              <div class="ach-icon">${t.icon}</div>
+              <div class="ach-text">
+                <div class="ach-name">${esc(t.name)}</div>
+                <div class="ach-desc">${esc(t.desc)}</div>
+                ${date?`<div class="ach-date">✓ ${date}</div>`:''}
+              </div>
+            </div>`;
+          };
+          let html=`<div class="season-current-label">Saison ${currentYear}</div>
+            <div class="ach-grid-inner tiers">${curTiers.map(tierCard).join('')}</div>`;
+
+          const years=Object.keys(pastByYear).sort((a,b)=>b-a);
+          if(years.length){
+            html+=`<div class="season-past-label">Frühere Saisons</div>`;
+            years.forEach(y=>{
+              const tiers=pastByYear[y].map(p=>{
+                const def=SEASON_TIERS.find(t=>t.suffix===p.suffix)||{icon:'🏆',name:p.suffix};
+                return `<span class="past-tier" title="${esc(def.name)} ${y}">${def.icon}</span>`;
+              }).join('');
+              html+=`<div class="past-season-row"><span class="past-year">${y}</span><span class="past-tiers">${tiers}</span></div>`;
+            });
+          }
+          inner=html;
+        } else {
+          items=ACHIEVEMENTS.filter(a=>a.cat===cat.key);
+          done=items.filter(a=>unlocked[a.code]).length;
+          total=items.length;
+          empty=items.length===0;
+          inner = empty
+            ? `<div class="ach-soon">kommt bald 🔜</div>`
+            : `<div class="ach-grid-inner">${items.map(card).join('')}</div>`;
+        }
+
         const open=!empty && i===0;
-        const inner = empty
-          ? `<div class="ach-soon">kommt bald 🔜</div>`
-          : `<div class="ach-grid-inner">${items.map(card).join('')}</div>`;
         return `<div class="ach-cat${open?' open':''}${empty?' is-empty':''}">
           <button class="ach-cat-head" aria-expanded="${open}" type="button"${empty?' disabled':''}>
             <span class="ach-cat-title">${cat.icon} ${esc(cat.label)}</span>
-            <span class="ach-cat-meta">${empty?'bald':`${done}/${items.length}`}<span class="ach-cat-arrow">▶</span></span>
+            <span class="ach-cat-meta">${empty?'bald':`${done}/${total}`}<span class="ach-cat-arrow">▶</span></span>
           </button>
           <div class="ach-cat-body"><div class="ach-cat-body-inner"><div class="ach-cat-body-pad">${inner}</div></div></div>
         </div>`;
