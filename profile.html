@@ -286,7 +286,6 @@
 
       <div class="ach-section">
         <div class="hist-label">Erfolge <span id="achCount" class="ach-count"></span></div>
-        <div id="achDebug" style="font-family:'DM Mono',monospace;font-size:.55rem;color:var(--orange);word-break:break-all;"></div>
         <div id="achGrid"><div class="hist-empty">Lädt…</div></div>
       </div>
       <div style="display:flex;gap:8px;">
@@ -406,10 +405,6 @@
       (rows||[]).forEach(r=>{unlocked[r.code]=r.unlocked_at});
       const have=Object.keys(unlocked).length;
       count.textContent=`${have}/${ACHIEVEMENTS.length}`;
-
-      // DEBUG — zeigt, was wirklich ankommt. Wieder entfernen, wenn geklaert.
-      const dbg=document.getElementById('achDebug');
-      if(dbg)dbg.textContent=`abgefragt: id=${profileId} · Zeilen: ${(rows||[]).length} · codes: [${(rows||[]).map(r=>r.code).join(', ')}]`;
 
       grid.innerHTML=ACHIEVEMENTS.map(a=>{
         const at=unlocked[a.code];
