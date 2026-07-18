@@ -106,6 +106,10 @@
     .profile-header{text-align:center}
     .profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:1.8rem;margin:0 auto 12px}
     [data-theme="dark"] .profile-avatar{color:var(--black)}
+    .profile-avatar-wrap{position:relative;width:64px;height:64px;margin:0 auto 12px}
+    .profile-avatar-wrap .profile-avatar{margin:0}
+    .profile-avatar-img{width:64px;height:64px;border-radius:50%;object-fit:cover;display:none}
+    .avatar-edit-btn{position:absolute;bottom:-2px;right:-2px;width:24px;height:24px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:.7rem;cursor:pointer;border:2px solid var(--body-bg)}
     .profile-name{font-family:'Bebas Neue';font-size:1.6rem}
     .profile-since{font-size:.62rem;color:var(--muted);margin-top:4px}
     .logout-btn{padding:12px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono';font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:8px}
@@ -228,11 +232,17 @@
     <!-- LOGGED IN VIEW -->
     <div class="profile-view" id="profileView">
       <div class="profile-header">
-        <div class="profile-avatar" id="profileAvatar">?</div>
+        <div class="profile-avatar-wrap">
+          <div class="profile-avatar" id="profileAvatar">?</div>
+          <img class="profile-avatar-img" id="profileAvatarImg" alt="">
+          <label class="avatar-edit-btn" for="avatarFileInput" title="Profilbild ändern">📷</label>
+          <input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
+        </div>
         <div class="profile-name" id="profileName">—</div>
         <div class="profile-since" id="profileSince">—</div>
         <div class="profile-since" id="profileHandle" style="margin-top:2px;"></div>
       </div>
+      <p class="auth-msg" id="avatarMsg"></p>
 
       <div class="stats-row" id="statsRow"></div>
 
@@ -613,6 +623,69 @@
     btn.disabled=false;btn.textContent='Passwort zurücksetzen →';
   });
 
+  // ── Profilbild: Resize per Canvas, Upload zu Supabase Storage ──
+  function resizeImageToBlob(file, size=256, quality=0.85){
+    return new Promise((resolve, reject)=>{
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = e => { img.src = e.target.result; };
+      reader.onerror = reject;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const scale = Math.max(size/img.width, size/img.height);
+        const w = img.width*scale, h = img.height*scale;
+        const x = (size-w)/2, y = (size-h)/2;
+        ctx.drawImage(img, x, y, w, h);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob failed')), 'image/jpeg', quality);
+      };
+      img.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function showAvatar(url){
+    const img = document.getElementById('profileAvatarImg');
+    const letter = document.getElementById('profileAvatar');
+    if(url){
+      img.src = url;
+      img.style.display = 'block';
+      letter.style.display = 'none';
+    } else {
+      img.style.display = 'none';
+      letter.style.display = 'flex';
+    }
+  }
+
+  document.getElementById('avatarFileInput').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const session = JSON.parse(localStorage.getItem(SESSION_KEY));
+    const msg = document.getElementById('avatarMsg');
+    msg.textContent = 'Bild wird hochgeladen…'; msg.className = 'auth-msg';
+
+    try{
+      const blob = await resizeImageToBlob(file, 256, 0.85);
+      const uploadRes = await fetch(`${SB_URL}/storage/v1/object/avatars/${session.id}.jpg`, {
+        method: 'POST',
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer '+SB_KEY, 'Content-Type': 'image/jpeg', 'x-upsert': 'true' },
+        body: blob
+      });
+      if(!uploadRes.ok) throw new Error('Upload fehlgeschlagen');
+
+      const publicUrl = `${SB_URL}/storage/v1/object/public/avatars/${session.id}.jpg?t=${Date.now()}`;
+      await sbFetch(`/rest/v1/profiles?id=eq.${session.id}`, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify({ avatar_url: publicUrl }) });
+
+      session.avatarUrl = publicUrl;
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      showAvatar(publicUrl);
+      msg.textContent = '✓ Profilbild aktualisiert'; msg.className = 'auth-msg ok';
+    }catch(err){
+      msg.textContent = '❌ Upload fehlgeschlagen'; msg.className = 'auth-msg err';
+    }
+  });
+
   // ── Change password (logged in) ──
   document.getElementById('changePasswordForm').addEventListener('submit', async (e)=>{
     e.preventDefault();
@@ -688,6 +761,7 @@
     const displayName=profile.display_name||profile.name;
     const handle=profile.discriminator ? `${profile.name}#${profile.discriminator}` : profile.name;
     document.getElementById('profileAvatar').textContent=displayName.charAt(0).toUpperCase();
+    showAvatar(profile.avatar_url);
     document.getElementById('profileName').textContent=displayName;
     document.getElementById('profileHandle').textContent='Login: '+handle;
     document.getElementById('editDisplayName').value=displayName;
