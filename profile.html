@@ -106,6 +106,21 @@
     .hist-pts{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);margin-top:3px}
     .hist-live{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--orange);
       letter-spacing:.06em;text-transform:uppercase}
+
+    /* --- Einstellungen-Aufklapper (gleiches Muster wie History) --- */
+    .settings-block{border:1px solid var(--border)}
+    .settings-head{display:flex;justify-content:space-between;align-items:center;gap:10px;
+      padding:13px 15px;cursor:pointer;background:none;border:none;width:100%;
+      font-family:inherit;color:var(--body-text);text-align:left;-webkit-tap-highlight-color:transparent}
+    .settings-head:hover{background:rgba(255,255,255,.03)}
+    .settings-title{font-family:'DM Mono',monospace;font-size:.66rem;letter-spacing:.14em;
+      text-transform:uppercase;color:var(--muted)}
+    .settings-arrow{transition:transform .3s ease;color:var(--muted);font-size:.65rem}
+    .settings-block.open .settings-arrow{transform:rotate(90deg)}
+    .settings-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+    .settings-block.open .settings-body{grid-template-rows:1fr}
+    .settings-body-inner{overflow:hidden}
+    .settings-body-pad{padding:4px 15px 15px;display:flex;flex-direction:column;gap:16px}
     .profile-view.active{display:flex}
     .profile-header{text-align:center}
     .profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:1.8rem;margin:0 auto 12px}
@@ -250,40 +265,50 @@
         <div class="hist-label">Deine Challenges</div>
         <div id="histList"><div class="hist-empty">Lädt…</div></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Anzeigename ändern</label>
-        <input type="text" class="form-input" id="editDisplayName" placeholder="Neuer Anzeigename">
-        <button class="secondary-btn" id="saveDisplayNameBtn">Speichern</button>
-        <p class="auth-msg" id="displayNameMsg"></p>
-      </div>
-      <form id="changePasswordForm" style="display:flex;flex-direction:column;gap:12px;">
-        <div class="form-group">
-          <label class="form-label">Passwort ändern</label>
-          <div class="password-wrap">
-            <input type="password" class="form-input" id="currentPassword" placeholder="Aktuelles Passwort" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false">
-            <button type="button" class="password-toggle" data-target="currentPassword">👁</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <div class="password-wrap">
-            <input type="password" class="form-input" id="newPassword" placeholder="Neues Passwort (mind. 6 Zeichen)" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false">
-            <button type="button" class="password-toggle" data-target="newPassword">👁</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <div class="password-wrap">
-            <input type="password" class="form-input" id="newPasswordConfirm" placeholder="Neues Passwort wiederholen" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false">
-            <button type="button" class="password-toggle" data-target="newPasswordConfirm">👁</button>
-          </div>
-        </div>
-        <button class="secondary-btn" id="changePasswordBtn" type="submit">Passwort ändern</button>
-        <p class="auth-msg" id="changePasswordMsg"></p>
-      </form>
       <div style="display:flex;gap:8px;">
         <a href="challenge.html" class="auth-btn" style="flex:1;text-align:center;text-decoration:none;">Challenge →</a>
         <a href="gaming.html" class="auth-btn" style="flex:1;text-align:center;text-decoration:none;">Gaming →</a>
       </div>
-      <button class="secondary-btn" id="regenCodeBtn">Wiederherstellungscode neu erzeugen</button>
+
+      <div class="settings-block" id="settingsBlock">
+        <button class="settings-head" id="settingsHead" aria-expanded="false" type="button">
+          <span class="settings-title">⚙ Einstellungen</span>
+          <span class="settings-arrow">▶</span>
+        </button>
+        <div class="settings-body"><div class="settings-body-inner"><div class="settings-body-pad">
+          <div class="form-group">
+            <label class="form-label">Anzeigename ändern</label>
+            <input type="text" class="form-input" id="editDisplayName" placeholder="Neuer Anzeigename">
+            <button class="secondary-btn" id="saveDisplayNameBtn">Speichern</button>
+            <p class="auth-msg" id="displayNameMsg"></p>
+          </div>
+          <form id="changePasswordForm" style="display:flex;flex-direction:column;gap:12px;">
+            <div class="form-group">
+              <label class="form-label">Passwort ändern</label>
+              <div class="password-wrap">
+                <input type="password" class="form-input" id="currentPassword" placeholder="Aktuelles Passwort" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+                <button type="button" class="password-toggle" data-target="currentPassword">👁</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="password-wrap">
+                <input type="password" class="form-input" id="newPassword" placeholder="Neues Passwort (mind. 6 Zeichen)" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+                <button type="button" class="password-toggle" data-target="newPassword">👁</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="password-wrap">
+                <input type="password" class="form-input" id="newPasswordConfirm" placeholder="Neues Passwort wiederholen" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+                <button type="button" class="password-toggle" data-target="newPasswordConfirm">👁</button>
+              </div>
+            </div>
+            <button class="secondary-btn" id="changePasswordBtn" type="submit">Passwort ändern</button>
+            <p class="auth-msg" id="changePasswordMsg"></p>
+          </form>
+          <button class="secondary-btn" id="regenCodeBtn">Wiederherstellungscode neu erzeugen</button>
+        </div></div></div>
+      </div>
+
       <button class="logout-btn" id="logoutBtn">Ausloggen</button>
     </div>
 
@@ -686,6 +711,13 @@
   });
 
   // ── Logout ──
+  // ── Einstellungen auf/zu ──
+  document.getElementById('settingsHead').addEventListener('click',()=>{
+    const blk=document.getElementById('settingsBlock');
+    const open=blk.classList.toggle('open');
+    document.getElementById('settingsHead').setAttribute('aria-expanded',open);
+  });
+
   document.getElementById('logoutBtn').addEventListener('click',()=>{
     localStorage.removeItem(SESSION_KEY);
     document.getElementById('authView').style.display='block';
