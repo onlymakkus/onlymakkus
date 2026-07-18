@@ -107,6 +107,24 @@
     .hist-live{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--orange);
       letter-spacing:.06em;text-transform:uppercase}
 
+    /* --- Erfolge --- */
+    .ach-section{display:flex;flex-direction:column;gap:10px}
+    .ach-count{color:var(--muted);font-size:.9em;letter-spacing:0}
+    #achGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    @media(max-width:400px){#achGrid{grid-template-columns:1fr}}
+    .ach-card{border:1px solid var(--border);padding:11px 12px;display:flex;gap:10px;
+      align-items:flex-start;border-radius:6px;position:relative;overflow:hidden}
+    .ach-card.locked{opacity:.45}
+    .ach-card.unlocked{border-color:rgba(255,78,26,.35)}
+    .ach-icon{font-size:1.4rem;line-height:1;flex:0 0 auto}
+    .ach-card.locked .ach-icon{filter:grayscale(1)}
+    .ach-text{min-width:0}
+    .ach-name{font-size:.8rem;font-weight:600;line-height:1.15}
+    .ach-desc{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);
+      margin-top:3px;line-height:1.4}
+    .ach-date{font-family:'DM Mono',monospace;font-size:.55rem;color:var(--orange);
+      margin-top:4px;letter-spacing:.04em}
+
     /* --- Einstellungen-Aufklapper (gleiches Muster wie History) --- */
     .settings-block{border:1px solid var(--border)}
     .settings-head{display:flex;justify-content:space-between;align-items:center;gap:10px;
@@ -265,6 +283,11 @@
         <div class="hist-label">Deine Challenges</div>
         <div id="histList"><div class="hist-empty">Lädt…</div></div>
       </div>
+
+      <div class="ach-section">
+        <div class="hist-label">Erfolge <span id="achCount" class="ach-count"></span></div>
+        <div id="achGrid"><div class="hist-empty">Lädt…</div></div>
+      </div>
       <div style="display:flex;gap:8px;">
         <a href="challenge.html" class="auth-btn" style="flex:1;text-align:center;text-decoration:none;">Challenge →</a>
         <a href="gaming.html" class="auth-btn" style="flex:1;text-align:center;text-decoration:none;">Gaming →</a>
@@ -358,6 +381,49 @@
   const SESSION_KEY='om_profile_session'; // stores {id, name}
   function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   const MONTH_LABELS={1:'Januar',2:'Februar',3:'März',4:'April',5:'Mai',6:'Juni',7:'Juli',8:'August',9:'September',10:'Oktober',11:'November',12:'Dezember'};
+
+  // Erfolgs-Definitionen. Die codes MUESSEN exakt zu grant_achievements() passen —
+  // laufen sie auseinander, zeigt das Profil einen Erfolg als "unbekannt".
+  const ACHIEVEMENTS=[
+    {code:'first_challenge', icon:'🎯', name:'Dabei',          desc:'Erste Challenge mitgemacht'},
+    {code:'first_complete',  icon:'✅', name:'Durchgezogen',    desc:'Erste Challenge zu 100% geschafft'},
+    {code:'five_challenges', icon:'🖐️', name:'Stammgast',       desc:'An 5 Challenges teilgenommen'},
+    {code:'streak_three',    icon:'🔥', name:'Dranbleiber',     desc:'3 Monate in Folge dabei'},
+    {code:'first_win',       icon:'🥇', name:'Erster Sieg',     desc:'Einen Monat gewonnen'},
+    {code:'three_wins',      icon:'👑', name:'Seriensieger',    desc:'3 Monate gewonnen'},
+    {code:'all_podium',      icon:'🏅', name:'Komplettes Podest',desc:'Platz 1, 2 und 3 je einmal erreicht'},
+    {code:'fifty_points',    icon:'💯', name:'Punktesammler',   desc:'50 Saisonpunkte geknackt'},
+    {code:'overachiever',    icon:'🚀', name:'Überflieger',     desc:'Über 150% vom Ziel erreicht'},
+  ];
+
+  async function renderAchievements(profileId){
+    const grid=document.getElementById('achGrid');
+    const count=document.getElementById('achCount');
+    try{
+      const rows=await sbFetch(`/rest/v1/achievements?profile_id=eq.${profileId}&select=code,unlocked_at`);
+      const unlocked={};
+      (rows||[]).forEach(r=>{unlocked[r.code]=r.unlocked_at});
+      const have=Object.keys(unlocked).length;
+      count.textContent=`${have}/${ACHIEVEMENTS.length}`;
+
+      grid.innerHTML=ACHIEVEMENTS.map(a=>{
+        const at=unlocked[a.code];
+        const date=at?new Date(at).toLocaleDateString('de-DE',{day:'2-digit',month:'short',year:'numeric'}):null;
+        return `<div class="ach-card ${at?'unlocked':'locked'}">
+          <div class="ach-icon">${a.icon}</div>
+          <div class="ach-text">
+            <div class="ach-name">${esc(a.name)}</div>
+            <div class="ach-desc">${esc(a.desc)}</div>
+            ${date?`<div class="ach-date">✓ ${date}</div>`:''}
+          </div>
+        </div>`;
+      }).join('');
+    }catch(e){
+      console.warn('Erfolge:',e.message);
+      grid.innerHTML='<div class="hist-empty">Erfolge konnten nicht geladen werden.</div>';
+      count.textContent='';
+    }
+  }
 
   // Persoenliche History. Laeuft bewusst voellig getrennt vom Login:
   // schlaegt sie fehl, bleibt das Profil trotzdem benutzbar.
@@ -833,6 +899,7 @@
     localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name,discriminator:profile.discriminator,displayName}));
     // Bewusst ohne await: das Profil ist sofort da, die History kommt nach.
     renderHistory(profile.id);
+    renderAchievements(profile.id);
   }
 
   // ── Auto-login from session ──
