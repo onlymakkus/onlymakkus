@@ -467,6 +467,14 @@
     const grid=document.getElementById('achGrid');
     const count=document.getElementById('achCount');
     try{
+      // Erst Erfolge aktualisieren (idempotent, vergibt nur Neues), dann lesen.
+      // So leuchtet ein frisch verdienter Erfolg beim Profil-Öffnen sofort auf,
+      // ohne dass jemand grant_achievements() manuell aufrufen muss.
+      // Schlaegt die Vergabe fehl, zeigen wir trotzdem den Stand aus der DB.
+      try{
+        await sbFetch('/rest/v1/rpc/grant_achievements',{method:'POST',prefer:'return=minimal',body:'{}'});
+      }catch(gErr){ console.warn('grant_achievements:', gErr.message); }
+
       const rows=await sbFetch(`/rest/v1/achievements?profile_id=eq.${profileId}&select=code,unlocked_at`);
       const unlocked={};
       (rows||[]).forEach(r=>{unlocked[r.code]=r.unlocked_at});
