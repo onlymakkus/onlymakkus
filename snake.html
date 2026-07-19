@@ -49,18 +49,16 @@
     .btn-start{padding:13px 36px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.72rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;cursor:none;transition:background .2s,transform .2s}
     .btn-start:hover{background:#ff6b3d;transform:translateY(-2px)}
 
-    /* D-PAD (mobile only) */
-    .dpad{display:none;grid-template-columns:56px 56px 56px;grid-template-rows:56px 56px 56px;gap:6px;margin:20px auto 0;width:fit-content}
-    .dpad-btn{background:var(--card);border:1px solid rgba(255,78,26,.3);color:var(--orange);font-size:1.4rem;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:manipulation;border-radius:4px}
-    .dpad-btn:active{background:rgba(255,78,26,.2)}
-    .dpad-up{grid-column:2;grid-row:1}
-    .dpad-left{grid-column:1;grid-row:2}
-    .dpad-pause{grid-column:2;grid-row:2;font-size:1rem}
-    .dpad-right{grid-column:3;grid-row:2}
-    .dpad-down{grid-column:2;grid-row:3}
+    /* Mobile: Swipe-Steuerung */
+    body{overscroll-behavior:none}
+    canvas{touch-action:none}
+    .hint-mobile{display:none}
+    main.playing{user-select:none;-webkit-user-select:none}
     @media(hover:none) and (pointer:coarse){
-      .dpad{display:grid}
+      .cursor{display:none}
+      body{cursor:auto}
       .hint{display:none}
+      .hint-mobile{display:block;font-size:.62rem;color:var(--muted);text-align:center;letter-spacing:.06em;line-height:1.8}
     }
     .section-label{font-size:.6rem;letter-spacing:.35em;text-transform:uppercase;color:var(--orange);margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:14px;width:100%}
     .section-label::before,.section-label::after{content:'';flex:0 0 32px;height:1px;background:var(--border)}
@@ -106,16 +104,10 @@
     </div>
   </div>
   <div style="text-align:center">
-    <p class="hint">↑↓←→ oder WASD · Space = Pause · Swipe auf Mobile</p>
+    <p class="hint">↑↓←→ oder WASD · Space = Pause</p>
+    <p class="hint-mobile">Swipe = Steuern · Tipp aufs Feld = Pause</p>
     <br>
     <button class="btn-start" id="btn-start">▶ Starten</button>
-  </div>
-  <div class="dpad">
-    <div class="dpad-btn dpad-up" id="dp-up">↑</div>
-    <div class="dpad-btn dpad-left" id="dp-left">←</div>
-    <div class="dpad-btn dpad-pause" id="dp-pause">⏸</div>
-    <div class="dpad-btn dpad-right" id="dp-right">→</div>
-    <div class="dpad-btn dpad-down" id="dp-down">↓</div>
   </div>
   <div class="section-label">🏆 Top 10 Highscores</div>
   <div class="hi-table" id="scores"><div class="hi-empty">Lädt…</div></div>
@@ -153,9 +145,17 @@ loadScores();
 const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
 const G=20,COLS=canvas.width/G,ROWS=canvas.height/G;
 let snake,dir,nd,food,score,hi=parseInt(localStorage.getItem('sn_hi')||'0'),loop,running,paused,gameStartTime=0;
+let dirQueue=[];
+// Richtungswechsel puffern: erlaubt 2 schnelle Swipes/Tasten innerhalb eines Ticks
+function queueDir(n){
+  const last=dirQueue.length?dirQueue[dirQueue.length-1]:dir;
+  if(n.x===last.x&&n.y===last.y)return;      // gleiche Richtung ignorieren
+  if(n.x===-last.x&&n.y===-last.y)return;    // 180° verboten
+  if(dirQueue.length<2)dirQueue.push(n);
+}
 document.getElementById('hi').textContent=hi;
 function init(){
-  snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];dir={x:1,y:0};nd={x:1,y:0};
+  snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];dir={x:1,y:0};nd={x:1,y:0};dirQueue=[];
   score=0;running=false;paused=false;
   placeFood();
   document.getElementById('score').textContent=0;
@@ -166,6 +166,7 @@ function init(){
 function placeFood(){do{food={x:Math.floor(Math.random()*COLS),y:Math.floor(Math.random()*ROWS)}}while(snake.some(s=>s.x===food.x&&s.y===food.y))}
 function speed(){return Math.max(65,190-Math.floor(score/5)*15)}
 function step(){
+  if(dirQueue.length)nd=dirQueue.shift();
   dir=nd;const h={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
   if(h.x<0||h.x>=COLS||h.y<0||h.y>=ROWS||snake.some(s=>s.x===h.x&&s.y===h.y)){end();return}
   snake.unshift(h);
@@ -187,9 +188,10 @@ function draw(){
   if(paused){ctx.fillStyle='rgba(10,10,8,.7)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#ff4e1a';ctx.font='bold 16px "DM Mono"';ctx.textAlign='center';ctx.fillText('// PAUSE',canvas.width/2,canvas.height/2);ctx.fillStyle='#9a9488';ctx.font='12px "DM Mono"';ctx.fillText('SPACE zum Weitermachen',canvas.width/2,canvas.height/2+24)}
   if(!running&&!paused){ctx.fillStyle='rgba(10,10,8,.5)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#ff4e1a';ctx.font='bold 13px "DM Mono"';ctx.textAlign='center';ctx.fillText('▶ STARTEN',canvas.width/2,canvas.height/2);ctx.fillStyle='#9a9488';ctx.font='11px "DM Mono"';ctx.fillText('WASD oder Pfeiltasten',canvas.width/2,canvas.height/2+22)}
 }
-function start(){if(running)return;init();running=true;gameStartTime=Date.now();document.getElementById('btn-start').textContent='▶ Läuft…';loop=setInterval(step,speed())}
+function start(){if(running)return;init();running=true;gameStartTime=Date.now();document.querySelector('main').classList.add('playing');document.getElementById('btn-start').textContent='▶ Läuft…';loop=setInterval(step,speed())}
 function end(){
   clearInterval(loop);running=false;
+  document.querySelector('main').classList.remove('playing');
   if(score>hi){hi=score;localStorage.setItem('sn_hi',hi);document.getElementById('hi').textContent=hi}
   document.getElementById('go-sub').textContent='Score: '+score+' Punkte';
   document.getElementById('go-msg').textContent='';
@@ -200,65 +202,55 @@ function end(){
 document.addEventListener('keydown',e=>{
   const m={ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0},w:{x:0,y:-1},s:{x:0,y:1},a:{x:-1,y:0},d:{x:1,y:0},W:{x:0,y:-1},S:{x:0,y:1},A:{x:-1,y:0},D:{x:1,y:0}};
   if(e.key===' '){e.preventDefault();if(!running){start();return}paused=!paused;if(paused){clearInterval(loop);draw()}else loop=setInterval(step,speed());return}
-  if(m[e.key]&&running&&!paused){const n=m[e.key];if(n.x!==-dir.x||n.y!==-dir.y)nd=n;if(e.key.startsWith('Arrow'))e.preventDefault()}
+  if(m[e.key]&&running&&!paused){queueDir(m[e.key]);if(e.key.startsWith('Arrow'))e.preventDefault()}
 });
-// ── Touch / Swipe ──
+// ── Touch / Swipe (ganzer Bildschirm) ──
+// Läuft das Spiel, ist überall Swipe-Fläche — nicht nur auf dem Canvas.
+// Buttons, Links und der Game-Over-Overlay bleiben normal bedienbar.
 let ts=null, lastSwipeDir=null;
 const MIN_SWIPE=20; // px minimum
+function touchOnUI(e){
+  return e.target.closest && e.target.closest('input,button,a,.go-overlay,.topbar,footer');
+}
 
-canvas.addEventListener('touchstart',e=>{
+document.addEventListener('touchstart',e=>{
+  if(touchOnUI(e)){ts=null;return}
   ts=e.touches[0];
   lastSwipeDir=null;
-  e.preventDefault();
-},{passive:false});
+},{passive:true});
 
-canvas.addEventListener('touchmove',e=>{
-  if(!ts||!running||paused)return;
-  e.preventDefault();
+document.addEventListener('touchmove',e=>{
+  if(!ts)return;
+  if(!running||paused)return;
+  e.preventDefault(); // verhindert Scrollen & Pull-to-Refresh während des Spiels
   const t=e.touches[0];
   const dx=t.clientX-ts.clientX, dy=t.clientY-ts.clientY;
   if(Math.max(Math.abs(dx),Math.abs(dy))<MIN_SWIPE)return;
-  // Apply direction immediately on move for snappier feel
   let n;
   if(Math.abs(dx)>Math.abs(dy)){n=dx>0?{x:1,y:0}:{x:-1,y:0};}
   else{n=dy>0?{x:0,y:1}:{x:0,y:-1};}
-  // Only apply if it's a new direction (avoid repeated triggers)
   const key=JSON.stringify(n);
-  if(key!==lastSwipeDir&&(n.x!==-dir.x||n.y!==-dir.y)){
-    nd=n; lastSwipeDir=key;
-    // Reset touch start for next swipe
+  if(key!==lastSwipeDir){
+    queueDir(n); lastSwipeDir=key;
+    // Fingerposition neu setzen → nächster Swipe ohne Absetzen möglich
     ts=e.touches[0];
   }
 },{passive:false});
 
-canvas.addEventListener('touchend',e=>{
+document.addEventListener('touchend',e=>{
   if(!ts)return;
   const dx=e.changedTouches[0].clientX-ts.clientX;
   const dy=e.changedTouches[0].clientY-ts.clientY;
-  // Short tap = start/pause
-  if(Math.max(Math.abs(dx),Math.abs(dy))<MIN_SWIPE){
+  // Kurzer Tipp aufs Spielfeld = Start/Pause (nur Canvas, sonst pausiert
+  // jedes Antippen der Highscore-Liste das Spiel)
+  if(Math.max(Math.abs(dx),Math.abs(dy))<MIN_SWIPE && e.target===canvas){
     if(!running){start();}
     else{paused=!paused;if(paused){clearInterval(loop);draw();}else{loop=setInterval(step,speed());}}
   }
   ts=null; lastSwipeDir=null;
-},{passive:false});
-document.getElementById('btn-start').addEventListener('click',start);
+},{passive:true});
 
-// ── D-PAD (mobile) ──
-function dpadMove(newDir){
-  if(!running){start();return}
-  if(paused)return;
-  if(newDir.x!==-dir.x||newDir.y!==-dir.y)nd=newDir;
-}
-document.getElementById('dp-up').addEventListener('click',()=>dpadMove({x:0,y:-1}));
-document.getElementById('dp-down').addEventListener('click',()=>dpadMove({x:0,y:1}));
-document.getElementById('dp-left').addEventListener('click',()=>dpadMove({x:-1,y:0}));
-document.getElementById('dp-right').addEventListener('click',()=>dpadMove({x:1,y:0}));
-document.getElementById('dp-pause').addEventListener('click',()=>{
-  if(!running){start();return}
-  paused=!paused;
-  if(paused){clearInterval(loop);draw()}else{loop=setInterval(step,speed())}
-});
+document.getElementById('btn-start').addEventListener('click',start);
 document.getElementById('go-save').addEventListener('click',async()=>{
   const name=document.getElementById('go-name').value.trim(),msg=document.getElementById('go-msg');
   const hp=document.getElementById('go-hp').value;
