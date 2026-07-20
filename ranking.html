@@ -77,9 +77,19 @@
   .empty{padding:28px;text-align:center;font-size:.75rem;color:var(--muted);font-style:italic}
 
   /* Hall of Fame */
-  .hof-year{margin-bottom:20px}
-  .hof-year-label{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.04em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-  .hof-year-label span{color:var(--orange);font-size:.9rem;font-family:'DM Mono',monospace}
+  .hof-year{margin-bottom:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+  .hof-year-head{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:14px 16px;cursor:none;background:var(--card);border:none;width:100%;
+    font-family:inherit;color:var(--body-text);text-align:left}
+  .hof-year-head:hover{background:var(--card2)}
+  .hof-year-label{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.04em;line-height:1}
+  .hof-year-label span{color:var(--orange);font-size:.82rem;font-family:'DM Mono',monospace;margin-left:8px}
+  .hof-year-arrow{color:var(--muted);font-size:.7rem;transition:transform .3s ease}
+  .hof-year.open .hof-year-arrow{transform:rotate(90deg)}
+  .hof-year-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+  .hof-year.open .hof-year-body{grid-template-rows:1fr}
+  .hof-year-body-inner{overflow:hidden}
+  .hof-year-body-pad{padding:4px 16px 12px}
   .hof-row{display:flex;align-items:center;gap:14px;padding:12px 4px;border-bottom:1px solid var(--border)}
   .hof-row:last-child{border-bottom:none}
   .hof-month{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);width:78px;flex:0 0 auto}
@@ -312,7 +322,7 @@
       if(!months||!months.length){el.innerHTML='<div class="empty">Noch keine Monate angelegt.</div>';return}
       const years=[...new Set(months.map(r=>r.season_year))].sort((a,b)=>b-a);
 
-      el.innerHTML=years.map(year=>{
+      el.innerHTML=years.map((year,yi)=>{
         const rows=months.filter(r=>r.season_year===year && !r.is_december_vote);
         const inner=rows.map(row=>{
           const w=winnerOf[row.id];
@@ -331,11 +341,25 @@
           </div>`;
         }).join('');
         const siege=rows.filter(r=>winnerOf[r.id]).length;
-        return `<div class="hof-year">
-          <div class="hof-year-label">Saison ${year} <span>${siege} entschieden</span></div>
-          ${inner||'<div class="empty">Keine Challenges.</div>'}
+        const open=yi===0;   // neueste Saison offen, ältere eingeklappt
+        return `<div class="hof-year${open?' open':''}">
+          <button class="hof-year-head" aria-expanded="${open}" type="button">
+            <span class="hof-year-label">Saison ${year} <span>${siege} entschieden</span></span>
+            <span class="hof-year-arrow">▶</span>
+          </button>
+          <div class="hof-year-body"><div class="hof-year-body-inner"><div class="hof-year-body-pad">
+            ${inner||'<div class="empty">Keine Challenges.</div>'}
+          </div></div></div>
         </div>`;
       }).join('');
+
+      el.querySelectorAll('.hof-year-head').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          const blk=btn.closest('.hof-year');
+          const now=blk.classList.toggle('open');
+          btn.setAttribute('aria-expanded',now);
+        });
+      });
     }catch(e){
       console.warn('Hall of Fame:',e.message);
       el.innerHTML='<div class="empty">Fehler beim Laden.</div>';
