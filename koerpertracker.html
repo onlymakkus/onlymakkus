@@ -72,8 +72,8 @@ h1,h2,h3, .display{
 .navrow .back:hover{ color:var(--rust); }
 .navrow .greeting{ color:var(--text-dim); font-size:.66rem; letter-spacing:.04em; font-family:var(--mono); }
 .navrow-right{ display:flex; align-items:center; gap:14px; }
-.theme-toggle{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--panel);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:transform .2s;}
-.theme-toggle:hover{transform:scale(1.1);}
+.theme-toggle{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text);background:transparent;border:1px solid var(--line);padding:7px 12px;cursor:pointer;}
+.theme-toggle:hover{border-color:var(--rust);color:var(--rust);}
 
 /* HEADER — measuring tape */
 header{
@@ -308,7 +308,7 @@ footer{
     <a class="back" href="health.html">‹ ZURÜCK</a>
     <div class="navrow-right">
       <span class="greeting" id="greeting"></span>
-      <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
+      <button class="theme-toggle" id="themeToggle" title="Design wechseln">Light</button>
     </div>
   </div>
 
@@ -414,7 +414,7 @@ const htmlEl=document.documentElement;
 const themeToggle=document.getElementById('themeToggle');
 function applyTheme(t){
   htmlEl.setAttribute('data-theme',t);
-  themeToggle.textContent=t==='dark'?'🌙':'☀️';
+  themeToggle.textContent=t==='dark'?'Light':'Dark';
   localStorage.setItem(THEME_KEY,t);
   if(chart) renderChart();
 }

@@ -20,7 +20,8 @@
   .nav-right{display:flex;gap:20px;align-items:center}
   .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--body-text);opacity:.5;transition:opacity .2s}
   .nav-link:hover{opacity:1}
-  .theme-toggle{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:none;font-size:.8rem}
+  .theme-toggle{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--body-text);background:transparent;border:1px solid var(--border);padding:7px 12px;cursor:pointer;}
+  .theme-toggle:hover{border-color:var(--orange);color:var(--orange);}
 
   .wrap{max-width:760px;margin:0 auto;padding:0 24px}
   .head{padding:52px 0 28px;text-align:center}
@@ -118,7 +119,7 @@
     <a class="nav-link" href="challenge.html">Challenge</a>
     <a class="nav-link" href="crossfit.html">CrossFit</a>
     <a class="nav-link" href="gaming.html">Gaming</a>
-    <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
+    <button class="theme-toggle" id="themeToggle" title="Design wechseln">Light</button>
   </div>
 </nav>
 
@@ -165,7 +166,7 @@
   const THEME_KEY='om_cf_theme';
   const htmlEl=document.documentElement;
   const themeToggle=document.getElementById('themeToggle');
-  function applyTheme(t){htmlEl.setAttribute('data-theme',t);themeToggle.textContent=t==='dark'?'🌙':'☀️';localStorage.setItem(THEME_KEY,t)}
+  function applyTheme(t){htmlEl.setAttribute('data-theme',t);themeToggle.textContent=t==='dark'?'Light':'Dark';localStorage.setItem(THEME_KEY,t)}
   applyTheme(localStorage.getItem(THEME_KEY)||'dark');
   themeToggle.addEventListener('click',()=>applyTheme(htmlEl.getAttribute('data-theme')==='dark'?'light':'dark'));
 

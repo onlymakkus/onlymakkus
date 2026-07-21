@@ -34,8 +34,8 @@
     .nav-right{display:flex;gap:20px;align-items:center}
     .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--body-text);text-decoration:none;opacity:.5;transition:opacity .2s;cursor:pointer;background:none;border:none;font-family:'DM Mono'}
     .nav-link:hover{opacity:1}
-    .theme-toggle{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:transform .2s,background .3s}
-    .theme-toggle:hover{transform:scale(1.1)}
+    .theme-toggle{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--body-text);background:transparent;border:1px solid var(--border);padding:7px 12px;cursor:pointer;}
+    .theme-toggle:hover{border-color:var(--orange);color:var(--orange);}
     [data-theme="light"] .theme-toggle{mix-blend-mode:normal}
 
     .hero{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 40px 60px;text-align:center;position:relative;overflow:hidden}
@@ -113,7 +113,7 @@
       <a class="nav-link" href="profile.html">Profil</a>
       <a class="nav-link" href="gaming.html">Gaming</a>
       <a class="nav-link" href="health.html">Health</a>
-      <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
+      <button class="theme-toggle" id="themeToggle" title="Design wechseln">Light</button>
     </div>
   </nav>
 
@@ -224,7 +224,7 @@
   const themeToggle=document.getElementById('themeToggle');
   function applyTheme(t){
     html.setAttribute('data-theme',t);
-    themeToggle.textContent=t==='dark'?'🌙':'☀️';
+    themeToggle.textContent=t==='dark'?'Light':'Dark';
     localStorage.setItem(THEME_KEY,t);
   }
   applyTheme(localStorage.getItem(THEME_KEY)||'dark');

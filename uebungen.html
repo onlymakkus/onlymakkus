@@ -18,8 +18,8 @@
     .nav-links{display:flex;gap:20px;align-items:center}
     .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
     .nav-link:hover,.nav-link.active{color:var(--body-text)}
-    .theme-toggle{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:transform .2s}
-    .theme-toggle:hover{transform:scale(1.1)}
+    .theme-toggle{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--body-text);background:transparent;border:1px solid var(--border);padding:7px 12px;cursor:pointer;}
+    .theme-toggle:hover{border-color:var(--orange);color:var(--orange);}
     .hamburger-btn{display:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--card);align-items:center;justify-content:center;cursor:pointer;font-size:1rem;color:var(--body-text);transition:background .2s}
     .hamburger-btn:hover{background:var(--card2)}
     .mobile-menu{display:none;position:absolute;top:100%;right:40px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px;flex-direction:column;gap:2px;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:200}
@@ -131,7 +131,7 @@
     <a class="nav-link" href="ranking.html">Ranking</a>
     <a class="nav-link" href="kalender.html">Kalender</a>
     <a class="nav-link active" href="uebungen.html">Übungen</a>
-    <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
+    <button class="theme-toggle" id="themeToggle" title="Design wechseln">Light</button>
   </div>
   <button class="hamburger-btn" id="hamburgerBtn">☰</button>
   <div class="mobile-menu" id="mobileMenu">
@@ -141,7 +141,7 @@
     <a class="nav-link active" href="uebungen.html">Übungen</a>
     <div class="mobile-theme-row">
       <span class="mobile-theme-label">Design</span>
-      <button class="theme-toggle" id="themeToggleMobile" title="Design wechseln">🌙</button>
+      <button class="theme-toggle" id="themeToggleMobile" title="Design wechseln">Light</button>
     </div>
   </div>
 </nav>
@@ -418,7 +418,7 @@
   const themeToggleMobile=document.getElementById('themeToggleMobile');
   function applyTheme(t){
     html.setAttribute('data-theme',t);
-    const icon=t==='dark'?'🌙':'☀️';
+    const icon=t==='dark'?'Light':'Dark';
     themeToggle.textContent=icon;
     if(themeToggleMobile)themeToggleMobile.textContent=icon;
     localStorage.setItem(THEME_KEY,t);
