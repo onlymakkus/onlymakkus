@@ -199,6 +199,35 @@
     .modal-title span{color:var(--orange)}
     .modal-warn{font-size:.66rem;color:var(--muted);line-height:1.7;margin-bottom:6px}
     .modal-code{font-family:'DM Mono';font-size:1.05rem;letter-spacing:.05em;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px;margin:16px 0;word-break:break-all;color:var(--orange)}
+  
+    /* --- account widget --- */
+    .nav-right{display:flex;align-items:center;gap:14px}
+    .navrow-right{display:flex;align-items:center;gap:14px}
+    .acct{position:relative;display:flex;align-items:center}
+    .acct-login{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--body-text);background:transparent;border:1px solid var(--border);padding:7px 12px;cursor:pointer;text-decoration:none;transition:border-color .2s,color .2s}
+    .acct-login:hover{border-color:var(--orange);color:var(--orange)}
+    .acct-chip{display:flex;align-items:center;gap:9px;background:transparent;border:1px solid var(--border);border-radius:999px;padding:4px 12px 4px 4px;cursor:pointer;font-family:'DM Mono',monospace;color:var(--body-text);transition:border-color .2s}
+    .acct-chip:hover{border-color:var(--orange)}
+    .acct-av{width:26px;height:26px;border-radius:50%;background:var(--orange);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:#0a0a08;flex-shrink:0;overflow:hidden;line-height:1}
+    .acct-av.lg{width:44px;height:44px;font-size:1.5rem}
+    .acct-av.has-img{color:transparent;background-color:var(--card2)}
+    .acct-name{font-size:.68rem;letter-spacing:.06em;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .acct-lvl{font-size:.52rem;letter-spacing:.1em;color:var(--orange);border:1px solid var(--border);border-radius:999px;padding:2px 7px;flex-shrink:0}
+    .acct-menu{position:absolute;top:calc(100% + 10px);right:0;min-width:236px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px;flex-direction:column;gap:2px;box-shadow:0 14px 40px rgba(0,0,0,.4);z-index:500;display:flex}
+    [data-theme="light"] .acct-menu{box-shadow:0 14px 40px rgba(42,36,32,.16)}
+    .acct-menu-head{display:flex;align-items:center;gap:12px;padding:10px 10px 12px}
+    .acct-menu-name{font-size:.82rem;letter-spacing:.04em;color:var(--body-text)}
+    .acct-menu-title{font-family:'Instrument Serif',serif;font-style:italic;font-size:.92rem;color:var(--orange);margin-top:2px}
+    .acct-xp{padding:8px 10px 12px;border-top:1px solid var(--border)}
+    .acct-xp-info{display:flex;justify-content:space-between;font-size:.54rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+    .acct-xp-bar{height:6px;border-radius:999px;background:var(--border);overflow:hidden}
+    .acct-xp-fill{height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:999px;transition:width .5s ease}
+    .acct-menu-item{display:block;width:100%;padding:10px;border-radius:8px;font-family:'DM Mono',monospace;font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;color:var(--body-text);text-decoration:none;background:transparent;border:none;text-align:left;cursor:pointer;transition:background .15s,color .15s}
+    .acct-menu-item:hover{background:var(--card2)}
+    .acct-menu-item.danger{color:var(--muted)}
+    .acct-menu-item.danger:hover{color:#ff5555;background:rgba(255,68,68,.09)}
+    .acct-login[hidden],.acct-chip[hidden],.acct-menu[hidden],.acct-lvl[hidden],.acct-menu-title[hidden],.acct-xp[hidden]{display:none}
+
   </style>
 </head>
 <body>
@@ -207,11 +236,31 @@
 <nav>
   <a class="nav-logo" href="index.html">← OM</a>
   <div class="nav-right">
-    <a class="nav-link" href="crossfit.html">CrossFit</a>
-    <a class="nav-link" href="gaming.html">Gaming</a>
-    <a class="nav-link" href="health.html">Health</a>
-    <button class="theme-toggle" id="themeToggle" title="Design wechseln">Light</button>
-  </div>
+      <div class="acct" id="acct">
+        <a class="acct-login" id="acctLogin" href="profile.html" hidden>Anmelden</a>
+        <button class="acct-chip" id="acctChip" type="button" aria-haspopup="true" aria-expanded="false" hidden>
+          <span class="acct-av" id="acctAv"></span>
+          <span class="acct-name" id="acctName"></span>
+          <span class="acct-lvl" id="acctLvl" hidden></span>
+        </button>
+        <div class="acct-menu" id="acctMenu" hidden>
+          <div class="acct-menu-head">
+            <span class="acct-av lg" id="acctAvLg"></span>
+            <div>
+              <div class="acct-menu-name" id="acctMenuName"></div>
+              <div class="acct-menu-title" id="acctMenuTitle" hidden></div>
+            </div>
+          </div>
+          <div class="acct-xp" id="acctXp" hidden>
+            <div class="acct-xp-info"><span id="acctXpLabel">Level 1</span><span id="acctXpVal">0 / 100 XP</span></div>
+            <div class="acct-xp-bar"><div class="acct-xp-fill" id="acctXpFill"></div></div>
+          </div>
+          <a class="acct-menu-item" href="profile.html">Profil</a>
+          <button class="acct-menu-item danger" id="acctLogout" type="button">Abmelden</button>
+        </div>
+      </div>
+      <button class="theme-toggle" id="themeToggle" title="Design wechseln">Light</button>
+    </div>
 </nav>
 
 <main>
@@ -1086,6 +1135,41 @@
       }
     }catch(e){}
   })();
+</script>
+  <script>
+(function(){
+  var SESS='om_profile_session';
+  var acct=document.getElementById('acct'); if(!acct) return;
+  var s=null; try{ s=JSON.parse(localStorage.getItem(SESS)||'null'); }catch(e){ s=null; }
+  var login=document.getElementById('acctLogin');
+  var chip=document.getElementById('acctChip');
+  var menu=document.getElementById('acctMenu');
+  function initial(n){ n=(n||'').trim(); return n?n.charAt(0).toUpperCase():'?'; }
+  function paintAv(el){ if(!el)return; if(s&&s.avatarUrl){ el.style.backgroundImage='url("'+s.avatarUrl+'")'; el.classList.add('has-img'); el.textContent=''; } else { el.textContent=initial(s&&(s.displayName||s.name)); } }
+  if(!s||!s.id){ if(login)login.hidden=false; return; }
+  if(chip)chip.hidden=false;
+  var name=s.displayName||s.name||'Profil';
+  var full=name+(s.discriminator?('#'+s.discriminator):'');
+  document.getElementById('acctName').textContent=name;
+  document.getElementById('acctMenuName').textContent=full;
+  paintAv(document.getElementById('acctAv'));
+  paintAv(document.getElementById('acctAvLg'));
+  if(s.level!=null){ var lv=document.getElementById('acctLvl'); lv.hidden=false; lv.textContent='LV '+s.level; }
+  if(s.title){ var ti=document.getElementById('acctMenuTitle'); ti.hidden=false; ti.textContent=s.title; }
+  if(s.xp!=null&&s.xpNext!=null){ var xp=document.getElementById('acctXp'); xp.hidden=false;
+    document.getElementById('acctXpLabel').textContent='Level '+(s.level!=null?s.level:1);
+    document.getElementById('acctXpVal').textContent=s.xp+' / '+s.xpNext+' XP';
+    var pct=s.xpNext?Math.max(0,Math.min(100,s.xp/s.xpNext*100)):0;
+    document.getElementById('acctXpFill').style.width=pct+'%';
+  }
+  function closeM(){ menu.hidden=true; chip.setAttribute('aria-expanded','false'); }
+  function openM(){ menu.hidden=false; chip.setAttribute('aria-expanded','true'); }
+  chip.addEventListener('click',function(e){ e.stopPropagation(); if(menu.hidden)openM();else closeM(); });
+  document.addEventListener('click',function(e){ if(!acct.contains(e.target))closeM(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape')closeM(); });
+  var lo=document.getElementById('acctLogout');
+  if(lo)lo.addEventListener('click',function(){ try{localStorage.removeItem(SESS);}catch(e){} location.href='profile.html'; });
+})();
 </script>
 </body>
 </html>
