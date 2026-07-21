@@ -124,6 +124,9 @@
   .streak-label{font-family:'DM Mono',monospace;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
   .streak-tile.cold{border-color:var(--border)}
   .streak-tile.cold .streak-num{color:var(--muted)}
+  .streak-record{font-family:'DM Mono',monospace;font-size:.66rem;letter-spacing:.06em;
+    color:var(--muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+  .streak-record.is-best{color:var(--orange)}
 
   /* Eigener Fortschritt */
   .my-progress{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:20px}
@@ -197,7 +200,8 @@
     <div class="streak-tile" id="streakTile" style="display:none;">
       <div class="streak-flame" id="streakFlame">🔥</div>
       <div class="streak-num" id="streakNum">0</div>
-      <div class="streak-label" id="streakLabel">Monate in Folge</div>
+      <div class="streak-label" id="streakLabel">Tage am Stück</div>
+      <div class="streak-record" id="streakRecord" style="display:none;"></div>
     </div>
 
     <div class="my-progress" id="myProgress" style="display:none;">
@@ -442,7 +446,7 @@
       document.getElementById('mpQuote').textContent=quoteFor(pct,hasEntry);
     }catch(e){console.warn('Fortschritt:',e.message)}
 
-    // 2) Streak + Bilanz aus v_profile_history
+    // 2) Bilanz aus v_profile_history
     try{
       const hist=await sbFetch(`/rest/v1/v_profile_history?profile_id=eq.${currentProfile.id}&select=season_year,month,platz,punkte,abgerechnet`)||[];
       // Bilanz: nur abgerechnete Monate zählen für Siege/Podeste/Punkte
@@ -456,31 +460,38 @@
       document.getElementById('statPodium').textContent=podium;
       document.getElementById('statPoints').textContent=points;
       document.getElementById('myStats').style.display='block';
+    }catch(e){console.warn('Bilanz:',e.message)}
 
-      // Monats-Streak: aufeinanderfolgende Monate (season_year*12+month) bis zum aktuellen.
-      // Gaps-and-Islands, identisch zur Achievement-Logik.
-      const nums=[...new Set(hist.map(h=>h.season_year*12+h.month))].sort((a,b)=>a-b);
-      const now=new Date();
-      const curNum=now.getFullYear()*12+(now.getMonth()+1);
-      // Streak zählt zurück ab aktuellem oder letztem Monat mit Eintrag
-      let streak=0;
-      if(nums.length){
-        // Startpunkt: aktueller Monat wenn dabei, sonst höchster Eintrag
-        let anchor=nums.includes(curNum)?curNum:nums[nums.length-1];
-        // nur zählen, wenn der Anchor aktueller oder Vormonat ist (sonst Streak gebrochen)
-        if(anchor>=curNum-1){
-          const set=new Set(nums);
-          let n=anchor;
-          while(set.has(n)){streak++;n--}
-        }
-      }
+    // Daily-Streak aus der DB (dieselbe Funktion wie die Achievements -> konsistent)
+    try{
+      const [curRes, maxRes]=await Promise.all([
+        sbFetch('/rest/v1/rpc/current_daily_streak',{method:'POST',body:JSON.stringify({p_profile_id:currentProfile.id})}),
+        sbFetch('/rest/v1/rpc/longest_daily_streak',{method:'POST',body:JSON.stringify({p_profile_id:currentProfile.id})})
+      ]);
+      const streak=typeof curRes==='number'?curRes:0;
+      const record=typeof maxRes==='number'?maxRes:0;
       const tile=document.getElementById('streakTile');
       tile.style.display='block';
       document.getElementById('streakNum').textContent=streak;
-      document.getElementById('streakLabel').textContent=streak===1?'Monat in Folge':'Monate in Folge';
+      document.getElementById('streakLabel').textContent=streak===1?'Tag am Stück':'Tage am Stück';
       tile.classList.toggle('cold',streak===0);
       document.getElementById('streakFlame').textContent=streak===0?'🧊':'🔥';
-    }catch(e){console.warn('Streak/Bilanz:',e.message)}
+
+      // Rekord-Anzeige (Mischung): aktuell=Rekord -> "Bestwert!", aktuell<Rekord ->
+      // Rekord als Ziel, beide 0 -> nichts.
+      const rec=document.getElementById('streakRecord');
+      if(record<=0){
+        rec.style.display='none';
+      }else if(streak>=record){
+        rec.style.display='block';
+        rec.classList.add('is-best');
+        rec.textContent=`🏆 Bestwert! ${record} ${record===1?'Tag':'Tage'}`;
+      }else{
+        rec.style.display='block';
+        rec.classList.remove('is-best');
+        rec.textContent=`🏆 Rekord: ${record} Tage — dranbleiben!`;
+      }
+    }catch(e){console.warn('Streak:',e.message)}
   }
 
   document.getElementById('submitBtn').addEventListener('click',async()=>{
@@ -534,6 +545,10 @@
       }
       document.getElementById('fLeft').value='';
       showUndo();
+      // Heutigen Tag für den Daily-Streak loggen (Server bestimmt den Tag in Berlin-Zeit).
+      // Vor refreshMyData, damit die Streak-Kachel den neuen Stand sofort zeigt.
+      try{ await sbFetch('/rest/v1/rpc/log_active_day',{method:'POST',prefer:'return=minimal',body:JSON.stringify({p_profile_id:currentProfile.id})}); }
+      catch(e){ console.warn('log_active_day:',e.message); }
       await refreshMyData();
       // Konfetti: normal beim Eintragen, Vollgas wenn dadurch das Ziel erreicht wurde
       const justDone=document.getElementById('mpBarFill').classList.contains('done');
