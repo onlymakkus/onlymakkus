@@ -116,9 +116,49 @@
       .nav-links{display:none}
       .hamburger-btn{display:flex}
     }
+  /* Streak-Kachel */
+  .streak-tile{background:var(--card);border:1.5px solid var(--orange);border-radius:12px;
+    padding:24px;text-align:center;margin-bottom:16px;position:relative;overflow:hidden}
+  .streak-flame{font-size:2.4rem;line-height:1}
+  .streak-num{font-family:'Bebas Neue';font-size:3.4rem;color:var(--orange);line-height:.9;margin:4px 0}
+  .streak-label{font-family:'DM Mono',monospace;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .streak-tile.cold{border-color:var(--border)}
+  .streak-tile.cold .streak-num{color:var(--muted)}
+
+  /* Eigener Fortschritt */
+  .my-progress{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:20px}
+  .mp-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+  .mp-label{font-family:'DM Mono',monospace;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .mp-val{font-family:'Bebas Neue';font-size:1.5rem;color:var(--body-text)}
+  .mp-bar{height:8px;background:var(--body-bg);border:1px solid var(--border);border-radius:5px;overflow:hidden}
+  .mp-bar-fill{height:100%;background:var(--orange);transition:width .5s ease;border-radius:4px}
+  .mp-bar-fill.done{background:#22c55e}
+  .mp-quote{font-family:'DM Mono',monospace;font-size:.74rem;color:var(--body-text);margin-top:12px;line-height:1.5;font-style:italic}
+
+  /* Persönliche Bilanz */
+  .my-stats{margin:22px 0}
+  .my-stats-label{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--orange);text-align:center;margin-bottom:12px}
+  .my-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .stat-cell{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 6px;text-align:center}
+  .stat-num{font-family:'Bebas Neue';font-size:2rem;color:var(--orange);line-height:1}
+  .stat-cap{font-family:'DM Mono',monospace;font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+  @media(max-width:440px){.my-stats-grid{grid-template-columns:repeat(2,1fr)}}
+
+  /* Ranking-Link */
+  .ranking-link{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);
+    border-radius:10px;padding:16px 18px;margin:20px 0;transition:border-color .2s,transform .1s;cursor:none}
+  .ranking-link:hover{border-color:var(--orange);transform:translateX(2px)}
+  .ranking-link-icon{font-size:1.6rem;flex:0 0 auto}
+  .ranking-link-text{flex:1;font-size:.72rem;color:var(--muted);line-height:1.5;display:flex;flex-direction:column}
+  .ranking-link-text strong{font-family:'Bebas Neue';font-size:1.2rem;letter-spacing:.03em;color:var(--body-text);font-weight:400}
+  .ranking-link-arrow{font-family:'Bebas Neue';font-size:1.6rem;color:var(--orange);flex:0 0 auto}
+
+  /* Konfetti */
+  #confettiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999}
   </style>
 </head>
 <body>
+<canvas id="confettiCanvas"></canvas>
 <div class="cursor" id="cursor"></div>
 
 <div class="page-content visible" id="pageContent">
@@ -154,14 +194,16 @@
       <div class="active-tips" id="chTips"></div>
     </div>
 
-    <div class="lb-table" id="lbTable">
-      <div class="lb-row lb-header">
-        <div class="lb-head">#</div>
-        <div class="lb-head" style="text-align:left">Name</div>
-        <div class="lb-head" id="lh1">Wert</div>
-        <div class="lb-head">Fortschritt</div>
-        <div class="lb-head">Status</div>
-      </div>
+    <div class="streak-tile" id="streakTile" style="display:none;">
+      <div class="streak-flame" id="streakFlame">🔥</div>
+      <div class="streak-num" id="streakNum">0</div>
+      <div class="streak-label" id="streakLabel">Monate in Folge</div>
+    </div>
+
+    <div class="my-progress" id="myProgress" style="display:none;">
+      <div class="mp-head"><span class="mp-label">Dein Stand</span><span class="mp-val" id="mpVal">0 / 0</span></div>
+      <div class="mp-bar"><div class="mp-bar-fill" id="mpBarFill" style="width:0%"></div></div>
+      <div class="mp-quote" id="mpQuote"></div>
     </div>
 
     <!-- LOGGED OUT: gate to login -->
@@ -185,6 +227,22 @@
         <button class="undo-btn" id="undoBtn" type="button">↩ Rückgängig</button>
       </div>
     </div>
+    <div class="my-stats" id="myStats" style="display:none;">
+      <div class="my-stats-label">Deine Bilanz</div>
+      <div class="my-stats-grid">
+        <div class="stat-cell"><div class="stat-num" id="statChallenges">0</div><div class="stat-cap">Challenges</div></div>
+        <div class="stat-cell"><div class="stat-num" id="statWins">0</div><div class="stat-cap">Siege</div></div>
+        <div class="stat-cell"><div class="stat-num" id="statPodium">0</div><div class="stat-cap">Podeste</div></div>
+        <div class="stat-cell"><div class="stat-num" id="statPoints">0</div><div class="stat-cap">Punkte</div></div>
+      </div>
+    </div>
+
+    <a href="ranking.html" class="ranking-link">
+      <span class="ranking-link-icon">🏆</span>
+      <span class="ranking-link-text"><strong>Zur Rangliste</strong>Wer liegt vorne? Aktuelle Challenge, Saison &amp; Hall of Fame</span>
+      <span class="ranking-link-arrow">→</span>
+    </a>
+
     <div class="points-info">
       <span class="points-info-icon">💡</span>
       <div class="points-info-text"><strong>Punkte-System:</strong> 1 Pt fürs Mitmachen, +1 Pt pro erreichten 10%-Fortschritt (bis zu 10 Pts). Zusätzlich: Platz 1 = +5 Pts, Platz 2 = +3 Pts, Platz 3 = +2 Pts.</div>
@@ -215,7 +273,6 @@
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const safeUrl=u=>{try{const p=new URL(u,location.href);return(p.protocol==='http:'||p.protocol==='https:')?p.href:null}catch{return null}};
 
-  const medals=['🥇','🥈','🥉'];
   const pageLoadTime=Date.now();
   let ACTIVE=null, GOAL=60;
   let LAST_ADD=null;
@@ -294,54 +351,136 @@
       ACTIVE.tips.map(([label,text])=>`<div class="active-tip"><div class="active-tip-label">${esc(label)}</div><div class="active-tip-text">${esc(text)}</div></div>`).join('')
       +(vurl?`<a href="${esc(vurl)}" target="_blank" rel="noopener" class="active-video"><div class="active-video-label">🎥 Video-Anleitung</div><div class="active-video-text">Zur Übungsausführung ansehen →</div></a>`:'');
     document.getElementById('fl1Label').textContent='Wert ('+ACTIVE.unit+')';
-    document.getElementById('lh1').textContent='Wert';
-    renderLeaderboard();
+    refreshMyData();
   }
 
-  async function renderLeaderboard(){
-    const table=document.getElementById('lbTable');
-    while(table.children.length>1)table.removeChild(table.lastChild);
-    const loading=document.createElement('div');loading.className='lb-empty';loading.textContent='Lädt…';table.appendChild(loading);
+  // ── Motivationsspruch je nach Fortschritt ──
+  // ── Konfetti-Kanone ──
+  let confettiRAF=null;
+  function fireConfetti(big){
+    const canvas=document.getElementById('confettiCanvas');
+    const ctx=canvas.getContext('2d');
+    const DPR=Math.min(window.devicePixelRatio||1,2);
+    canvas.width=window.innerWidth*DPR;
+    canvas.height=window.innerHeight*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    const W=window.innerWidth,H=window.innerHeight;
+    const colors=['#ff4e1a','#ff6b3d','#f2ede4','#ffd700','#ff8f66'];
+    const count=big?180:90;
+    const parts=[];
+    // Ursprung: bei Ziel-Erreichung aus der Mitte unten (Kanone), sonst breit gestreut oben
+    for(let i=0;i<count;i++){
+      const fromBottom=big;
+      parts.push({
+        x: fromBottom ? W/2 : Math.random()*W,
+        y: fromBottom ? H+10 : -10,
+        vx:(Math.random()-0.5)*(big?14:6),
+        vy: fromBottom ? -(8+Math.random()*10) : (2+Math.random()*4),
+        size:4+Math.random()*6,
+        color:colors[Math.floor(Math.random()*colors.length)],
+        rot:Math.random()*Math.PI,
+        vrot:(Math.random()-0.5)*0.4,
+        life:0,
+        maxLife:big?150:110
+      });
+    }
+    const grav=big?0.28:0.16;
+    if(confettiRAF)cancelAnimationFrame(confettiRAF);
+    function frame(){
+      ctx.clearRect(0,0,W,H);
+      let alive=false;
+      parts.forEach(p=>{
+        if(p.life>=p.maxLife)return;
+        alive=true;
+        p.life++;
+        p.vy+=grav;
+        p.x+=p.vx;
+        p.y+=p.vy;
+        p.rot+=p.vrot;
+        const fade=Math.max(0,1-p.life/p.maxLife);
+        ctx.save();
+        ctx.globalAlpha=fade;
+        ctx.translate(p.x,p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle=p.color;
+        ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*0.6);
+        ctx.restore();
+      });
+      if(alive){confettiRAF=requestAnimationFrame(frame)}
+      else{ctx.clearRect(0,0,W,H);confettiRAF=null}
+    }
+    frame();
+  }
 
-    let data=[];
-    try{ data=await sbFetch(`/rest/v1/challenge_entries?season_month_id=eq.${ACTIVE.monthId}&select=*`)||[]; }
-    catch(e){loading.textContent='⚠ Fehler beim Laden.';return}
+  function quoteFor(pct, hasEntry){
+    if(!hasEntry) return '👀 Noch nichts eingetragen — der erste Eintrag zählt am meisten.';
+    if(pct>=100)  return '🏆 Durchgezogen! Ziel erreicht. Jetzt noch oben drauf?';
+    if(pct>=70)   return '🔥 Fast da — der Rest ist reine Formsache.';
+    if(pct>=40)   return '💪 Über die Hälfte. Genau so weiter.';
+    if(pct>=15)   return '⚡ Guter Start, jetzt dranbleiben.';
+    return '🌱 Der Anfang ist gemacht — bau drauf auf.';
+  }
 
-    // Sortierung über den gedeckelten Wert — Überschuss verändert die Rangliste nicht.
-    // Tiebreak: wer den Wert zuerst erreicht hat. Muss identisch zur
-    // DB-Funktion finalize_challenge() sein, sonst zeigt die Seite eine
-    // andere Reihenfolge als die spätere Abrechnung.
-    const capped=e=>Math.min(e.value1||0,GOAL);
-    const reached=e=>{
-      const t=e.last_progress_ts||e.created_at;
-      const ms=t?Date.parse(t):NaN;
-      return Number.isNaN(ms)?Infinity:ms;
-    };
-    data.sort((a,b)=>{
-      const ca=capped(a),cb=capped(b);
-      if(cb!==ca)return cb-ca;
-      const ra=reached(a),rb=reached(b);
-      if(ra!==rb)return ra-rb;
-      return (a.id||0)-(b.id||0);
-    });
+  // ── Meine Daten: Streak, eigener Fortschritt, Bilanz ──
+  async function refreshMyData(){
+    if(!currentProfile){
+      ['streakTile','myProgress','myStats'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none'});
+      return;
+    }
+    // 1) Eigener Fortschritt in der aktuellen Challenge
+    try{
+      const mine=await sbFetch(`/rest/v1/challenge_entries?season_month_id=eq.${ACTIVE.monthId}&profile_id=eq.${currentProfile.id}&select=value1`);
+      const v=(mine&&mine[0]&&mine[0].value1)||0;
+      const pct=Math.min(100,Math.round(v/GOAL*100));
+      const hasEntry=!!(mine&&mine.length);
+      const mp=document.getElementById('myProgress');
+      mp.style.display='block';
+      document.getElementById('mpVal').textContent=`${v} / ${GOAL} ${ACTIVE.unit}`;
+      const fill=document.getElementById('mpBarFill');
+      fill.style.width=pct+'%';
+      fill.classList.toggle('done',v>=GOAL);
+      document.getElementById('mpQuote').textContent=quoteFor(pct,hasEntry);
+    }catch(e){console.warn('Fortschritt:',e.message)}
 
-    while(table.children.length>1)table.removeChild(table.lastChild);
-    if(!data.length){const el=document.createElement('div');el.className='lb-empty';el.textContent='Noch niemand dabei — sei der Erste! 💪';table.appendChild(el);return}
+    // 2) Streak + Bilanz aus v_profile_history
+    try{
+      const hist=await sbFetch(`/rest/v1/v_profile_history?profile_id=eq.${currentProfile.id}&select=season_year,month,platz,punkte,abgerechnet`)||[];
+      // Bilanz: nur abgerechnete Monate zählen für Siege/Podeste/Punkte
+      const settled=hist.filter(h=>h.abgerechnet);
+      const challenges=hist.length;
+      const wins=settled.filter(h=>h.platz===1).length;
+      const podium=settled.filter(h=>h.platz&&h.platz<=3).length;
+      const points=settled.reduce((s,h)=>s+(h.punkte||0),0);
+      document.getElementById('statChallenges').textContent=challenges;
+      document.getElementById('statWins').textContent=wins;
+      document.getElementById('statPodium').textContent=podium;
+      document.getElementById('statPoints').textContent=points;
+      document.getElementById('myStats').style.display='block';
 
-    data.forEach((e,i)=>{
-      const v=e.value1||0;
-      const done=v>=GOAL;
-      const surplus=Math.max(0,v-GOAL);
-      const pct=Math.min(100,Math.round((v/GOAL)*100));
-      const rc=i===0?'var(--gold)':i===1?'var(--silver)':i===2?'var(--bronze)':'var(--muted)';
-      const row=document.createElement('div');row.className='lb-row';
-      row.innerHTML=`<div class="lb-rank" style="color:${rc}">${medals[i]||'#'+(i+1)}</div>`
-        +`<div class="lb-name">${esc(e.name)}</div>`
-        +`<div class="lb-val ${done?'done':''}">${v}${esc(ACTIVE.unit)}${done?' ✓':''}${surplus?`<span class="lb-surplus" title="${surplus}${esc(ACTIVE.unit)} über dem Ziel">+${surplus}</span>`:''}</div>`
-        +`<div class="lb-prog"><div class="lb-bar"><div class="lb-fill" style="width:${pct}%"></div></div><span class="lb-pct">${pct}%</span></div>`
-        +`<div class="lb-status">${done?(surplus?'🚀 Übererfüllt!':'🏆 Fertig!'):v>0?'🔥 dabei':'—'}</div>`;
-      table.appendChild(row);
-    });
+      // Monats-Streak: aufeinanderfolgende Monate (season_year*12+month) bis zum aktuellen.
+      // Gaps-and-Islands, identisch zur Achievement-Logik.
+      const nums=[...new Set(hist.map(h=>h.season_year*12+h.month))].sort((a,b)=>a-b);
+      const now=new Date();
+      const curNum=now.getFullYear()*12+(now.getMonth()+1);
+      // Streak zählt zurück ab aktuellem oder letztem Monat mit Eintrag
+      let streak=0;
+      if(nums.length){
+        // Startpunkt: aktueller Monat wenn dabei, sonst höchster Eintrag
+        let anchor=nums.includes(curNum)?curNum:nums[nums.length-1];
+        // nur zählen, wenn der Anchor aktueller oder Vormonat ist (sonst Streak gebrochen)
+        if(anchor>=curNum-1){
+          const set=new Set(nums);
+          let n=anchor;
+          while(set.has(n)){streak++;n--}
+        }
+      }
+      const tile=document.getElementById('streakTile');
+      tile.style.display='block';
+      document.getElementById('streakNum').textContent=streak;
+      document.getElementById('streakLabel').textContent=streak===1?'Monat in Folge':'Monate in Folge';
+      tile.classList.toggle('cold',streak===0);
+      document.getElementById('streakFlame').textContent=streak===0?'🧊':'🔥';
+    }catch(e){console.warn('Streak/Bilanz:',e.message)}
   }
 
   document.getElementById('submitBtn').addEventListener('click',async()=>{
@@ -395,7 +534,10 @@
       }
       document.getElementById('fLeft').value='';
       showUndo();
-      await renderLeaderboard();
+      await refreshMyData();
+      // Konfetti: normal beim Eintragen, Vollgas wenn dadurch das Ziel erreicht wurde
+      const justDone=document.getElementById('mpBarFill').classList.contains('done');
+      fireConfetti(justDone);
     }catch(e){msg.textContent='❌ Fehler: '+e.message;msg.className='form-msg err'}
     btn.textContent='Eintragen →';btn.disabled=false;
     setTimeout(()=>msg.textContent='',4000);
@@ -429,7 +571,7 @@
       msg.textContent='↩ Rückgängig gemacht.';msg.className='form-msg ok';
       LAST_ADD=null;
       document.getElementById('undoWrap').style.display='none';
-      await renderLeaderboard();
+      await refreshMyData();
     }catch(e){msg.textContent='❌ Rückgängig fehlgeschlagen: '+e.message;msg.className='form-msg err'}
     btn.disabled=false;btn.textContent='↩ Rückgängig';
     setTimeout(()=>msg.textContent='',4000);
