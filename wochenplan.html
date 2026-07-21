@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wochenplan Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14151A;
+    --panel:#1D1F26;
+    --panel-2:#242730;
+    --line:#33363F;
+    --chalk:#EDEEF0;
+    --muted:#8B909C;
+    --hard:#FF5A36;
+    --hard-dim:#5A2C22;
+    --ga:#2FD3C0;
+    --ga-dim:#1C3F3B;
+    --rest:#5B6472;
+    --rest-dim:#2A2D34;
+    --warn:#FFC145;
+    --err:#FF3B5C;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #1B1D24 0%, transparent 60%),
+      var(--bg);
+    color:var(--chalk);
+    font-family:'Inter',system-ui,sans-serif;
+    padding:32px 20px 60px;
+    min-height:100vh;
+  }
+  .wrap{max-width:980px;margin:0 auto;}
+  header{margin-bottom:28px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--ga);
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(36px,6vw,54px);
+    letter-spacing:.02em;
+    margin:0 0 6px;
+    line-height:.95;
+  }
+  .sub{color:var(--muted);font-size:14.5px;max-width:560px;line-height:1.5;}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px 22px 24px;
+    margin-bottom:22px;
+  }
+  .panel h2{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:20px;
+    letter-spacing:.04em;
+    margin:0 0 4px;
+    color:var(--chalk);
+  }
+  .panel .hint{color:var(--muted);font-size:13px;margin-bottom:16px;}
+
+  .row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;}
+  .field{display:flex;flex-direction:column;gap:8px;}
+  .field label{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600;}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap;}
+  .chip{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    padding:9px 13px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--panel-2);
+    color:var(--muted);
+    cursor:pointer;
+    user-select:none;
+    transition:.15s ease;
+  }
+  .chip.active{
+    background:var(--hard-dim);
+    border-color:var(--hard);
+    color:#FFD8CC;
+  }
+  .chip:hover{border-color:#4a4e5a;}
+
+  select{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    background:var(--panel-2);
+    color:var(--chalk);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:9px 10px;
+    min-width:150px;
+  }
+
+  .genbtn{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:17px;
+    letter-spacing:.05em;
+    background:var(--ga);
+    color:#0B1F1D;
+    border:none;
+    border-radius:9px;
+    padding:12px 22px;
+    cursor:pointer;
+    align-self:flex-end;
+    transition:.15s ease;
+  }
+  .genbtn:hover{filter:brightness(1.08);}
+  .genbtn:active{transform:translateY(1px);}
+
+  .board{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:10px;
+    margin-bottom:22px;
+  }
+  @media (max-width:760px){
+    .board{grid-template-columns:1fr;}
+  }
+  .daycard{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 12px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    position:relative;
+    overflow:hidden;
+  }
+  .daycard .dayname{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:22px;
+    letter-spacing:.03em;
+  }
+  .eveningtag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:.05em;
+    color:var(--warn);
+    text-transform:uppercase;
+  }
+  .daycard select{width:100%;min-width:0;}
+  .loadbar{
+    height:6px;
+    border-radius:4px;
+    background:var(--panel-2);
+    overflow:hidden;
+  }
+  .loadbar span{display:block;height:100%;border-radius:4px;transition:.2s ease;}
+  .load-class span,.load-arne span{background:var(--hard);width:100%;}
+  .load-ga span{background:var(--ga);width:55%;}
+  .load-rest span{background:var(--rest);width:15%;}
+
+  .daylabel{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--muted);
+  }
+
+  .summary{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .sumline{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:13.5px;
+    padding:9px 12px;
+    border-radius:8px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+  }
+  .sumline.ok{border-color:#264a3f;}
+  .sumline.warn{border-color:var(--warn);color:#FFE1A6;}
+  .sumline.err{border-color:var(--err);color:#FFC0CD;}
+  .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+  .dot.ok{background:#3DDC84;}
+  .dot.warn{background:var(--warn);}
+  .dot.err{background:var(--err);}
+
+  footer{color:var(--muted);font-size:12px;margin-top:26px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Trainingswoche · Board</div>
+    <h1>Wochenplan</h1>
+    <p class="sub">Trag deine Abenddienste ein und wie viele Classes/Arne-Tage du diese Woche willst. Ich schlage dir eine sinnvolle Verteilung vor — jeden Tag kannst du danach per Dropdown selbst anpassen.</p>
+  </header>
+
+  <section class="panel">
+    <h2>Diese Woche</h2>
+    <div class="hint">Abenddienst = keine Class möglich, nur Rest / GA / Arne vor der Arbeit.</div>
+    <div class="row">
+      <div class="field">
+        <label>Abenddienste</label>
+        <div class="chips" id="eveningChips"></div>
+      </div>
+      <div class="field">
+        <label>Classes gewünscht</label>
+        <select id="desiredClasses">
+          <option value="0">0 Classes</option>
+          <option value="1" selected>1 Class</option>
+          <option value="2">2 Classes</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Arne-Tage (inkl. GA)</label>
+        <select id="arneDays">
+          <option value="3">3 Tage</option>
+          <option value="4" selected>4 Tage</option>
+        </select>
+      </div>
+      <button class="genbtn" id="genBtn">Vorschlag generieren →</button>
+    </div>
+  </section>
+
+  <div class="board" id="board"></div>
+
+  <section class="panel">
+    <h2>Check</h2>
+    <div class="summary" id="summary"></div>
+  </section>
+
+  <footer>Dienstag &amp; Donnerstag 18 Uhr = feste Class-Slots · GA zählt bei Arne als aktiver Rest</footer>
+</div>
+
+<script>
+const DAY_NAMES = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+const CLASS_DAY_IDX = [1,3]; // Di, Do
+
+const TYPES = {
+  class: {label:'Class 18 Uhr', short:'CLASS', hard:true, loadClass:'load-class'},
+  arne:  {label:'Arne – Programm', short:'ARNE', hard:true, loadClass:'load-arne'},
+  ga:    {label:'Grundlagenausdauer', short:'GA', hard:false, loadClass:'load-ga'},
+  rest:  {label:'Rest', short:'REST', hard:false, loadClass:'load-rest'},
+};
+
+let eveningDays = new Set();
+let schedule = Array(7).fill('rest');
+
+function buildEveningChips(){
+  const el = document.getElementById('eveningChips');
+  el.innerHTML = '';
+  DAY_NAMES.forEach((name, idx)=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (eveningDays.has(idx) ? ' active' : '');
+    chip.textContent = name;
+    chip.onclick = ()=>{
+      if(eveningDays.has(idx)) eveningDays.delete(idx);
+      else eveningDays.add(idx);
+      buildEveningChips();
+    };
+    el.appendChild(chip);
+  });
+}
+
+function generate(){
+  const desiredClasses = parseInt(document.getElementById('desiredClasses').value,10);
+  const arneDaysTotal = parseInt(document.getElementById('arneDays').value,10);
+
+  const sched = Array(7).fill(null);
+
+  // 1. Class days — only Di/Do, only if not an evening-shift day
+  const classCandidates = CLASS_DAY_IDX.filter(d=>!eveningDays.has(d));
+  const classDays = classCandidates.slice(0, desiredClasses);
+  classDays.forEach(d=> sched[d]='class');
+
+  // 2. GA day — prefer an evening-shift day that's still free
+  let gaPlaced = false;
+  for(const d of [...eveningDays].sort((a,b)=>a-b)){
+    if(sched[d]===null){ sched[d]='ga'; gaPlaced=true; break; }
+  }
+
+  // 3. Walk through the week, filling hard Arne / GA / Rest with streak control
+  let arneHardBudget = arneDaysTotal - 1; // one of the Arne days is the GA day
+  let streak = 0;
+  for(let d=0; d<7; d++){
+    if(sched[d]!==null){
+      streak = TYPES[sched[d]].hard ? streak+1 : 0;
+      continue;
+    }
+    if(streak>=2){
+      if(!gaPlaced){ sched[d]='ga'; gaPlaced=true; streak=0; continue; }
+      sched[d]='rest'; streak=0; continue;
+    }
+    if(arneHardBudget>0){ sched[d]='arne'; arneHardBudget--; streak++; continue; }
+    if(!gaPlaced){ sched[d]='ga'; gaPlaced=true; streak=0; continue; }
+    sched[d]='rest'; streak=0;
+  }
+
+  // 4. If Arne-hard days are still left over (streak rules blocked them), try to
+  //    swap them into existing Rest days where it stays safe.
+  for(let d=0; d<7 && arneHardBudget>0; d++){
+    if(sched[d]==='rest'){
+      const prevHard = d>0 && TYPES[sched[d-1]]?.hard;
+      const prevPrevHard = d>1 && TYPES[sched[d-2]]?.hard;
+      if(!(prevHard && prevPrevHard)){
+        sched[d]='arne'; arneHardBudget--;
+      }
+    }
+  }
+
+  schedule = sched;
+  render();
+}
+
+function render(){
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  DAY_NAMES.forEach((name, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'daycard';
+
+    const isClassDay = CLASS_DAY_IDX.includes(idx);
+    const isEvening = eveningDays.has(idx);
+
+    const head = document.createElement('div');
+    head.innerHTML = `<div class="dayname">${name}</div>` +
+      (isEvening ? `<div class="eveningtag">Abenddienst</div>` : `<div class="daylabel">&nbsp;</div>`);
+    card.appendChild(head);
+
+    const sel = document.createElement('select');
+    Object.entries(TYPES).forEach(([key, t])=>{
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = t.label;
+      if(key==='class' && !(isClassDay && !isEvening)) opt.disabled = true;
+      sel.appendChild(opt);
+    });
+    sel.value = schedule[idx];
+    sel.onchange = ()=>{ schedule[idx] = sel.value; renderSummary(); renderLoadbars(); };
+    card.appendChild(sel);
+
+    const bar = document.createElement('div');
+    bar.className = 'loadbar';
+    bar.id = 'bar-'+idx;
+    bar.innerHTML = '<span></span>';
+    card.appendChild(bar);
+
+    board.appendChild(card);
+  });
+  renderLoadbars();
+  renderSummary();
+}
+
+function renderLoadbars(){
+  DAY_NAMES.forEach((_, idx)=>{
+    const bar = document.getElementById('bar-'+idx);
+    if(!bar) return;
+    const t = TYPES[schedule[idx]];
+    bar.querySelector('span').className = '';
+    bar.querySelector('span').classList.add(t.loadClass.split(' ')[0]);
+  });
+}
+
+function line(status, text){
+  return `<div class="sumline ${status}"><span class="dot ${status}"></span>${text}</div>`;
+}
+
+function renderSummary(){
+  const el = document.getElementById('summary');
+  const lines = [];
+
+  const desiredClasses = parseInt(document.getElementById('desiredClasses').value,10);
+  const arneDaysTotal = parseInt(document.getElementById('arneDays').value,10);
+
+  const classCount = schedule.filter(s=>s==='class').length;
+  const arneCount = schedule.filter(s=>s==='arne').length;
+  const gaCount = schedule.filter(s=>s==='ga').length;
+  const restCount = schedule.filter(s=>s==='rest').length;
+
+  // conflicts: class on evening day
+  let conflict = false;
+  schedule.forEach((s, idx)=>{ if(s==='class' && eveningDays.has(idx)) conflict = true; });
+  if(conflict){
+    lines.push(line('err', 'Eine Class liegt auf einem Abenddienst-Tag — das geht nicht, bitte umlegen.'));
+  }
+
+  // class count check
+  if(classCount === desiredClasses){
+    lines.push(line('ok', `${classCount} von ${desiredClasses} gewünschten Classes eingeplant.`));
+  } else if(classCount < desiredClasses){
+    lines.push(line('warn', `Nur ${classCount} von ${desiredClasses} Classes möglich — Di/Do fallen wegen Abenddienst weg.`));
+  } else {
+    lines.push(line('warn', `${classCount} Classes eingeplant, gewünscht waren ${desiredClasses}.`));
+  }
+
+  // arne total check
+  const arneTotal = arneCount + gaCount;
+  if(arneTotal === arneDaysTotal){
+    lines.push(line('ok', `${arneTotal} Arne-Tage (inkl. 1 GA) — passt zur Vorgabe.`));
+  } else {
+    lines.push(line('warn', `${arneTotal} von ${arneDaysTotal} Arne-Tagen eingeplant — Woche manuell prüfen.`));
+  }
+
+  // GA present
+  if(gaCount===0){
+    lines.push(line('warn', 'Kein Grundlagenausdauer-Tag eingeplant — als aktiver Rest fehlt dir das evtl.'));
+  }
+
+  // streak check
+  let maxStreak = 0, cur = 0;
+  schedule.forEach(s=>{
+    if(TYPES[s].hard){ cur++; maxStreak = Math.max(maxStreak, cur); }
+    else cur = 0;
+  });
+  if(maxStreak >= 4){
+    lines.push(line('err', `${maxStreak} harte Tage am Stück — das ist auch für dich zu viel, bau einen Break ein.`));
+  } else if(maxStreak === 3){
+    lines.push(line('warn', `3 harte Tage am Stück — machbar, aber nur wenn du dich fit fühlst.`));
+  } else {
+    lines.push(line('ok', `Maximal ${maxStreak} harte Tage am Stück.`));
+  }
+
+  // rest day present
+  if(restCount === 0){
+    lines.push(line('warn', 'Kein vollständiger Rest-Tag diese Woche.'));
+  } else {
+    lines.push(line('ok', `${restCount} vollständige${restCount===1?'r':''} Rest-Tag${restCount===1?'':'e'} eingeplant.`));
+  }
+
+  el.innerHTML = lines.join('');
+}
+
+document.getElementById('genBtn').onclick = generate;
+document.getElementById('desiredClasses').onchange = generate;
+document.getElementById('arneDays').onchange = generate;
+
+buildEveningChips();
+generate();
+</script>
+</body>
+</html>
