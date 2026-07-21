@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zuletzt freigeschaltet — onlymakkus</title>
+
+<!-- ============================================================
+     BLOCK A — CSS  (in <style> oder deine gemeinsame CSS-Datei)
+     Nutzt nur deine bestehenden Design-Tokens. Alle Klassen
+     sind mit fd- (feed) geprefixt, damit nichts kollidiert.
+     ============================================================ -->
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap');
+
+:root{
+  --bg:#0a0a08; --fg:#f2ede4; --accent:#ff4e1a;
+  --muted:rgba(242,237,228,.55);
+  --line:rgba(242,237,228,.14);
+  --card:rgba(242,237,228,.045);
+}
+body.light{
+  --bg:#f2ede4; --fg:#0a0a08; --accent:#ff4e1a;
+  --muted:rgba(10,10,8,.55);
+  --line:rgba(10,10,8,.16);
+  --card:rgba(10,10,8,.035);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font-family:'DM Mono',monospace;
+  -webkit-font-smoothing:antialiased;
+  transition:background .25s ease,color .25s ease;
+}
+
+/* ---- Feed-Baustein ---- */
+.fd-wrap{max-width:640px;margin:0 auto;padding:0 20px}
+
+.fd-head{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:12px;margin:0 0 18px;
+}
+.fd-eyebrow{
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 2px;
+}
+.fd-title{
+  font-family:'Bebas Neue',sans-serif;font-weight:400;
+  font-size:clamp(30px,7vw,44px);line-height:.95;letter-spacing:.01em;
+  margin:0;text-transform:uppercase;
+}
+.fd-count{
+  font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);
+  white-space:nowrap;
+}
+
+.fd-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+
+.fd-row{
+  display:grid;grid-template-columns:46px 1fr auto;gap:14px;align-items:center;
+  padding:14px 4px;border-bottom:1px solid var(--line);
+}
+
+/* Avatar: Bild überlagert Initiale; onerror entfernt das Bild -> Initiale sichtbar */
+.fd-av{
+  position:relative;width:46px;height:46px;flex:none;overflow:hidden;
+  background:var(--card);border:1px solid var(--line);
+  display:grid;place-items:center;
+}
+.fd-av-i{
+  font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;
+  color:var(--fg);opacity:.85;
+}
+.fd-av img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
+}
+
+.fd-body{min-width:0}
+.fd-l1{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;line-height:1.1}
+.fd-name{
+  font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.02em;
+  text-transform:uppercase;
+}
+.fd-verb{font-size:11px;color:var(--muted)}
+.fd-l2{display:flex;align-items:center;gap:8px;margin-top:3px;min-width:0}
+.fd-ico{font-size:17px;line-height:1;flex:none}
+.fd-ach{
+  font-size:13px;color:var(--fg);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+.fd-meta{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.fd-time{font-size:11px;color:var(--muted);white-space:nowrap}
+.fd-new{
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--bg);background:var(--accent);
+  padding:2px 6px;
+}
+
+/* Leer- / Fehler- / Ladezustand */
+.fd-empty,.fd-error{
+  padding:26px 4px;font-size:13px;color:var(--muted);
+  border-bottom:1px solid var(--line);line-height:1.5;
+}
+.fd-error{color:var(--accent)}
+.fd-skel{
+  display:grid;grid-template-columns:46px 1fr;gap:14px;align-items:center;
+  padding:14px 4px;border-bottom:1px solid var(--line);
+}
+.fd-skel .b{background:var(--card);height:46px}
+.fd-skel .l{height:12px;background:var(--card);width:70%}
+.fd-skel .l+.l{margin-top:8px;width:45%;height:10px}
+@keyframes fdpulse{0%,100%{opacity:1}50%{opacity:.45}}
+.fd-skel .b,.fd-skel .l{animation:fdpulse 1.2s ease-in-out infinite}
+
+@media (prefers-reduced-motion:reduce){
+  .fd-skel .b,.fd-skel .l{animation:none}
+  body{transition:none}
+}
+
+/* ---- Demo-Chrome der Standalone-Seite (beim Transplant NICHT mitnehmen) ---- */
+.demo-top{
+  max-width:640px;margin:0 auto;padding:34px 20px 8px;
+  display:flex;justify-content:flex-end;
+}
+.demo-toggle{
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--fg);background:transparent;
+  border:1px solid var(--line);padding:7px 12px;cursor:pointer;
+}
+.demo-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.demo-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.demo-foot{max-width:640px;margin:26px auto 60px;padding:0 20px;
+  font-size:11px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- Demo-Chrome (nur für die Standalone-Seite) -->
+<div class="demo-top">
+  <button class="demo-toggle" id="themeToggle" type="button">Theme</button>
+</div>
+
+<!-- ============================================================
+     BLOCK B — HTML  (diese <section> in deine Seite einsetzen)
+     ============================================================ -->
+<section class="fd-wrap" aria-labelledby="fdTitle">
+  <header class="fd-head">
+    <div>
+      <p class="fd-eyebrow">Frisch dabei</p>
+      <h2 class="fd-title" id="fdTitle">Zuletzt freigeschaltet</h2>
+    </div>
+    <span class="fd-count" id="fdCount"></span>
+  </header>
+  <ul class="fd-list" id="fdList"></ul>
+</section>
+<!-- ============================================================
+     ENDE BLOCK B
+     ============================================================ -->
+
+<div class="demo-foot">Standalone-Vorschau. Zum Einbauen: Block&nbsp;A (CSS), Block&nbsp;B (Section) und Block&nbsp;C (JS) übernehmen und <code>initFeed()</code> nach dem Laden aufrufen.</div>
+
+<!-- ============================================================
+     BLOCK C — JS  (in <script> oder deine gemeinsame JS-Datei)
+     Standalone braucht nichts weiter als initFeed() beim Laden.
+     ============================================================ -->
+<script>
+(function(){
+  'use strict';
+
+  /* --- Supabase-Zugang (identisch zu deinen anderen Seiten) --- */
+  const SB_URL = 'https://bsubsesbcxdaqofmkiqg.supabase.co';
+  const SB_KEY = 'sb_publishable_fA2Dca6SVp0eB8k_WuqLrw_zplTnXBU';
+
+  const FEED_LIMIT = 20; // wie viele Einträge der Feed zeigt
+
+  /* --- sbFetch: prüft r.ok, sonst schlägt es still fehl --- */
+  async function sbFetch(path, opts = {}){
+    const r = await fetch(SB_URL + '/rest/v1/' + path, {
+      ...opts,
+      headers: {
+        apikey: SB_KEY,
+        Authorization: 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        ...(opts.headers || {})
+      }
+    });
+    if(!r.ok){ throw new Error('Supabase ' + r.status + ': ' + (await r.text())); }
+    return r.status === 204 ? null : r.json();
+  }
+
+  /* --- Erfolgs-Katalog: Code -> {icon, name} ---
+     Deckt alle 21 Erfolge ab. Saison-Tiers (season_gold_2026 o.ä.)
+     werden per Regex aufgelöst. Alles Unbekannte kriegt einen
+     neutralen Fallback, damit nie eine Zeile bricht. --- */
+  const ACH = {
+    // 💪 Fitness
+    first_challenge:{i:'🎯',n:'Dabei'},
+    first_complete :{i:'✅',n:'Durchgezogen'},
+    five_challenges:{i:'🖐️',n:'Stammgast'},
+    streak_three   :{i:'🔥',n:'Dranbleiber'},
+    daily_7        :{i:'📅',n:'Woche geschafft'},
+    daily_30       :{i:'🗓️',n:'Monat durchgezogen'},
+    daily_100      :{i:'🏔️',n:'Hundert Tage'},
+    first_win      :{i:'🥇',n:'Erster Sieg'},
+    three_wins     :{i:'👑',n:'Seriensieger'},
+    all_podium     :{i:'🏅',n:'Komplettes Podest'},
+    fifty_points   :{i:'💯',n:'Punktesammler'},
+    overachiever   :{i:'🚀',n:'Überflieger'},
+    // 🎮 Gaming
+    game_snake     :{i:'🐍',n:'Snake-Spieler'},
+    game_blockblast:{i:'🧱',n:'Blockblast-Spieler'},
+    game_tetris    :{i:'🎮',n:'Tetris-Spieler'},
+    game_flappy    :{i:'🐤',n:'Flappy-Spieler'},
+    game_allfour   :{i:'🕹️',n:'Zocker'},
+    // ⭐ Allgemein
+    cross_both      :{i:'🌟',n:'Rundum dabei'},
+    cross_allrounder:{i:'🎭',n:'Allrounder'},
+    cross_versatile :{i:'⚡',n:'Vielseitig'},
+    cross_collector :{i:'🏆',n:'Sammler'}
+  };
+  const TIER = {
+    bronze:{i:'🥉',n:'Bronze'}, silber:{i:'🥈',n:'Silber'},
+    gold:{i:'🥇',n:'Gold'},     platin:{i:'💎',n:'Platin'}
+  };
+  function achInfo(code){
+    if(ACH[code]) return ACH[code];
+    const m = /^season_(bronze|silber|gold|platin)_(\d{4})$/.exec(code || '');
+    if(m){ const t = TIER[m[1]]; return {i:t.i, n:t.n + ' ' + m[2]}; }
+    return {i:'🏅', n:code || 'Erfolg'}; // Fallback, bricht nie
+  }
+
+  /* --- Helfer --- */
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+      {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+    ));
+  }
+  function displayName(p){
+    return (p && (p.display_name || p.name)) || 'Jemand';
+  }
+  function relTime(iso){
+    const then = new Date(iso), now = new Date();
+    const s = Math.max(0, Math.floor((now - then) / 1000));
+    if(s < 60) return 'gerade eben';
+    const min = Math.floor(s / 60); if(min < 60) return 'vor ' + min + ' Min';
+    const h = Math.floor(min / 60); if(h < 24) return 'vor ' + h + ' Std';
+    const d = Math.floor(h / 24);
+    if(d === 1) return 'gestern';
+    if(d < 7) return 'vor ' + d + ' Tagen';
+    const w = Math.floor(d / 7);
+    if(d < 35) return 'vor ' + w + ' Woche' + (w > 1 ? 'n' : '');
+    return then.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+  }
+  const isNew = iso => (Date.now() - new Date(iso).getTime()) < 24*60*60*1000;
+
+  function avatarHTML(p){
+    const letter = esc(displayName(p).charAt(0).toUpperCase() || '?');
+    const inner = '<span class="fd-av-i">' + letter + '</span>';
+    if(p && p.avatar_url){
+      // Bild überlagert die Initiale; bei Ladefehler entfernt es sich selbst.
+      return '<span class="fd-av">' + inner +
+             '<img src="' + esc(p.avatar_url) + '" alt="" loading="lazy" ' +
+             'onerror="this.remove()"></span>';
+    }
+    return '<span class="fd-av">' + inner + '</span>';
+  }
+
+  function rowHTML(entry, profById){
+    const p = profById[entry.profile_id] || null;
+    const a = achInfo(entry.code);
+    const neu = isNew(entry.unlocked_at)
+      ? '<span class="fd-new">Neu</span>' : '';
+    return '<li class="fd-row">' +
+      avatarHTML(p) +
+      '<div class="fd-body">' +
+        '<div class="fd-l1">' +
+          '<span class="fd-name">' + esc(displayName(p)) + '</span>' +
+          '<span class="fd-verb">hat freigeschaltet</span>' +
+        '</div>' +
+        '<div class="fd-l2">' +
+          '<span class="fd-ico">' + a.i + '</span>' +
+          '<span class="fd-ach">' + esc(a.n) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="fd-meta">' +
+        neu +
+        '<time class="fd-time" datetime="' + esc(entry.unlocked_at) + '">' +
+          relTime(entry.unlocked_at) +
+        '</time>' +
+      '</div>' +
+    '</li>';
+  }
+
+  function skeleton(list){
+    let html = '';
+    for(let i = 0; i < 4; i++){
+      html += '<li class="fd-skel"><div class="b"></div>' +
+              '<div><div class="l"></div><div class="l"></div></div></li>';
+    }
+    list.innerHTML = html;
+  }
+
+  /* --- Hauptfunktion --- */
+  async function initFeed(){
+    const list  = document.getElementById('fdList');
+    const count = document.getElementById('fdCount');
+    if(!list) return;
+    skeleton(list);
+
+    try{
+      // Zwei getrennte Queries, Join im Client über profile_id.
+      const [entries, profiles] = await Promise.all([
+        sbFetch('achievements?select=code,unlocked_at,profile_id' +
+                '&order=unlocked_at.desc&limit=' + FEED_LIMIT),
+        sbFetch('profiles?select=id,name,display_name,discriminator,avatar_url')
+      ]);
+
+      const profById = {};
+      (profiles || []).forEach(p => { profById[p.id] = p; });
+
+      if(!entries || entries.length === 0){
+        list.innerHTML = '<li class="fd-empty">Noch nichts freigeschaltet. ' +
+          'Die erste Challenge oder ein Spiel startet den Feed.</li>';
+        if(count) count.textContent = '';
+        return;
+      }
+
+      list.innerHTML = entries.map(e => rowHTML(e, profById)).join('');
+      if(count) count.textContent = 'letzte ' + entries.length;
+
+    }catch(err){
+      console.error('[Feed] Laden fehlgeschlagen:', err);
+      list.innerHTML = '<li class="fd-error">Feed lädt gerade nicht. ' +
+        'Kurz neu laden.</li>';
+      if(count) count.textContent = '';
+    }
+  }
+
+  // Standalone: automatisch starten. Beim Transplant kannst du initFeed()
+  // an der Stelle aufrufen, an der deine Seite fertig geladen ist.
+  window.initFeed = initFeed;
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initFeed);
+  }else{
+    initFeed();
+  }
+})();
+</script>
+<!-- ============================================================
+     ENDE BLOCK C
+     ============================================================ -->
+
+<!-- Nur Demo-Chrome: Theme-Toggle der Standalone-Seite.
+     Beim Transplant NICHT mitnehmen — deine Seite hat ihr eigenes Theme. -->
+<script>
+(function(){
+  const KEY = 'om_cf_theme';
+  const saved = localStorage.getItem(KEY);
+  if(saved === 'light') document.body.classList.add('light');
+  const btn = document.getElementById('themeToggle');
+  if(btn) btn.addEventListener('click', function(){
+    const light = document.body.classList.toggle('light');
+    localStorage.setItem(KEY, light ? 'light' : 'dark');
+  });
+})();
+</script>
+
+</body>
+</html>
