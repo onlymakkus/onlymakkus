@@ -8,28 +8,35 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --black:#0a0a08; --bg2:#111008; --panel:#141410; --panel2:#1c1c18;
-  --cream:#f2ede4; --muted:#9a9488; --border:rgba(255,255,255,0.08);
-  --orange:#ff4e1a;
+  --black:#0b0b09; --bg2:#111008; --panel:#16150f; --panel2:#1d1c15;
+  --cream:#f2ede4; --muted:#8f8a7d; --border:#2b2920;
+  --orange:#ff4e1a;--orange2:#ff6b3d;
   --danger:#ff3b5c; --violet:#7c3aed; --amber:#ffb454;
 }
 html,body{height:100%;height:calc(var(--vh, 1vh) * 100);overscroll-behavior:none}
 body{
   background:var(--black); color:var(--cream); font-family:'DM Mono',monospace;
-  overflow:hidden; cursor:none;
+  overflow:hidden;
   touch-action:manipulation;
   -webkit-touch-callout:none;
   -webkit-user-select:none; user-select:none;
   -webkit-tap-highlight-color:transparent;
   overscroll-behavior:none;
 }
-.cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
-.cursor.big{width:32px;height:32px}
-@media(hover:none){.cursor{display:none}body{cursor:auto}}
+.cursor{display:none}
+::selection{background:var(--orange);color:var(--black)}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
 
-.topbar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) 12px calc(20px + env(safe-area-inset-left));border-bottom:1px solid var(--border);background:rgba(10,10,8,0.88);backdrop-filter:blur(6px)}
+@media(hover:none){.cursor{display:none}
+::selection{background:var(--orange);color:var(--black)}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px}body{cursor:auto}}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) 12px calc(20px + env(safe-area-inset-left));border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--black) 86%,transparent);backdrop-filter:blur(10px)}
 .topbar-title{font-family:'Bebas Neue';letter-spacing:.15em;font-size:1.05rem;color:var(--cream)}
 .topbar-title span{color:var(--orange)}
+.tb-logo{display:flex;align-items:center;gap:8px;color:var(--cream);font-family:'DM Mono';font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;text-decoration:none;transition:color .2s}
+.tb-logo b{font-family:'Bebas Neue';font-size:1.15rem;letter-spacing:.06em;font-weight:400;color:var(--orange)}
+.tb-logo:hover{color:var(--orange)}
 .tb-back{background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono';font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:7px 14px;cursor:pointer;text-decoration:none;transition:all .15s}
 .tb-back:hover{border-color:var(--orange);color:var(--orange)}
 
@@ -155,6 +162,8 @@ body{
   .joystick-zone{display:block}
   .hint{display:none}
   .cursor{display:none}
+::selection{background:var(--orange);color:var(--black)}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
   body{cursor:auto}
 }
 
@@ -173,7 +182,7 @@ body{
     .acct-menu{position:absolute;top:calc(100% + 10px);right:0;min-width:236px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:8px;flex-direction:column;gap:2px;box-shadow:0 14px 40px rgba(0,0,0,.5);z-index:9000;display:flex}
     .acct-menu-head{display:flex;align-items:center;gap:12px;padding:10px 10px 12px}
     .acct-menu-name{font-size:.82rem;letter-spacing:.04em;color:var(--cream)}
-    .acct-menu-title{font-family:'Instrument Serif',serif;font-style:italic;font-size:.92rem;color:var(--orange);margin-top:2px}
+    .acct-menu-title{font-family:'DM Mono',monospace;font-style:italic;font-size:.72rem;letter-spacing:.04em;color:var(--orange);margin-top:2px}
     .acct-xp{padding:8px 10px 12px;border-top:1px solid var(--border)}
     .acct-xp-info{display:flex;justify-content:space-between;font-size:.54rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
     .acct-xp-bar{height:6px;border-radius:999px;background:var(--border);overflow:hidden}
@@ -192,8 +201,7 @@ body{
 <div class="cursor" id="cursor"></div>
 
 <div class="topbar">
-  <a class="tb-back" href="gaming.html">← Gaming</a>
-  <div class="topbar-title">SCHWARM<span>KERN</span></div>
+  <a class="tb-logo" href="gaming.html">←&nbsp; <b>OM</b> / schwarmkern</a>
   <div class="tb-right">
     <div class="acct" id="acct">
         <a class="acct-login" id="acctLogin" href="profile.html" hidden>Anmelden</a>

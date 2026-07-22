@@ -32,13 +32,23 @@ body{
 #app{position:relative;height:100vh;display:flex;flex-direction:column}
 
 /* TOP BAR */
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+.tb-back{display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--text);font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;padding:0;text-decoration:none;transition:color .2s;flex-shrink:0}
+.tb-back b{font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:.06em;font-weight:400;color:var(--phosphor)}
+.tb-back:hover{color:var(--phosphor)}
 .topbar-title{font-family:'Bebas Neue';letter-spacing:.15em;font-size:1rem;color:var(--phosphor)}
 .topbar-title span{color:var(--amber)}
-.topbar-right{display:flex;gap:14px;align-items:center}
+.topbar-right{display:flex;gap:14px;align-items:center;flex-shrink:0}
+.tb-controls{display:flex;gap:8px;align-items:center}
 .tb-btn{background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'Space Mono';font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;cursor:pointer;transition:all .15s}
 .tb-btn:hover{border-color:var(--phosphor-dim);color:var(--phosphor)}
-.chapter-tag{font-size:.6rem;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase}
+.chapter-tag{font-size:.6rem;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;text-align:center;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:640px){
+  .chapter-tag{display:none}
+  .tb-btn{padding:6px 9px;font-size:.56rem}
+  .tb-controls{gap:5px}
+  .topbar{gap:8px;padding:10px 14px}
+}
 
 /* MAIN SCREEN */
 #screen{flex:1;overflow-y:auto;padding:0}
@@ -158,9 +168,14 @@ body{
 
 <div id="app">
   <div class="topbar">
-    <a class="tb-back" href="gaming.html">← Gaming</a>
-    <div class="topbar-title">DER LETZTE <span>FUNKE</span></div>
+    <a class="tb-back" href="gaming.html">←&nbsp; <b>OM</b> / funke</a>
+    <span class="chapter-tag" id="chapterTag"></span>
     <div class="topbar-right">
+      <div class="tb-controls">
+        <button class="tb-btn" id="btnSound">Sound An</button>
+        <button class="tb-btn" id="btnInventory">Inventar</button>
+        <button class="tb-btn" id="btnSave">Speichern</button>
+      </div>
       <div class="acct" id="acct">
         <a class="acct-login" id="acctLogin" href="profile.html" hidden>Anmelden</a>
         <button class="acct-chip" id="acctChip" type="button" aria-haspopup="true" aria-expanded="false" hidden>
@@ -184,10 +199,6 @@ body{
           <button class="acct-menu-item danger" id="acctLogout" type="button">Abmelden</button>
         </div>
       </div>
-      <span class="chapter-tag" id="chapterTag"></span>
-      <button class="tb-btn" id="btnSound">Sound An</button>
-      <button class="tb-btn" id="btnInventory">Inventar</button>
-      <button class="tb-btn" id="btnSave">Speichern</button>
     </div>
   </div>
   <div id="screen"><div class="screen-inner" id="screenInner"></div></div>

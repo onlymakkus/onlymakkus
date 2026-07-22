@@ -7,11 +7,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08)}
+    :root{--black:#0b0b09;--cream:#f2ede4;--orange:#ff4e1a;--orange2:#ff6b3d;--muted:#8f8a7d;--card:#16150f;--card2:#1d1c15;--border:#2b2920}
     html,body{height:100%;height:calc(var(--vh, 1vh) * 100)}
-    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;min-height:100vh;display:flex;flex-direction:column;cursor:none;overflow-x:hidden;user-select:none}
-    .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
-    .cursor.big{width:36px;height:36px}
+    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;user-select:none}
+    .cursor{display:none}
+    
     nav{padding:18px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
     .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--cream);text-decoration:none}
     .nav-center{font-family:'Bebas Neue';font-size:1.5rem;letter-spacing:.1em}
@@ -20,11 +20,12 @@
     .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
     .nav-link:hover{color:var(--cream)}
 
-    .topbar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(10,10,8,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+    .topbar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:color-mix(in srgb,var(--black) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
     .topbar-title{font-family:'Bebas Neue';letter-spacing:.15em;font-size:1.05rem;color:var(--cream)}
     .topbar-title span{color:var(--orange)}
-    .tb-back{background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono';font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 14px;text-decoration:none;transition:all .2s}
-    .tb-back:hover{border-color:var(--orange);color:var(--orange)}
+    .tb-back{display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--cream);font-family:'DM Mono';font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;padding:0;text-decoration:none;transition:color .2s}
+    .tb-back b{font-family:'Bebas Neue';font-size:1.15rem;letter-spacing:.06em;font-weight:400;color:var(--orange)}
+    .tb-back:hover{color:var(--orange)}
     main{flex:1;display:flex;flex-direction:column;align-items:center;padding:20px 16px 60px;gap:16px;padding-top:66px}
     .game-layout{display:flex;gap:20px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
     .side-panel{display:flex;flex-direction:column;gap:16px;width:100px}
@@ -44,12 +45,12 @@
     .go-sub{font-size:.72rem;color:var(--muted)}
     .go-input{background:#1c1c18;border:1px solid var(--border);color:var(--cream);font-family:'DM Mono';font-size:.85rem;padding:11px 16px;outline:none;width:190px;text-align:center}
     .go-input:focus{border-color:var(--orange)}
-    .go-btn{padding:11px 28px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.68rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;cursor:none}
+    .go-btn{padding:11px 28px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.68rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;}
     .go-btn:hover{background:#ff6b3d}
-    .go-skip{font-size:.6rem;color:var(--muted);background:none;border:none;cursor:none;text-decoration:underline}
+    .go-skip{font-size:.6rem;color:var(--muted);background:none;border:none;text-decoration:underline}
     .go-msg{font-size:.62rem;color:var(--orange);min-height:16px}
     .hint{font-size:.6rem;color:var(--muted);text-align:center;letter-spacing:.05em;line-height:1.8}
-    .btn-start{padding:12px 30px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.68rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;cursor:none}
+    .btn-start{padding:12px 30px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.68rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;}
     .btn-start:hover{background:#ff6b3d}
     .section-label{font-size:.6rem;letter-spacing:.35em;text-transform:uppercase;color:var(--orange);margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:14px;width:100%;max-width:480px}
     .section-label::before,.section-label::after{content:'';flex:0 0 32px;height:1px;background:var(--border)}
@@ -96,7 +97,7 @@
     .acct-menu{position:absolute;top:calc(100% + 10px);right:0;min-width:236px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px;flex-direction:column;gap:2px;box-shadow:0 14px 40px rgba(0,0,0,.5);z-index:9000;display:flex}
     .acct-menu-head{display:flex;align-items:center;gap:12px;padding:10px 10px 12px}
     .acct-menu-name{font-size:.82rem;letter-spacing:.04em;color:var(--cream)}
-    .acct-menu-title{font-family:'Instrument Serif',serif;font-style:italic;font-size:.92rem;color:var(--orange);margin-top:2px}
+    .acct-menu-title{font-family:'DM Mono',monospace;font-style:italic;font-size:.72rem;letter-spacing:.04em;color:var(--orange);margin-top:2px}
     .acct-xp{padding:8px 10px 12px;border-top:1px solid var(--border)}
     .acct-xp-info{display:flex;justify-content:space-between;font-size:.54rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
     .acct-xp-bar{height:6px;border-radius:999px;background:var(--border);overflow:hidden}
@@ -112,8 +113,7 @@
 <body>
 <div class="cursor" id="cursor"></div>
 <div class="topbar">
-  <a class="tb-back" href="gaming.html">← Gaming</a>
-  <div class="topbar-title">TETRIS<span> 2026</span></div>
+  <a class="tb-back" href="gaming.html">←&nbsp; <b>OM</b> / tetris</a>
   <div class="acct" id="acct">
         <a class="acct-login" id="acctLogin" href="profile.html" hidden>Anmelden</a>
         <button class="acct-chip" id="acctChip" type="button" aria-haspopup="true" aria-expanded="false" hidden>
