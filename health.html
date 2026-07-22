@@ -4,118 +4,141 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Health — onlymakkus</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
     :root, [data-theme="dark"]{
-      --black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--orange2:#ff6b3d;--muted:#9a9488;
-      --card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08);
-      --body-bg:var(--black);--body-text:var(--cream);color-scheme:dark;
+      --ink:#0b0b09;--paper:#f2ede4;--blaze:#ff4e1a;--blaze2:#ff6b3d;--chalk:#8f8a7d;
+      --field:#16150f;--field2:#1d1c15;--line:#2b2920;
+      --body-bg:var(--ink);--body-text:var(--paper);color-scheme:dark;
     }
-
     [data-theme="light"]{color-scheme:light;
-      --black:#2A2420;--cream:#2A2420;--orange:#FF6E35;--orange2:#e85a1f;--muted:#8A8078;
-      --card:#FFFFFF;--card2:#FFF6EE;--border:rgba(42,36,32,0.1);
-      --body-bg:#FBF6EE;--body-text:#2A2420;
+      --ink:#2a2420;--paper:#2a2420;--blaze:#e8480f;--blaze2:#c93d0a;--chalk:#8a8078;
+      --field:#ffffff;--field2:#fbf4ea;--line:#dcd4c6;
+      --body-bg:#f4efe6;--body-text:#2a2420;
     }
 
     html{scroll-behavior:smooth}
-    body{background:var(--body-bg);color:var(--body-text);font-family:'DM Mono',monospace;overflow-x:hidden;cursor:none;transition:background .3s,color .3s}
-    .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
-    .cursor.big{width:36px;height:36px}
-    [data-theme="light"] .cursor{mix-blend-mode:normal;background:var(--orange)}
+    body{background:var(--body-bg);color:var(--body-text);font-family:'DM Mono',monospace;overflow-x:hidden;transition:background .3s,color .3s;-webkit-font-smoothing:antialiased;min-height:100vh}
+    ::selection{background:var(--blaze);color:var(--ink)}
+    a{color:inherit}
+    :focus-visible{outline:2px solid var(--blaze);outline-offset:3px}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-    nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;mix-blend-mode:difference}
-    [data-theme="light"] nav{mix-blend-mode:normal;background:rgba(251,246,238,.88);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
-    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--body-text);text-decoration:none}
-    .nav-right{display:flex;gap:20px;align-items:center}
-    .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--body-text);text-decoration:none;opacity:.5;transition:opacity .2s;cursor:pointer;background:none;border:none;font-family:'DM Mono'}
-    .nav-link:hover{opacity:1}
-    .theme-toggle{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--body-text);background:transparent;border:1px solid var(--border);padding:7px 12px;cursor:pointer;}
-    .theme-toggle:hover{border-color:var(--orange);color:var(--orange);}
-    [data-theme="light"] .theme-toggle{mix-blend-mode:normal}
+    /* ---------- NAV ---------- */
+    nav{position:sticky;top:0;z-index:100;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;background:color-mix(in srgb,var(--body-bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+    .nav-logo{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--body-text);text-decoration:none;display:flex;align-items:center;gap:8px}
+    .nav-logo b{font-family:'Bebas Neue';font-size:1.15rem;letter-spacing:.06em;color:var(--blaze)}
+    .nav-right{display:flex;align-items:center;gap:14px}
+    .theme-toggle{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk);background:transparent;border:1px solid var(--line);padding:7px 11px;cursor:pointer;transition:.2s}
+    .theme-toggle:hover{border-color:var(--blaze);color:var(--blaze)}
 
-    .hero{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 40px 60px;text-align:center;position:relative;overflow:hidden}
-    .hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#0a0a08 40%,#061a12 100%)}
-    [data-theme="light"] .hero-bg{background:linear-gradient(135deg,#FBF6EE 40%,#EAF5EE 100%)}
-    .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(78,255,150,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(78,255,150,.04) 1px,transparent 1px);background-size:60px 60px}
-    [data-theme="light"] .hero-grid{background-image:linear-gradient(rgba(53,180,110,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(53,180,110,.06) 1px,transparent 1px)}
-    .hero-tag{font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:var(--orange);margin-bottom:16px;position:relative}
-    .hero-title{font-family:'Bebas Neue';font-size:clamp(4rem,15vw,10rem);line-height:.9;position:relative}
-    .hero-title span{color:var(--orange)}
-    .hero-sub{margin-top:18px;font-size:.78rem;color:var(--muted);max-width:440px;line-height:1.8;position:relative}
+    /* ---------- HERO: SCORE SHEET ---------- */
+    .sheet{max-width:1120px;margin:0 auto;padding:56px 28px 0}
+    .sheet-top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding-bottom:14px;border-bottom:2px solid var(--body-text)}
+    .sheet-meta{font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:var(--chalk)}
+    .sheet-meta b{color:var(--blaze);font-weight:500}
 
-    .marquee-wrap{overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:14px 0;background:var(--card)}
-    .marquee-track{display:flex;gap:60px;animation:marquee 22s linear infinite;white-space:nowrap}
-    .marquee-item{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
-    .dot{color:var(--orange);margin-right:10px}
-
-    .section{padding:80px 40px;max-width:1100px;margin:0 auto}
-    .section-label{font-size:.6rem;letter-spacing:.35em;text-transform:uppercase;color:var(--orange);margin-bottom:44px;display:flex;align-items:center;justify-content:center;gap:16px}
-    .section-label::before,.section-label::after{content:'';flex:0 0 40px;height:1px;background:var(--border)}
-
-    .hub-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2px}
-    [data-theme="light"] .hub-cards{gap:16px}
-    .hub-card{background:var(--card);padding:48px 36px;text-decoration:none;color:var(--body-text);display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;transition:background .3s,box-shadow .3s;cursor:none}
-    [data-theme="light"] .hub-card{cursor:pointer;box-shadow:0 2px 12px rgba(42,36,32,.05)}
-    .hub-card:hover{background:var(--card2)}
-    [data-theme="light"] .hub-card:hover{box-shadow:0 8px 28px rgba(255,110,53,.15)}
-    .hub-card-num{font-family:'Bebas Neue';font-size:5rem;color:rgba(255,255,255,.04);line-height:1;position:absolute;top:16px;right:20px}
-    [data-theme="light"] .hub-card-num{color:rgba(42,36,32,.04)}
-    .hub-card-icon{font-size:2.2rem}
-    .hub-card-title{font-family:'Bebas Neue';font-size:2.6rem;line-height:.95;letter-spacing:.02em}
-    .hub-card-sub{font-family:'Instrument Serif';font-style:italic;font-size:1rem;color:var(--orange)}
-    .hub-card-desc{font-size:.7rem;color:var(--muted);line-height:1.9}
-    .hub-card-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
-    .tag{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;border:1px solid rgba(255,255,255,.1);padding:3px 10px;color:var(--muted)}
-    [data-theme="light"] .tag{border-color:rgba(42,36,32,.15)}
-    .hub-card-arrow{font-size:1.1rem;color:var(--orange);margin-top:auto;transition:transform .2s}
-    .hub-card:hover .hub-card-arrow{transform:translate(4px,-4px)}
-    .hub-card.soon{opacity:.55;cursor:not-allowed}
-    .hub-card.soon:hover{background:var(--card)}
-
-    footer{padding:36px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
-    footer a{color:var(--muted);text-decoration:none}
-
-    @media(max-width:600px){nav{padding:16px 20px}.hero{padding:100px 20px 50px}.section{padding:60px 20px}}
+    .marquee-line{overflow:hidden;padding:9px 0;border-bottom:1px solid var(--line);margin-bottom:34px}
+    .marquee-track{display:flex;gap:44px;animation:marquee 26s linear infinite;white-space:nowrap;width:max-content}
+    .marquee-item{font-size:.58rem;letter-spacing:.28em;text-transform:uppercase;color:var(--chalk);flex-shrink:0}
+    .dot{color:var(--blaze);margin-right:9px}
     @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
-    /* --- account widget --- */
-    .nav-right{display:flex;align-items:center;gap:14px}
+    .hero{display:grid;grid-template-columns:1fr 1.05fr;gap:48px;align-items:start;padding-bottom:60px}
+    .hero-left{padding-top:8px}
+    .hero-kicker{font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:var(--blaze);margin-bottom:20px}
+    .hero-title{font-family:'Bebas Neue';font-size:clamp(3.6rem,11vw,8.2rem);line-height:.82;letter-spacing:.01em}
+    .hero-title .cut{color:var(--blaze)}
+    .hero-sub{margin-top:22px;font-size:.76rem;line-height:1.9;color:var(--chalk);max-width:34ch}
+
+    /* body-in-numbers panel (right) */
+    .vitals{border:1px solid var(--line);background:var(--field)}
+    .vitals-head{padding:14px 18px;border-bottom:1px solid var(--line);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--chalk)}
+    .vitals-head b{color:var(--body-text);font-weight:500}
+    .vitals-grid{display:grid;grid-template-columns:1fr 1fr}
+    .vitals-cell{padding:18px;border-top:1px solid var(--line)}
+    .vitals-cell:nth-child(-n+2){border-top:none}
+    .vitals-cell:nth-child(odd){border-right:1px solid var(--line)}
+    .vitals-cell-l{font-size:.54rem;letter-spacing:.16em;text-transform:uppercase;color:var(--chalk);margin-bottom:6px}
+    .vitals-cell-v{font-family:'Bebas Neue';font-size:1.5rem;line-height:1;letter-spacing:.02em}
+    .vitals-cell-v .u{font-size:.9rem;color:var(--chalk);margin-left:4px}
+    .vitals-note{padding:13px 18px;border-top:1px solid var(--line);font-size:.6rem;line-height:1.7;color:var(--chalk)}
+    .vitals-note b{color:var(--blaze);font-weight:500}
+
+    /* ---------- INDEX / TOOLS ---------- */
+    .section{max-width:1120px;margin:0 auto;padding:0 28px 80px}
+    .section-label{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--chalk);display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:0}
+    .section-label b{color:var(--body-text);font-weight:500}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--line)}
+
+    .index{border:1px solid var(--line);border-top:none}
+    .index-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:24px;padding:28px 24px;text-decoration:none;color:var(--body-text);border-top:1px solid var(--line);transition:background .18s}
+    .index-row:first-child{border-top:none}
+    .index-row:hover{background:var(--field)}
+    .index-tag{font-family:'DM Mono',monospace;font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk);width:96px;flex-shrink:0}
+    .index-main{min-width:0}
+    .index-title{font-family:'Bebas Neue';font-size:2.1rem;line-height:.95;letter-spacing:.03em;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+    .index-note{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blaze)}
+    .index-desc{font-size:.68rem;line-height:1.8;color:var(--chalk);margin-top:8px;max-width:64ch}
+    .index-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+    .tag{font-size:.53rem;letter-spacing:.16em;text-transform:uppercase;border:1px solid var(--line);padding:3px 9px;color:var(--chalk)}
+    .index-arrow{font-family:'Bebas Neue';font-size:2rem;color:var(--line);transition:color .18s,transform .18s;align-self:center}
+    .index-row:hover .index-arrow{color:var(--blaze);transform:translateX(5px)}
+
+    /* ---------- FOOTER ---------- */
+    footer{border-top:1px solid var(--line);padding:28px;display:flex;justify-content:center;gap:26px;font-size:.58rem;color:var(--chalk);letter-spacing:.14em;text-transform:uppercase;flex-wrap:wrap}
+    footer a{color:var(--chalk);text-decoration:none}
+    footer a:hover{color:var(--blaze)}
+
+    /* ---------- RESPONSIVE ---------- */
+    @media(max-width:820px){
+      .hero{grid-template-columns:1fr;gap:34px}
+      .hero-sub{max-width:none}
+    }
+    @media(max-width:560px){
+      nav{padding:12px 18px}
+      .sheet{padding:34px 18px 0}
+      .section{padding:0 18px 60px}
+      .hero{padding-bottom:48px}
+      .index-row{grid-template-columns:1fr;gap:10px;padding:22px 18px}
+      .index-arrow{display:none}
+      .index-tag{width:auto}
+    }
+
+    /* ---------- ACCOUNT WIDGET ---------- */
     .navrow-right{display:flex;align-items:center;gap:14px}
     .acct{position:relative;display:flex;align-items:center}
-    .acct-login{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--body-text);background:transparent;border:1px solid var(--border);padding:7px 12px;cursor:pointer;text-decoration:none;transition:border-color .2s,color .2s}
-    .acct-login:hover{border-color:var(--orange);color:var(--orange)}
-    .acct-chip{display:flex;align-items:center;gap:9px;background:transparent;border:1px solid var(--border);border-radius:999px;padding:4px 12px 4px 4px;cursor:pointer;font-family:'DM Mono',monospace;color:var(--body-text);transition:border-color .2s}
-    .acct-chip:hover{border-color:var(--orange)}
-    .acct-av{width:26px;height:26px;border-radius:50%;background:var(--orange);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:#0a0a08;flex-shrink:0;overflow:hidden;line-height:1}
+    .acct-login{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--body-text);background:transparent;border:1px solid var(--line);padding:7px 11px;cursor:pointer;text-decoration:none;transition:border-color .2s,color .2s}
+    .acct-login:hover{border-color:var(--blaze);color:var(--blaze)}
+    .acct-chip{display:flex;align-items:center;gap:9px;background:transparent;border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 4px;cursor:pointer;font-family:'DM Mono',monospace;color:var(--body-text);transition:border-color .2s}
+    .acct-chip:hover{border-color:var(--blaze)}
+    .acct-av{width:26px;height:26px;border-radius:50%;background:var(--blaze);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:#0a0a08;flex-shrink:0;overflow:hidden;line-height:1}
     .acct-av.lg{width:44px;height:44px;font-size:1.5rem}
-    .acct-av.has-img{color:transparent;background-color:var(--card2)}
+    .acct-av.has-img{color:transparent;background-color:var(--field2)}
     .acct-name{font-size:.68rem;letter-spacing:.06em;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .acct-lvl{font-size:.52rem;letter-spacing:.1em;color:var(--orange);border:1px solid var(--border);border-radius:999px;padding:2px 7px;flex-shrink:0}
-    .acct-menu{position:absolute;top:calc(100% + 10px);right:0;min-width:236px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px;flex-direction:column;gap:2px;box-shadow:0 14px 40px rgba(0,0,0,.4);z-index:500;display:flex}
+    .acct-lvl{font-size:.52rem;letter-spacing:.1em;color:var(--blaze);border:1px solid var(--line);border-radius:999px;padding:2px 7px;flex-shrink:0}
+    .acct-menu{position:absolute;top:calc(100% + 10px);right:0;min-width:236px;background:var(--field);border:1px solid var(--line);border-radius:12px;padding:8px;flex-direction:column;gap:2px;box-shadow:0 14px 40px rgba(0,0,0,.4);z-index:500;display:flex}
     [data-theme="light"] .acct-menu{box-shadow:0 14px 40px rgba(42,36,32,.16)}
     .acct-menu-head{display:flex;align-items:center;gap:12px;padding:10px 10px 12px}
     .acct-menu-name{font-size:.82rem;letter-spacing:.04em;color:var(--body-text)}
-    .acct-menu-title{font-family:'Instrument Serif',serif;font-style:italic;font-size:.92rem;color:var(--orange);margin-top:2px}
-    .acct-xp{padding:8px 10px 12px;border-top:1px solid var(--border)}
-    .acct-xp-info{display:flex;justify-content:space-between;font-size:.54rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
-    .acct-xp-bar{height:6px;border-radius:999px;background:var(--border);overflow:hidden}
-    .acct-xp-fill{height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:999px;transition:width .5s ease}
+    .acct-menu-title{font-family:'DM Mono',monospace;font-style:italic;font-size:.72rem;color:var(--blaze);margin-top:3px;letter-spacing:.04em}
+    .acct-xp{padding:8px 10px 12px;border-top:1px solid var(--line)}
+    .acct-xp-info{display:flex;justify-content:space-between;font-size:.54rem;letter-spacing:.08em;color:var(--chalk);text-transform:uppercase;margin-bottom:6px}
+    .acct-xp-bar{height:6px;border-radius:999px;background:var(--line);overflow:hidden}
+    .acct-xp-fill{height:100%;width:0;background:linear-gradient(90deg,var(--blaze),var(--blaze2));border-radius:999px;transition:width .5s ease}
     .acct-menu-item{display:block;width:100%;padding:10px;border-radius:8px;font-family:'DM Mono',monospace;font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;color:var(--body-text);text-decoration:none;background:transparent;border:none;text-align:left;cursor:pointer;transition:background .15s,color .15s}
-    .acct-menu-item:hover{background:var(--card2)}
-    .acct-menu-item.danger{color:var(--muted)}
+    .acct-menu-item:hover{background:var(--field2)}
+    .acct-menu-item.danger{color:var(--chalk)}
     .acct-menu-item.danger:hover{color:#ff5555;background:rgba(255,68,68,.09)}
     .acct-login[hidden],.acct-chip[hidden],.acct-menu[hidden],.acct-lvl[hidden],.acct-menu-title[hidden],.acct-xp[hidden]{display:none}
-
   </style>
 </head>
 <body>
-<div class="cursor" id="cursor"></div>
 
 <nav>
-  <a class="nav-logo" href="index.html">← OM</a>
+  <a class="nav-logo" href="index.html">←&nbsp; <b>OM</b> / health</a>
   <div class="nav-right">
       <div class="acct" id="acct">
         <a class="acct-login" id="acctLogin" href="profile.html" hidden>Anmelden</a>
@@ -144,47 +167,80 @@
     </div>
 </nav>
 
-<section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-grid"></div>
-  <p class="hero-tag">// kalorien, gewicht, fortschritt</p>
-  <h1 class="hero-title">HEA<span>LTH</span></h1>
-  <p class="hero-sub">Dein Körper in Zahlen — Kalorien tracken, Gewicht und Umfänge festhalten. Getrennt von CrossFit, verbunden mit deinem Profil.</p>
-</section>
-
-<div class="marquee-wrap">
-  <div class="marquee-track">
-    <span class="marquee-item"><span class="dot">●</span>kalorien</span>
-    <span class="marquee-item"><span class="dot">●</span>makros</span>
-    <span class="marquee-item"><span class="dot">●</span>gewicht</span>
-    <span class="marquee-item"><span class="dot">●</span>körperumfänge</span>
-    <span class="marquee-item"><span class="dot">●</span>kalorien</span>
-    <span class="marquee-item"><span class="dot">●</span>makros</span>
-    <span class="marquee-item"><span class="dot">●</span>gewicht</span>
-    <span class="marquee-item"><span class="dot">●</span>körperumfänge</span>
+<!-- SCORE SHEET HEADER -->
+<div class="sheet">
+  <div class="sheet-top">
+    <span class="sheet-meta">Health Tracking</span>
+    <span class="sheet-meta">Dein <b>Profil</b></span>
   </div>
 </div>
+<div class="sheet" style="padding-top:0;padding-bottom:0">
+  <div class="marquee-line">
+    <div class="marquee-track">
+      <span class="marquee-item"><span class="dot">●</span>kalorien</span>
+      <span class="marquee-item"><span class="dot">●</span>makros</span>
+      <span class="marquee-item"><span class="dot">●</span>gewicht</span>
+      <span class="marquee-item"><span class="dot">●</span>körperumfänge</span>
+      <span class="marquee-item"><span class="dot">●</span>kalorien</span>
+      <span class="marquee-item"><span class="dot">●</span>makros</span>
+      <span class="marquee-item"><span class="dot">●</span>gewicht</span>
+      <span class="marquee-item"><span class="dot">●</span>körperumfänge</span>
+    </div>
+  </div>
 
+  <section class="hero">
+    <div class="hero-left">
+      <p class="hero-kicker">// kalorien, gewicht, fortschritt</p>
+      <h1 class="hero-title">HEA<span class="cut">LTH</span></h1>
+      <p class="hero-sub">Dein Körper in Zahlen — Kalorien tracken, Gewicht und Umfänge festhalten. Getrennt von CrossFit, verbunden mit deinem Profil.</p>
+    </div>
+
+    <div class="vitals">
+      <div class="vitals-head">Dein Körper — <b>in Zahlen</b></div>
+      <div class="vitals-grid">
+        <div class="vitals-cell">
+          <div class="vitals-cell-l">Kalorien</div>
+          <div class="vitals-cell-v">täglich</div>
+        </div>
+        <div class="vitals-cell">
+          <div class="vitals-cell-l">Makros</div>
+          <div class="vitals-cell-v">P·C·F</div>
+        </div>
+        <div class="vitals-cell">
+          <div class="vitals-cell-l">Gewicht</div>
+          <div class="vitals-cell-v">Verlauf</div>
+        </div>
+        <div class="vitals-cell">
+          <div class="vitals-cell-l">Umfänge</div>
+          <div class="vitals-cell-v">über Zeit</div>
+        </div>
+      </div>
+      <div class="vitals-note">Alles <b>profilgebunden</b> — deine Daten bleiben bei deinem Login, getrennt vom CrossFit-Bereich.</div>
+    </div>
+  </section>
+</div>
+
+<!-- INDEX / TOOLS -->
 <div class="section">
-  <p class="section-label">tools</p>
-  <div class="hub-cards">
-    <a href="tracker.html" class="hub-card">
-      <div class="hub-card-num">01</div>
-      <div class="hub-card-icon">🍽️</div>
-      <div class="hub-card-title">KALORIEN</div>
-      <div class="hub-card-sub">Ernährungstracker</div>
-      <p class="hub-card-desc">Kalorien und Makros tracken, Schnellzugriff auf häufige Lebensmittel, Barcode-Scan.</p>
-      <div class="hub-card-tags"><span class="tag">täglich</span><span class="tag">profil gebunden</span></div>
-      <div class="hub-card-arrow">→</div>
+  <p class="section-label"><b>Tools</b> — zwei Tracker</p>
+  <div class="index">
+    <a href="tracker.html" class="index-row">
+      <span class="index-tag">Kalorien</span>
+      <div class="index-main">
+        <div class="index-title">ERNÄHRUNGSTRACKER <span class="index-note">// täglich</span></div>
+        <p class="index-desc">Kalorien und Makros tracken, Schnellzugriff auf häufige Lebensmittel, Barcode-Scan.</p>
+        <div class="index-tags"><span class="tag">täglich</span><span class="tag">profil gebunden</span></div>
+      </div>
+      <span class="index-arrow">→</span>
     </a>
-    <a href="koerpertracker.html" class="hub-card">
-      <div class="hub-card-num">02</div>
-      <div class="hub-card-icon">📏</div>
-      <div class="hub-card-title">KÖRPERMASSE</div>
-      <div class="hub-card-sub">Gewicht &amp; Umfänge</div>
-      <p class="hub-card-desc">Gewicht und Körperumfänge über Zeit festhalten und den Verlauf sehen.</p>
-      <div class="hub-card-tags"><span class="tag">verlauf</span><span class="tag">profil gebunden</span></div>
-      <div class="hub-card-arrow">→</div>
+    <a href="koerpertracker.html" class="index-row">
+      <span class="index-tag">Körpermaße</span>
+      <div class="index-main">
+        <div class="index-title">GEWICHT &amp; UMFÄNGE <span class="index-note">// verlauf</span></div>
+        <p class="index-desc">Gewicht und Körperumfänge über die Zeit festhalten und den Verlauf sehen.</p>
+        <div class="index-tags"><span class="tag">verlauf</span><span class="tag">profil gebunden</span></div>
+      </div>
+      <span class="index-arrow">→</span>
     </a>
   </div>
 </div>
@@ -208,10 +264,6 @@
   themeToggle.addEventListener('click',()=>{
     applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark');
   });
-
-  const cursor=document.getElementById('cursor');
-  document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
-  document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
 </script>
   <script>
 (function(){
