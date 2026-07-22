@@ -5,137 +5,122 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>onlymakkus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --black: #0a0a08;
-      --cream: #f2ede4;
-      --orange: #ff4e1a;
-      --muted: #9a9488;
-      --card: #141410;
-      --card2: #1c1c18;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --ink:#0b0b09;--paper:#f2ede4;--blaze:#ff4e1a;--blaze2:#ff6b3d;--chalk:#8f8a7d;
+      --field:#16150f;--field2:#1d1c15;--line:#2b2920;
     }
-    html { scroll-behavior: smooth; }
-    body { background: var(--black); color: var(--cream); font-family: 'DM Mono', monospace; overflow-x: hidden; cursor: none; }
+    html{scroll-behavior:smooth}
+    body{background:var(--ink);color:var(--paper);font-family:'DM Mono',monospace;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+    ::selection{background:var(--blaze);color:var(--ink)}
+    a{color:inherit;text-decoration:none}
+    :focus-visible{outline:2px solid var(--blaze);outline-offset:3px}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-    .cursor { position: fixed; width: 12px; height: 12px; background: var(--orange); border-radius: 50%; pointer-events: none; z-index: 999999; transform: translate(-50%,-50%); transition: width 0.2s, height 0.2s; mix-blend-mode: difference; }
-    .cursor.big { width: 40px; height: 40px; }
+    /* ---------- NAV ---------- */
+    nav{position:sticky;top:0;z-index:100;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;background:color-mix(in srgb,var(--ink) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+    .nav-logo{font-family:'Bebas Neue';font-size:1.3rem;letter-spacing:.08em;color:var(--blaze)}
+    .nav-links{display:flex;gap:22px}
+    .nav-link{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--chalk);transition:color .2s}
+    .nav-link:hover{color:var(--paper)}
+    @media(max-width:560px){.nav-links{gap:14px}.nav-link{font-size:.55rem;letter-spacing:.12em}}
 
-    /* NAV */
-    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; mix-blend-mode: difference; }
-    .nav-logo { font-family: 'Bebas Neue'; font-size: 1.4rem; letter-spacing: 0.1em; color: var(--cream); text-decoration: none; }
-    .nav-links { display: flex; gap: 24px; }
-    .nav-link { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cream); text-decoration: none; opacity: 0.5; transition: opacity 0.2s; }
-    .nav-link:hover { opacity: 1; }
+    /* ---------- HERO ---------- */
+    .hero{min-height:88vh;display:flex;flex-direction:column;justify-content:center;padding:80px 28px 40px;max-width:1120px;margin:0 auto;position:relative}
+    .hero-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding-bottom:12px;border-bottom:2px solid var(--paper);margin-bottom:40px}
+    .hero-meta{font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:var(--chalk)}
+    .hero-meta b{color:var(--blaze);font-weight:500}
+    .hero-tag{font-size:.64rem;letter-spacing:.3em;text-transform:uppercase;color:var(--blaze);margin-bottom:22px;opacity:0;animation:fadeUp .6s ease forwards .15s}
+    .hero-title{font-family:'Bebas Neue';font-size:clamp(4.5rem,17vw,15rem);line-height:.82;letter-spacing:-.01em;opacity:0;animation:fadeUp .8s ease forwards .3s}
+    .hero-title span{color:var(--blaze)}
+    .hero-sub{margin-top:26px;font-size:.78rem;color:var(--chalk);max-width:44ch;line-height:1.9;opacity:0;animation:fadeUp .8s ease forwards .55s}
+    .hero-ticker{margin-top:40px;display:flex;align-items:center;gap:14px;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk);opacity:0;animation:fadeUp .8s ease forwards .8s}
+    .hero-live-dot{width:7px;height:7px;border-radius:50%;background:var(--blaze);flex-shrink:0;animation:livepulse 2.4s infinite}
+    @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.35}}
+    .hero-ticker b{color:var(--paper);font-weight:500}
 
-    /* HERO */
-    .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 120px 40px 80px; position: relative; overflow: hidden; text-align: center; }
-    .hero-noise { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; }
-    .hero-tag { font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--orange); margin-bottom: 24px; opacity: 0; animation: fadeUp 0.6s ease forwards 0.2s; }
-    .hero-title { font-family: 'Bebas Neue'; font-size: clamp(5rem, 18vw, 16rem); line-height: 0.9; letter-spacing: -0.02em; opacity: 0; animation: fadeUp 0.8s ease forwards 0.4s; }
-    .hero-title span { color: var(--orange); }
-    .hero-sub { margin-top: 32px; font-size: 0.8rem; color: var(--muted); max-width: 400px; line-height: 1.8; opacity: 0; animation: fadeUp 0.8s ease forwards 0.7s; text-align: center; }
-    .hero-scroll { position: absolute; bottom: 40px; right: 40px; font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); writing-mode: vertical-rl; opacity: 0; animation: fadeUp 0.8s ease forwards 1s; }
+    /* ---------- MARQUEE ---------- */
+    .marquee-wrap{overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:13px 0;background:var(--field)}
+    .marquee-track{display:flex;gap:52px;animation:marquee 24s linear infinite;white-space:nowrap;width:max-content}
+    .marquee-item{font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--chalk);flex-shrink:0}
+    .marquee-item .dot{color:var(--blaze);margin-right:11px}
 
-    /* MARQUEE */
-    .marquee-wrap { overflow: hidden; border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 16px 0; background: var(--card); }
-    .marquee-track { display: flex; gap: 60px; animation: marquee 20s linear infinite; white-space: nowrap; }
-    .marquee-item { font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); flex-shrink: 0; }
-    .marquee-item .dot { color: var(--orange); margin-right: 12px; }
+    /* ---------- SECTION FRAME ---------- */
+    .section{padding:72px 28px;max-width:1120px;margin:0 auto}
+    .section-label{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--chalk);display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:0}
+    .section-label b{color:var(--paper);font-weight:500}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--line)}
 
-    /* MATRIX CANVAS */
-  #matrix-canvas { position: absolute; inset: 0; opacity: 0.18; pointer-events: none; z-index: 0; }
-
-  /* EASTER EGG */
-  .egg-overlay { position: fixed; inset: 0; z-index: 99999; background: var(--black); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; opacity: 0; pointer-events: none; transition: opacity .4s; cursor: none; }
-  .egg-overlay.show { opacity: 1; pointer-events: all; }
-  .egg-title { font-family: 'Bebas Neue'; font-size: clamp(3rem, 10vw, 7rem); color: var(--orange); text-align: center; line-height: 1; }
-  .egg-sub { font-size: .82rem; color: var(--muted); text-align: center; line-height: 1.9; max-width: 440px; }
-  .egg-close { padding: 12px 28px; background: var(--orange); color: var(--black); border: none; font-family: 'DM Mono'; font-size: .7rem; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
-  .egg-konami { font-size: .6rem; letter-spacing: .2em; color: rgba(255,255,255,.15); text-transform: uppercase; }
-    .section { padding: 100px 40px; max-width: 1200px; margin: 0 auto; }
-    .section-label { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--orange); margin-bottom: 48px; display: flex; align-items: center; gap: 16px; justify-content: center; }
-    .section-label::before { content: ''; flex: 0 0 40px; height: 1px; background: rgba(255,255,255,0.08); }
-    .section-label::after { content: ''; flex: 0 0 40px; height: 1px; background: rgba(255,255,255,0.08); }
-
-    /* CARDS */
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0; border-top: 1px solid var(--border); }
-    .card { padding: 40px 32px; position: relative; overflow: hidden; transition: background 0.25s; border-right: 1px solid var(--border); }
-    .card:last-child { border-right: none; }
-    .card:hover { background: rgba(255,78,26,0.04); }
-    .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--orange); transform: scaleX(0); transform-origin: left; transition: transform 0.3s ease; }
-    .card:hover::before { transform: scaleX(1); }
-    .card-num { font-family: 'Bebas Neue'; font-size: 2.6rem; color: var(--orange); line-height: 1; margin-bottom: 18px; transition: transform 0.25s ease; }
-    .card:hover .card-num { transform: translateX(4px); }
-    .card-title { font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: #5ecbe0; margin-bottom: 12px; font-weight: 600; font-style: normal; }
-    .card-text { font-size: 0.72rem; line-height: 1.8; color: var(--muted); font-style: italic; }
-    .card-tag { display: inline-block; margin-top: 20px; font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
-    .card-tag::before { content: '// '; color: var(--orange); }
-    .card-link { text-decoration: none; color: inherit; display: block; }
-    .card-link .card { cursor: none; }
-    .card-arrow { position: absolute; bottom: 24px; right: 28px; font-size: 1.1rem; color: var(--orange); opacity: 0; transition: opacity 0.2s, transform 0.2s; }
-    .card-link:hover .card-arrow { opacity: 1; transform: translate(3px, -3px); }
-    @media (max-width: 700px) { .card { border-right: none; border-bottom: 1px solid var(--border); } .card:last-child { border-bottom: none; } }
-
-    /* STATEMENT */
-    .statement { padding: 100px 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; align-items: center; }
-    .statement-text { font-family: 'Instrument Serif'; font-size: clamp(1.8rem, 5vw, 4rem); font-style: italic; line-height: 1.3; max-width: 800px; margin: 0 auto; }
-    .statement-text em { color: var(--orange); font-style: normal; font-family: 'Bebas Neue'; font-size: 1.2em; vertical-align: -0.05em; }
-
-    /* LIVE STATUS STRIP */
-    .live-strip { padding: 60px 40px 0; max-width: 1200px; margin: 0 auto; }
-    .live-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 1px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.06); }
-    .live-item { background: var(--card); padding: 22px 24px; }
-    .live-label { display: flex; align-items: center; gap: 8px; font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 6px var(--orange); animation: livepulse 2s infinite; }
-    @keyframes livepulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
-    .live-value { font-family: 'Bebas Neue'; font-size: 1.8rem; color: var(--cream); line-height: 1; }
-
-    /* PAGES SECTION */
-    .pages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0; border-top: 1px solid var(--border); }
-    .page-card { padding: 40px 32px; text-decoration: none; color: inherit; display: block; position: relative; overflow: hidden; transition: background 0.25s; cursor: none; border-right: 1px solid var(--border); }
-    .page-card:last-child { border-right: none; }
-    .page-card:hover { background: rgba(255,78,26,0.04); }
-    .page-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--orange); transform: scaleX(0); transform-origin: left; transition: transform 0.3s ease; }
-    .page-card:hover::before { transform: scaleX(1); }
-    .page-card-num { font-family: 'Bebas Neue'; font-size: 2.6rem; color: var(--orange); line-height: 1; margin-bottom: 18px; transition: transform 0.25s ease; }
-    .page-card:hover .page-card-num { transform: translateX(4px); }
-    .page-card-label { font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: #5ecbe0; margin-bottom: 12px; font-weight: 600; }
-    .page-card-title { display: none; }
-    .page-card-desc { font-size: 0.72rem; color: var(--muted); line-height: 1.8; font-style: italic; }
-    .page-card-lock { position: absolute; top: 32px; right: 28px; font-size: 0.85rem; opacity: 0.4; }
-    .page-card-arrow { position: absolute; bottom: 24px; right: 28px; color: var(--orange); opacity: 0; transition: opacity 0.2s, transform 0.2s; font-size: 1.1rem; }
-    .page-card:hover .page-card-arrow { opacity: 1; transform: translate(3px,-3px); }
-    @media (max-width: 700px) { .page-card { border-right: none; border-bottom: 1px solid var(--border); } .page-card:last-child { border-bottom: none; } }
-
-    /* FOOTER */
-    footer { padding: 40px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: center; gap: 40px; align-items: center; font-size: 0.62rem; color: var(--muted); letter-spacing: 0.15em; text-align: center; }
-
-    @media (max-width: 600px) {
-      nav { padding: 16px 20px; }
-      .hero { padding: 100px 20px 60px; }
-      .section, .live-strip { padding: 60px 20px; }
-      .live-strip { padding-top: 40px; }
-      .statement { padding: 60px 20px; }
-      footer { flex-direction: column; gap: 12px; }
+    /* ---------- NAVIGATION INDEX (die Hauptsache) ---------- */
+    .nav-index{border:1px solid var(--line);border-top:none}
+    .nav-row{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:24px;padding:30px 26px;color:var(--paper);border-top:1px solid var(--line);transition:background .18s}
+    .nav-row:first-child{border-top:none}
+    .nav-row:hover{background:var(--field)}
+    .nav-row-tag{font-family:'DM Mono',monospace;font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk);width:88px;flex-shrink:0}
+    .nav-row-main{min-width:0}
+    .nav-row-title{font-family:'Bebas Neue';font-size:2.4rem;line-height:.9;letter-spacing:.03em}
+    .nav-row-desc{font-size:.68rem;line-height:1.75;color:var(--chalk);margin-top:8px;max-width:52ch}
+    .nav-row-stat{text-align:right;flex-shrink:0}
+    .nav-row-stat-val{font-family:'Bebas Neue';font-size:1.9rem;line-height:1;color:var(--blaze)}
+    .nav-row-stat-lbl{font-size:.5rem;letter-spacing:.12em;text-transform:uppercase;color:var(--chalk);margin-top:3px}
+    .nav-row-arrow{font-family:'Bebas Neue';font-size:2rem;color:var(--line);transition:color .18s,transform .18s;align-self:center}
+    .nav-row:hover .nav-row-arrow{color:var(--blaze);transform:translateX(5px)}
+    @media(max-width:720px){
+      .nav-row{grid-template-columns:1fr auto;gap:8px 16px}
+      .nav-row-tag{width:auto;grid-column:1;order:1}
+      .nav-row-main{grid-column:1;order:3}
+      .nav-row-stat{grid-column:2;grid-row:1;order:2}
+      .nav-row-arrow{display:none}
     }
 
-    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes marquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+    /* ---------- ABOUT (kompakt) ---------- */
+    .about{max-width:1120px;margin:0 auto;padding:0 28px 72px}
+    .about-inner{border-left:2px solid var(--blaze);padding:8px 0 8px 22px;display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+    .about-item-t{font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--paper);margin-bottom:8px;font-weight:500}
+    .about-item-d{font-size:.66rem;line-height:1.7;color:var(--chalk)}
+    @media(max-width:640px){.about-inner{grid-template-columns:1fr;gap:20px}}
+
+    /* ---------- STATEMENT ---------- */
+    .statement{padding:80px 28px;text-align:center;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--field)}
+    .statement-text{font-family:'Bebas Neue';font-size:clamp(1.8rem,5vw,3.6rem);line-height:1.15;max-width:900px;margin:0 auto;letter-spacing:.01em}
+    .statement-text em{color:var(--blaze);font-style:normal}
+
+    /* ---------- FOOTER ---------- */
+    footer{padding:36px 28px;border-top:1px solid var(--line);display:flex;justify-content:center;gap:26px;align-items:center;font-size:.58rem;color:var(--chalk);letter-spacing:.14em;text-transform:uppercase;flex-wrap:wrap}
+    footer a{color:var(--chalk)}
+    footer a:hover{color:var(--blaze)}
+
+    @media(max-width:600px){
+      nav{padding:12px 18px}
+      .hero{padding:60px 18px 36px;min-height:80vh}
+      .section,.about{padding-left:18px;padding-right:18px}
+      .statement{padding:60px 20px}
+      footer{flex-direction:column;gap:12px}
+    }
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+    /* ---------- EASTER EGG ---------- */
+    .egg-overlay{position:fixed;inset:0;z-index:99999;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;opacity:0;pointer-events:none;transition:opacity .4s;padding:24px}
+    .egg-overlay.show{opacity:1;pointer-events:all}
+    .egg-title{font-family:'Bebas Neue';font-size:clamp(3rem,10vw,7rem);color:var(--blaze);text-align:center;line-height:.95}
+    .egg-sub{font-size:.8rem;color:var(--chalk);text-align:center;line-height:1.9;max-width:440px}
+    .egg-close{padding:12px 26px;background:var(--blaze);color:var(--ink);border:none;font-family:'DM Mono';font-size:.68rem;font-weight:500;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;margin-top:8px}
+    .egg-konami{font-size:.6rem;letter-spacing:.2em;color:var(--line);text-transform:uppercase}
   </style>
 </head>
 <body>
-
-<div class="cursor" id="cursor"></div>
 
 <!-- EASTER EGG -->
 <div class="egg-overlay" id="eggOverlay">
   <div class="egg-konami">↑ ↑ ↓ ↓ ← → ← → B A</div>
   <div class="egg-title">DU HAST<br>ZU VIEL<br>ZEIT 🤝</div>
   <p class="egg-sub">Ernsthaft. Wer gibt einen Konami-Code auf einer Website über einen Mann namens Markus ein?<br><br>Respekt. Absoluter Respekt.</p>
-  <p class="egg-sub" style="font-size:.7rem;color:var(--orange);">🏆 Achievement unlocked: "Zu viel Freizeit"</p>
-  <button class="egg-close" id="eggClose">Okay ich geh jetzt → </button>
+  <p class="egg-sub" style="font-size:.7rem;color:var(--blaze);">🏆 Achievement unlocked: "Zu viel Freizeit"</p>
+  <button class="egg-close" id="eggClose">Okay ich geh jetzt →</button>
 </div>
 
 <nav>
@@ -150,12 +135,17 @@
 
 <!-- HERO -->
 <section class="hero">
-  <canvas id="matrix-canvas"></canvas>
-  <div class="hero-noise"></div>
+  <div class="hero-head">
+    <span class="hero-meta">onlymakkus.de</span>
+    <span class="hero-meta">Est. <b>irgendwann</b></span>
+  </div>
   <p class="hero-tag">// das original seit irgendwann</p>
   <h1 class="hero-title">ONLY<br><span>Makkus</span></h1>
-  <p class="hero-sub">Kein Influencer. Kein Coach. Kein Guru.<br>Nur Markus — und das reicht vollkommen.</p>
-  <span class="hero-scroll">scroll ↓</span>
+  <p class="hero-sub">Kein Influencer. Kein Coach. Kein Guru. Nur Markus — und das reicht vollkommen.</p>
+  <div class="hero-ticker">
+    <span class="hero-live-dot"></span>
+    <span><b id="liveProfiles">—</b> Profile · <b id="liveGames">—</b> Gaming-Runden · <b id="liveChallenge">—</b> Challenge-Einträge</span>
+  </div>
 </section>
 
 <!-- MARQUEE -->
@@ -169,100 +159,80 @@
     <span class="marquee-item"><span class="dot">●</span>crossfit mit schmerzen</span>
     <span class="marquee-item"><span class="dot">●</span>side planks für immer</span>
     <span class="marquee-item"><span class="dot">●</span>onlymakkus.de</span>
-    <span class="marquee-item"><span class="dot">●</span>humor ohne agenda</span>
-    <span class="marquee-item"><span class="dot">●</span>crossfit mit schmerzen</span>
   </div>
 </div>
 
-<!-- LIVE STATUS -->
-<div class="live-strip">
-  <div class="live-panel">
-    <div class="live-item">
-      <div class="live-label"><span class="live-dot"></span>Profile</div>
-      <div class="live-value" id="liveProfiles">—</div>
-    </div>
-    <div class="live-item">
-      <div class="live-label"><span class="live-dot"></span>Gaming-Runden</div>
-      <div class="live-value" id="liveGames">—</div>
-    </div>
-    <div class="live-item">
-      <div class="live-label"><span class="live-dot"></span>Challenge-Einträge</div>
-      <div class="live-value" id="liveChallenge">—</div>
-    </div>
-  </div>
-</div>
-
-<!-- ABOUT CARDS -->
+<!-- NAVIGATION (die Hauptsache) -->
 <div class="section">
-  <p class="section-label">was dich erwartet</p>
-  <div class="cards">
-    <div class="card">
-      <div class="card-num">01</div>
-      <div class="card-title">Ehrliche Meinungen</div>
-      <p class="card-text">Keine Sponsoren, keine PR-Strategie, kein Bullshit. Nur das was tatsächlich gedacht wird — auch wenn's wehtut.</p>
-      <span class="card-tag">unzensiert</span>
+  <p class="section-label"><b>Bereiche</b> — wohin willst du</p>
+  <div class="nav-index">
+    <a href="crossfit.html" class="nav-row">
+      <span class="nav-row-tag">CrossFit</span>
+      <div class="nav-row-main">
+        <div class="nav-row-title">CROSSFIT</div>
+        <p class="nav-row-desc">Challenge-Tracker, Jahresplan, Saison-Ranking und die Dezember-Bosschallenge.</p>
+      </div>
+      <div class="nav-row-stat"><div class="nav-row-stat-val" id="navChallenge">—</div><div class="nav-row-stat-lbl">Einträge</div></div>
+      <span class="nav-row-arrow">→</span>
+    </a>
+    <a href="gaming.html" class="nav-row">
+      <span class="nav-row-tag">Gaming</span>
+      <div class="nav-row-main">
+        <div class="nav-row-title">GAMING AREA</div>
+        <p class="nav-row-desc">Snake, Wordle, Block Blast, Flappy Makkus, Tetris und ein episches Text-Adventure.</p>
+      </div>
+      <div class="nav-row-stat"><div class="nav-row-stat-val" id="navGames">—</div><div class="nav-row-stat-lbl">Runden</div></div>
+      <span class="nav-row-arrow">→</span>
+    </a>
+    <a href="health.html" class="nav-row">
+      <span class="nav-row-tag">Health</span>
+      <div class="nav-row-main">
+        <div class="nav-row-title">HEALTH</div>
+        <p class="nav-row-desc">Kalorien tracken, Gewicht und Körperumfänge über die Zeit festhalten.</p>
+      </div>
+      <div class="nav-row-stat"></div>
+      <span class="nav-row-arrow">→</span>
+    </a>
+    <a href="profile.html" class="nav-row">
+      <span class="nav-row-tag">Profil</span>
+      <div class="nav-row-main">
+        <div class="nav-row-title">PROFIL</div>
+        <p class="nav-row-desc">Ein Login für alles — CrossFit, Gaming und Health. Registrieren oder einloggen.</p>
+      </div>
+      <div class="nav-row-stat"><div class="nav-row-stat-val" id="navProfiles">—</div><div class="nav-row-stat-lbl">Profile</div></div>
+      <span class="nav-row-arrow">→</span>
+    </a>
+  </div>
+</div>
+
+<!-- ABOUT (kompakt) -->
+<div class="about">
+  <div class="about-inner">
+    <div class="about-item">
+      <div class="about-item-t">Ehrliche Meinungen</div>
+      <p class="about-item-d">Keine Sponsoren, keine PR, kein Bullshit. Nur das, was tatsächlich gedacht wird.</p>
     </div>
-    <div class="card">
-      <div class="card-num">02</div>
-      <div class="card-title">CrossFit, Health & Gaming</div>
-      <p class="card-text">Challenges, Ranking, Kalorien- und Körper-Tracking, dazu fünf Spiele und ein Text-Adventure — alles an einem Ort, alles mit einem Profil.</p>
-      <span class="card-tag">durchdacht</span>
+    <div class="about-item">
+      <div class="about-item-t">Alles an einem Ort</div>
+      <p class="about-item-d">Challenges, Ranking, Tracking, fünf Spiele und ein Text-Adventure — mit einem Profil.</p>
     </div>
-    <div class="card">
-      <div class="card-num">03</div>
-      <div class="card-title">Fragwürdige Entscheidungen</div>
-      <p class="card-text">60 Minuten Side Plank? Webseite bauen statt schlafen? Manche Ideen klingen nachts besser als sie morgens sind.</p>
-      <span class="card-tag">dokumentiert</span>
+    <div class="about-item">
+      <div class="about-item-t">Fragwürdige Ideen</div>
+      <p class="about-item-d">60 Minuten Side Plank? Manche Ideen klingen nachts besser als morgens.</p>
     </div>
   </div>
 </div>
 
 <!-- STATEMENT -->
 <div class="statement">
-  <p class="statement-text">"Das Internet braucht mehr <em>EHRLICHKEIT</em> und weniger perfekte Feeds. Das hier ist beides nicht — aber zumindest <em>ECHT.</em>"</p>
-</div>
-
-<!-- SEITEN -->
-<div class="section" id="seiten">
-  <p class="section-label">alle seiten</p>
-  <div class="pages-grid">
-
-    <a href="crossfit.html" class="page-card">
-      <div class="page-card-num">01</div>
-      <div class="page-card-label">CROSSFIT</div>
-      <p class="page-card-desc">Challenge Tracker, Jahresplan, Saison-Ranking und Dezember-Voting.</p>
-      <div class="page-card-arrow">→</div>
-    </a>
-
-    <a href="gaming.html" class="page-card">
-      <div class="page-card-num">02</div>
-      <div class="page-card-label">GAMING AREA</div>
-      <p class="page-card-desc">Snake, Wordle, Block Blast, Flappy Makkus, Tetris und ein episches Text-Adventure.</p>
-      <div class="page-card-arrow">→</div>
-    </a>
-
-    <a href="health.html" class="page-card">
-      <div class="page-card-num">03</div>
-      <div class="page-card-label">HEALTH</div>
-      <p class="page-card-desc">Kalorien tracken, Gewicht und Körperumfänge über Zeit festhalten.</p>
-      <div class="page-card-arrow">→</div>
-    </a>
-
-    <a href="profile.html" class="page-card">
-      <div class="page-card-num">04</div>
-      <div class="page-card-label">PROFIL</div>
-      <p class="page-card-desc">Ein Login für alles — CrossFit, Gaming und Health. Registrieren oder einloggen.</p>
-      <div class="page-card-arrow">→</div>
-    </a>
-
-  </div>
+  <p class="statement-text">Das Internet braucht mehr <em>Ehrlichkeit</em> und weniger perfekte Feeds. Das hier ist beides nicht — aber zumindest <em>echt.</em></p>
 </div>
 
 <footer>
   <span>© 2026 onlymakkus.de</span>
-  <a href="impressum.html" style="color:var(--muted);text-decoration:none;">Impressum</a>
-  <a href="datenschutz.html" style="color:var(--muted);text-decoration:none;">Datenschutz</a>
-  <span>made with pain & php</span>
+  <a href="impressum.html">Impressum</a>
+  <a href="datenschutz.html">Datenschutz</a>
+  <span>made with pain &amp; supabase</span>
 </footer>
 
 <script>
@@ -283,51 +253,11 @@
     const [profiles, games, entries] = await Promise.all([
       sbCount('profiles'), sbCount('snake_scores'), sbCount('challenge_entries')
     ]);
-    document.getElementById('liveProfiles').textContent = profiles ?? '—';
-    document.getElementById('liveGames').textContent = games ?? '—';
-    document.getElementById('liveChallenge').textContent = entries ?? '—';
+    const setAll=(ids,val)=>ids.forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=val;});
+    setAll(['liveProfiles','navProfiles'], profiles ?? '—');
+    setAll(['liveGames','navGames'], games ?? '—');
+    setAll(['liveChallenge','navChallenge'], entries ?? '—');
   })();
-
-  // Cursor
-  const cursor = document.getElementById('cursor');
-  document.addEventListener('mousemove', e => { cursor.style.left = e.clientX+'px'; cursor.style.top = e.clientY+'px'; });
-  document.querySelectorAll('a, button').forEach(el => {
-    el.addEventListener('mouseenter', () => cursor.classList.add('big'));
-    el.addEventListener('mouseleave', () => cursor.classList.remove('big'));
-  });
-
-  // ── MATRIX BACKGROUND ──────────────────────────────────────────
-  const canvas = document.getElementById('matrix-canvas');
-  const ctx = canvas.getContext('2d');
-  const chars = 'ONLYMAKKUS0110ABCDEFGHIJKLMNOPQRSTUVWXYZ01アイウエオカキクケコサシスセソ';
-  let cols, drops;
-
-  function initMatrix() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const fontSize = 14;
-    cols = Math.floor(canvas.width / fontSize);
-    drops = Array(cols).fill(1);
-  }
-
-  function drawMatrix() {
-    ctx.fillStyle = 'rgba(10,10,8,0.04)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#ff4e1a';
-    ctx.font = '14px "DM Mono", monospace';
-    for (let i = 0; i < drops.length; i++) {
-      const char = chars[Math.floor(Math.random() * chars.length)];
-      ctx.globalAlpha = Math.random() * 0.5 + 0.1;
-      ctx.fillText(char, i * 14, drops[i] * 14);
-      if (drops[i] * 14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-      drops[i]++;
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  initMatrix();
-  window.addEventListener('resize', initMatrix);
-  setInterval(drawMatrix, 50);
 
   // ── KONAMI CODE EASTER EGG ──────────────────────────────────────
   const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
