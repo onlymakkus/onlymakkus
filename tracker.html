@@ -47,9 +47,10 @@
     border-bottom:1px solid var(--line); position:sticky; top:0; z-index:20;
   }
   .navrow{display:flex; align-items:center; justify-content:space-between; padding-bottom:16px;}
-  .navrow .brand{font-family:'DM Mono',monospace; font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; display:flex; align-items:center; gap:8px;}
+  .navrow .brand{font-family:'DM Mono',monospace; font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; display:flex; align-items:center; gap:8px; color:var(--paper); text-decoration:none; transition:color .2s;}
+  .navrow .brand:hover{color:var(--blaze);}
+  .navrow .brand b{font-family:'Bebas Neue'; font-size:1.15rem; letter-spacing:.06em; font-weight:400;}
   .navrow .brand .o{color:var(--blaze);}
-  .navrow a.back{color:var(--chalk); font-size:.68rem; text-decoration:none; letter-spacing:.08em;}
   .theme-toggle{font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--chalk); background:transparent; border:1px solid var(--line); padding:7px 11px; cursor:pointer; transition:.2s;}
   .theme-toggle:hover{border-color:var(--blaze); color:var(--blaze);}
 
@@ -232,8 +233,7 @@
 
 <header id="appHeader" style="display:none;">
   <div class="navrow">
-    <a class="back" href="health.html">‹ ZURÜCK</a>
-    <div class="brand"><b class="o">OM</b> / tracker</div>
+    <a class="brand back" href="health.html">←&nbsp; <b class="o">OM</b> / tracker</a>
     <div class="navrow-right">
       <div class="acct" id="acct">
         <a class="acct-login" id="acctLogin" href="profile.html" hidden>Anmelden</a>

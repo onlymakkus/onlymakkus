@@ -76,8 +76,9 @@ h1,h2,h3, .display{
   position:sticky; top:0; z-index:20;
   background:color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter:blur(10px);
 }
-.navrow .back{ color:var(--text-dim); text-decoration:none; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-family:var(--mono); }
+.navrow .back{ color:var(--text); text-decoration:none; font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; font-family:var(--mono); display:flex; align-items:center; gap:8px; transition:color .2s; }
 .navrow .back:hover{ color:var(--rust); }
+.navrow .back b{ font-family:'Bebas Neue'; font-size:1.15rem; letter-spacing:.06em; font-weight:400; color:var(--rust); }
 .navrow .greeting{ color:var(--text-dim); font-size:.64rem; letter-spacing:.04em; font-family:var(--mono); }
 .navrow-right{ display:flex; align-items:center; gap:14px; }
 .theme-toggle{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);background:transparent;border:1px solid var(--line);padding:7px 11px;cursor:pointer;transition:.2s;}
@@ -346,7 +347,7 @@ footer{
 <div id="appWrap" style="display:none;">
 
   <div class="navrow">
-    <a class="back" href="health.html">‹ ZURÜCK</a>
+    <a class="back" href="health.html">←&nbsp; <b>OM</b> / körpermaße</a>
     <div class="navrow-right">
       <div class="acct" id="acct">
         <a class="acct-login" id="acctLogin" href="profile.html" hidden>Anmelden</a>
