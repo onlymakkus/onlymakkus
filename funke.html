@@ -123,14 +123,67 @@ body{
   .screen-inner{padding:28px 16px 100px}
   .drawer{width:100vw;max-width:100vw}
 }
-</style>
+
+    /* --- account widget --- */
+    .nav-right{display:flex;align-items:center;gap:14px}
+    .acct{position:relative;display:flex;align-items:center}
+    .acct-login{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text);background:transparent;border:1px solid var(--border);padding:7px 12px;cursor:pointer;text-decoration:none;transition:border-color .2s,color .2s}
+    .acct-login:hover{border-color:var(--amber);color:var(--amber)}
+    .acct-chip{display:flex;align-items:center;gap:9px;background:transparent;border:1px solid var(--border);border-radius:999px;padding:4px 12px 4px 4px;cursor:pointer;font-family:'Space Mono',monospace;color:var(--text);transition:border-color .2s}
+    .acct-chip:hover{border-color:var(--amber)}
+    .acct-av{width:26px;height:26px;border-radius:50%;background:var(--amber);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:#0a0a08;flex-shrink:0;overflow:hidden;line-height:1}
+    .acct-av.lg{width:44px;height:44px;font-size:1.5rem}
+    .acct-av.has-img{color:transparent;background-color:var(--bg2)}
+    .acct-name{font-size:.68rem;letter-spacing:.06em;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .acct-lvl{font-size:.52rem;letter-spacing:.1em;color:var(--amber);border:1px solid var(--border);border-radius:999px;padding:2px 7px;flex-shrink:0}
+    .acct-menu{position:absolute;top:calc(100% + 10px);right:0;min-width:236px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:8px;flex-direction:column;gap:2px;box-shadow:0 14px 40px rgba(0,0,0,.5);z-index:9000;display:flex}
+    .acct-menu-head{display:flex;align-items:center;gap:12px;padding:10px 10px 12px}
+    .acct-menu-name{font-size:.82rem;letter-spacing:.04em;color:var(--text)}
+    .acct-menu-title{font-family:'Instrument Serif',serif;font-style:italic;font-size:.92rem;color:var(--amber);margin-top:2px}
+    .acct-xp{padding:8px 10px 12px;border-top:1px solid var(--border)}
+    .acct-xp-info{display:flex;justify-content:space-between;font-size:.54rem;letter-spacing:.08em;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px}
+    .acct-xp-bar{height:6px;border-radius:999px;background:var(--border);overflow:hidden}
+    .acct-xp-fill{height:100%;width:0;background:linear-gradient(90deg,var(--amber),var(--phosphor-bright));border-radius:999px;transition:width .5s ease}
+    .acct-menu-item{display:block;width:100%;padding:10px;border-radius:8px;font-family:'Space Mono',monospace;font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;color:var(--text);text-decoration:none;background:transparent;border:none;text-align:left;cursor:pointer;transition:background .15s,color .15s}
+    .acct-menu-item:hover{background:var(--bg2)}
+    .acct-menu-item.danger{color:var(--text-dim)}
+    .acct-menu-item.danger:hover{color:#ff5555;background:rgba(255,68,68,.09)}
+    .acct-login[hidden],.acct-chip[hidden],.acct-menu[hidden],.acct-lvl[hidden],.acct-menu-title[hidden],.acct-xp[hidden]{display:none}
+    .tb-back{background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;text-decoration:none;transition:all .15s}
+    .tb-back:hover{border-color:var(--phosphor-dim);color:var(--phosphor)}
+
+  </style>
 </head>
 <body>
 
 <div id="app">
   <div class="topbar">
+    <a class="tb-back" href="gaming.html">← Gaming</a>
     <div class="topbar-title">DER LETZTE <span>FUNKE</span></div>
     <div class="topbar-right">
+      <div class="acct" id="acct">
+        <a class="acct-login" id="acctLogin" href="profile.html" hidden>Anmelden</a>
+        <button class="acct-chip" id="acctChip" type="button" aria-haspopup="true" aria-expanded="false" hidden>
+          <span class="acct-av" id="acctAv"></span>
+          <span class="acct-name" id="acctName"></span>
+          <span class="acct-lvl" id="acctLvl" hidden></span>
+        </button>
+        <div class="acct-menu" id="acctMenu" hidden>
+          <div class="acct-menu-head">
+            <span class="acct-av lg" id="acctAvLg"></span>
+            <div>
+              <div class="acct-menu-name" id="acctMenuName"></div>
+              <div class="acct-menu-title" id="acctMenuTitle" hidden></div>
+            </div>
+          </div>
+          <div class="acct-xp" id="acctXp" hidden>
+            <div class="acct-xp-info"><span id="acctXpLabel">Level 1</span><span id="acctXpVal">0 / 100 XP</span></div>
+            <div class="acct-xp-bar"><div class="acct-xp-fill" id="acctXpFill"></div></div>
+          </div>
+          <a class="acct-menu-item" href="profile.html">Profil</a>
+          <button class="acct-menu-item danger" id="acctLogout" type="button">Abmelden</button>
+        </div>
+      </div>
       <span class="chapter-tag" id="chapterTag"></span>
       <button class="tb-btn" id="btnSound">Sound An</button>
       <button class="tb-btn" id="btnInventory">Inventar</button>
@@ -174,9 +227,7 @@ let state = {
    ══════════════════════════════════════════════════════════════ */
 
 let audioCtx = null, masterGain = null, audioBuilt = false;
-/* Sound ist standardmäßig AUS, bis die Szenen-Tags über alle 11 Kapitel integriert sind
-   (aktuell nur Kapitel 1-3 getaggt). Wer will, kann ihn über den Topbar-Button aktivieren. */
-let soundMuted = localStorage.getItem(MUTE_KEY) !== '0';
+let soundMuted = localStorage.getItem(MUTE_KEY) === '1';
 const scenes = {};
 let pendingScene = null, currentSceneName = null;
 
@@ -282,60 +333,9 @@ function buildAudioGraph(){
     scenes.wind = buildWindScene();
     scenes.fire = buildFireScene();
     scenes.silence = buildSilenceScene();
-    musicGain = audioCtx.createGain();
-    musicGain.gain.value = 0;
-    musicGain.connect(masterGain);
     audioBuilt = true;
     if(pendingScene) setScene(pendingScene);
-    if(pendingMusic) playMusic(pendingMusic);
   }catch(e){ /* Web Audio nicht verfügbar — Spiel läuft trotzdem normal weiter */ }
-}
-
-/* ── Musik-Ebene: echte Audiodateien (z.B. Suno-Tracks), separat von den
-   prozeduralen Ambient-Szenen. Läuft über denselben masterGain, respektiert
-   also Mute-Button und Lautstärke automatisch. ── */
-let musicGain = null, pendingMusic = null, currentMusicSource = null, currentMusicTrack = null;
-const musicBufferCache = {};
-const MUSIC_VOLUME = 0.55;
-const MUSIC_TRACKS = {
-  title: 'audio/hauptmenue.mp3'
-};
-
-async function playMusic(trackKey){
-  if(!audioBuilt){ pendingMusic = trackKey; return; }
-  if(currentMusicTrack === trackKey) return;
-  currentMusicTrack = trackKey;
-  const url = MUSIC_TRACKS[trackKey];
-  if(!url) return stopMusic();
-
-  try{
-    if(!musicBufferCache[trackKey]){
-      const res = await fetch(url);
-      const arrBuf = await res.arrayBuffer();
-      musicBufferCache[trackKey] = await audioCtx.decodeAudioData(arrBuf);
-    }
-    // falls der Track inzwischen gewechselt hat, während wir geladen haben
-    if(currentMusicTrack !== trackKey) return;
-
-    if(currentMusicSource){ try{ currentMusicSource.stop(); }catch(e){} }
-    const source = audioCtx.createBufferSource();
-    source.buffer = musicBufferCache[trackKey];
-    source.loop = true;
-    source.connect(musicGain);
-    source.start();
-    currentMusicSource = source;
-    musicGain.gain.setTargetAtTime(MUSIC_VOLUME, audioCtx.currentTime, 1.2);
-  }catch(e){ /* Track nicht ladbar (z.B. Datei fehlt) — kein Absturz, nur kein Musik-Layer */ }
-}
-
-function stopMusic(){
-  currentMusicTrack = null;
-  pendingMusic = null;
-  if(!audioBuilt || !musicGain) return;
-  musicGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.8);
-  const src = currentMusicSource;
-  currentMusicSource = null;
-  if(src) setTimeout(()=>{ try{ src.stop(); }catch(e){} }, 1500);
 }
 
 function setScene(name){
@@ -420,7 +420,6 @@ function checkCondition(cond){
     if(cond.invert && flagState) return false;
     if(!cond.invert && !flagState) return false;
   }
-  if(cond.allFlags && !cond.allFlags.every(f=>getFlag(f))) return false;
   if(cond.notFlag && getFlag(cond.notFlag)) return false;
   return true;
 }
@@ -493,9 +492,6 @@ function renderNode(nodeId, skipAnim){
 
   // Sound-Szene wechseln, falls der Node eine eigene definiert (sonst bleibt die aktuelle bestehen)
   if(node.sound) setScene(node.sound);
-
-  // Musik-Ebene: nur am Titelbildschirm, sonst aus
-  if(node.type === 'title'){ playMusic('title'); } else { stopMusic(); }
 
   if(node.type === 'title'){ renderTitle(); return; }
   if(node.type === 'end'){ renderEnd(node); return; }
@@ -2355,291 +2351,7 @@ const STORY = {
     type: 'end',
     badge: 'ENDE KAPITEL 9',
     title: 'DIE KARTE',
-    text: 'Ein Schlüssel, der in ein amtliches Schloss passt. Ein Handbuch, das behauptet, eine einzige Person könne das Netz wiederbeleben. Und irgendwo auf dem Weg zur Leitstelle: Schritte im Dunkeln, die dasselbe Ziel haben. Morgen früh beginnt der weiteste Weg seit dem Zusammenbruch.',
-    nextChapter: 'ch10_intro'
-  },
-
-  /* ══════════════════════════════════════════════════════
-     KAPITEL 10 — "DER WEG DORTHIN"
-     ══════════════════════════════════════════════════════ */
-
-  ch10_intro: {
-    chapter: 'KAPITEL 10 — DER WEG DORTHIN',
-    location: 'KÖNIGSMÜHLE, MORGENGRAUEN',
-    text: [
-      { narrator: 'Der Aufbruch hat etwas von einem kleinen Staatsakt: Das halbe Dorf steht am Tor, Vorräte werden verstaut, und an drei Orten gleichzeitig gehen heute Morgen Funkgeräte auf Empfang, deren einzige Aufgabe ihr seid.', showIf: { flag: 'expedition_full_backing' } },
-      { narrator: 'Der Aufbruch ist bewusst unspektakulär: kein Abschiedskomitee, kein Tross, nur eine Handvoll Gestalten, die im Morgengrauen durchs Nordtor gehen, als wäre es ein Arbeitsweg. Wer leise reisen will, verabschiedet sich leise.', showIf: { flag: 'expedition_small_team' } },
-      { speaker: 'Elena', line: '"Jeden Abend eine Meldung. Wenn zwei Abende Stille sind, komme ich persönlich — und das will keiner von uns."' },
-      { speaker: 'Rosa', line: '"Eine Woche Fußmarsch. Als ich in deinem Alter war, nannte man das Wanderurlaub und hat dafür bezahlt. Die Welt war schon immer seltsam, nur anders."', showIf: { flag: 'rosa_companion' } },
-      { speaker: 'Finn', line: '"Die ersten zwei Tage kenne ich den Weg. Danach kenne ich nur noch die Geschichten über den Weg. Ich sag euch rechtzeitig, wann das eine ins andere übergeht."', showIf: { flag: 'helped_finn' } }
-    ],
-    next: 'ch10_journey'
-  },
-
-  ch10_journey: {
-    chapter: 'KAPITEL 10 — DER WEG DORTHIN',
-    location: 'UNTERWEGS, TAG ZWEI',
-    text: [
-      { narrator: 'Die Landschaft wird fremder, je weiter ihr nach Westen kommt. Ortschaften, deren Namen niemand von euch je gehört hat, Straßenschilder zu Zielen, die es nicht mehr gibt. Die Welt hinter dem eigenen Horizont ist drei Jahre lang eine Theorie gewesen. Jetzt ist sie Gelände.' },
-      { narrator: 'Jeden Abend, pünktlich, die Funkkette: Königsmühle meldet, der Turm meldet, Shini leitet weiter. Es ist nur eine Stimme aus einem Lautsprecher — aber sie macht die Nächte in fremdem Gelände kleiner.', showIf: { flag: 'expedition_full_backing' } },
-      { narrator: 'Das Handfunkgerät bleibt fast immer stumm — Reichweite ist Luxus, und Shinis Relais liegt ab Tag drei hinter einem Höhenzug. Die Abendmeldungen werden zu Stichworten, dann zu Klicklauten, dann zu Hoffnung.', showIf: { flag: 'expedition_small_team' } },
-      { speaker: 'Tobias', line: '"Weißt du, was mir gerade auffällt? Vor einem Monat war mein größtes Projekt ein Turm, den ich sehen konnte. Jetzt laufe ich zu einem Bunker, den noch nie jemand gesehen hat, der davon erzählen konnte. Ich glaube, das nennt man Karriere."', showIf: { flag: 'tobias_joined' } }
-    ],
-    next: 'ch10_viaduct'
-  },
-
-  ch10_viaduct: {
-    chapter: 'KAPITEL 10 — DER WEG DORTHIN',
-    location: 'DAS VIADUKT, TAG VIER',
-    text: [
-      { narrator: 'Am vierten Tag stellt sich euch das erste echte Hindernis in den Weg: ein Bahnviadukt über ein tiefes Flusstal. Die Karte behauptet, hier ginge es rüber. Die Realität behauptet, das mittlere Segment sei vor Jahren in die Tiefe gegangen — geblieben ist ein Stahlträger, vielleicht vierzig Zentimeter breit, über dem der Wind pfeift.' },
-      { narrator: 'Die Alternative: einen Tag flussabwärts bis zur nächsten Furt, und einen Tag zurück. Zwei Tage gegen vierzig Zentimeter Stahl.' },
-      { narrator: 'Du kennst dieses Gefühl. Der Turm, damals, der Moment vor dem Seil-Schwung — dieselbe Sorte Entscheidung, nur dass unter dir diesmal Wasser rauscht statt Beton wartet.', showIf: { flag: 'climb_swing' } },
-      { narrator: 'Du kennst dieses Gefühl. Der Turm, damals, das vorsichtige Balancieren über den Sims — Zentimeter für Zentimeter, ohne nach unten zu schauen. Das hier ist dasselbe, nur länger. Und windiger.', showIf: { flag: 'climb_edge' } }
-    ],
-    choices: [
-      { label: 'Über den Träger. Der Wettlauf lässt keine zwei Tage übrig.', to: 'ch10_cross_direct' },
-      { label: 'Den Umweg über die Furt nehmen. Kein Bunker ist einen Absturz wert.', to: 'ch10_detour' },
-    ]
-  },
-
-  ch10_cross_direct: {
-    text: [
-      { narrator: 'Ihr geht einzeln, mit dem Kletterseil als Sicherung zwischen den Stützpfeilern — Tobias\' altes Seil, das schon einen Turm gesehen hat und offenbar beschlossen hat, eine Karriere daraus zu machen.' },
-      { narrator: 'Der Wind zerrt, der Fluss rauscht, und die Welt schrumpft für zwanzig Minuten auf vierzig Zentimeter Stahl zusammen. Dann ist es vorbei, und alle stehen auf der anderen Seite, mit weichen Knien und diesem speziellen Lachen, das nur nach überstandener Höhenangst existiert.' },
-      { speaker: 'Rosa', line: '"Nie. Wieder. Und damit meine ich: bis zum Rückweg."', showIf: { flag: 'rosa_companion' } },
-      { narrator: 'Zwei gewonnene Tage. In einem Wettlauf, dessen Gegner ihr noch nie gesehen habt, könnten sie alles sein.' }
-    ],
-    onEnter: { flags: ['ch10_ahead'] },
-    next: 'ch10_night_camp'
-  },
-
-  ch10_detour: {
-    text: [
-      { narrator: 'Die Vernunft siegt, wie sie es bei Leuten tut, die drei Jahre Zusammenbruch überlebt haben: Der Umweg über die Furt kostet zwei Tage, aber niemanden das Leben.' },
-      { narrator: 'Die Furt selbst ist knietief und eiskalt, und auf der anderen Seite findet ihr im Uferschlamm etwas, das euch schweigen lässt: Fußspuren. Mehrere Personen, Richtung Westen, höchstens einen Tag alt.' },
-      { narrator: 'Ihr seid nicht mehr vorne in diesem Rennen. Falls ihr es je wart.' }
-    ],
-    next: 'ch10_night_camp'
-  },
-
-  ch10_night_camp: {
-    chapter: 'KAPITEL 10 — DER WEG DORTHIN',
-    location: 'LAGER, LETZTE NACHT VOR DEN HÜGELN',
-    text: [
-      { narrator: 'Die letzte Nacht vor den Hügeln. Das Feuer ist klein und gut versteckt, und niemand redet laut — die Nähe des Ziels macht aus jedem Geräusch eine Frage.' },
-      { speaker: 'Rosa', line: '"Weißt du noch, wie du an meine Tür geklopft hast? Ich hab durch den Spion geschaut und gedacht: Der da bringt Ärger mit. Ich lag richtig. Ich hab nur die Sorte Ärger unterschätzt."', showIf: { flag: 'rosa_companion' } },
-      { narrator: 'Sie sagt es mit diesem fast unsichtbaren Lächeln, das man sich bei ihr über Wochen verdienen muss.', showIf: { flag: 'rosa_companion' } },
-      { speaker: 'Mira', line: '"Falls das Ding da drin wirklich funktioniert — hast du dir überlegt, was du sagst? Beim ersten Mal, meine ich. Beim Turm hast du es miterlebt: Der erste Satz zählt."', showIf: { allFlags: ['tobias_joined', 'broadcast_sent'] } },
-      { speaker: 'Mira', line: '"Falls das Ding da drin wirklich funktioniert: Diesmal bleibst du für die Übertragung. Beim Turm bist du gegangen, bevor es losging. Ich hab\'s dir nie übel genommen — aber diesmal will ich dein Gesicht dabei sehen."', showIf: { flag: 'tobias_joined', notFlag: 'broadcast_sent' } },
-      { narrator: 'Kurz vor Mitternacht knackt das Handfunkgerät — schwach, verrauscht, aber unverkennbar.' },
-      { speaker: 'Shini', line: '"...falls ihr das hört: Die Fremden von neulich sind nicht mehr allein unterwegs, ich fange seit gestern kurze Sprüche auf einer Sammler-Frequenz auf. Führungsstimme nennt sich <span class=\'hl\'>Jarik</span>. Sie reden über eine Tür, die nicht aufgeht. Ich wiederhole: eine Tür, die nicht aufgeht. Macht was draus. Ende."' }
-    ],
-    next: 'ch10_arrival'
-  },
-
-  ch10_arrival: {
-    chapter: 'KAPITEL 10 — DER WEG DORTHIN',
-    location: 'DIE HÜGEL, TAG SIEBEN',
-    text: [
-      { narrator: 'Am siebten Tag steigt das Land an, und dann seht ihr ihn: einen Hügel wie jeden anderen, wäre da nicht der Stumpf eines gewaltigen Antennenmasts auf seiner Kuppe — abgeknickt, verrostet, aber unverkennbar amtlich. Und in den Hang gebaut, halb von Erde und drei Jahren Gestrüpp verschluckt: eine Betonfassade mit einer einzigen, fensterlosen Stahltür.' },
-      { narrator: 'Dank der gewonnenen Tage seid ihr zuerst hier. Der Hang ist leer, die Tür unberührt — noch. Aber Jariks Gruppe kann höchstens einen Tag hinter euch sein, und sie wissen nicht, dass die Tür für euch kein Hindernis ist.', showIf: { flag: 'ch10_ahead' } },
-      { narrator: 'Ihr seid nicht die Ersten. Am Fuß des Hangs, keine hundert Meter von der Tür: ein Lager. Sechs, sieben Gestalten um ein rauchendes Feuer, und selbst auf die Entfernung kann man die Frustration sehen — die Körperhaltung von Leuten, die seit Tagen gegen eine Stahltür verlieren.', showIf: { flag: 'ch10_ahead', invert: true } },
-      { narrator: 'An zwei Rucksäcken im Lager: drei parallele Striche, roh eingeritzt. Du hast dieses Zeichen schon einmal gesehen, an einer Ruinenwand, neben einem ausgebrannten Wrack.', showIf: { flag: 'knows_about_sammler' } }
-    ],
-    next: 'ch10_chapter_end'
-  },
-
-  ch10_chapter_end: {
-    type: 'end',
-    badge: 'ENDE KAPITEL 10',
-    title: 'DER WEG DORTHIN',
-    text: 'Sieben Tage, ein Viadukt, und am Ende ein Hügel mit einer Tür, die seit drei Jahren auf genau einen Schlüssel wartet. Er liegt in deiner Tasche. Das einzige Problem: Ihr seid nicht die Einzigen, die vor dieser Tür stehen wollen.',
-    nextChapter: 'ch11_intro'
-  },
-
-  /* ══════════════════════════════════════════════════════
-     KAPITEL 11 — "DER LETZTE FUNKE"
-     ══════════════════════════════════════════════════════ */
-
-  ch11_intro: {
-    chapter: 'KAPITEL 11 — DER LETZTE FUNKE',
-    location: 'VOR DER TÜR DER LEITSTELLE',
-    text: [
-      { narrator: 'Aus der Nähe ist die Tür noch amtlicher, als sie aus der Ferne wirkte: Stahl, fensterlos, und darüber eine gestanzte Plakette, an der drei Jahre Weltuntergang spurlos vorbeigegangen sind. <span class="hl">LEITSTELLE — ZUTRITT NUR MIT BERECHTIGUNG</span>.' },
-      { narrator: 'Neben der Tür, im Windschatten der Betonfassade, die Überreste eines alten Lagers: zerfallene Zelte, verrostetes Werkzeug, tiefe Kratzspuren rund um das Schloss. Und unter einer Plane, sorgfältig gegen die Zeit verpackt, ein Notizbuch.' },
-      { narrator: 'Die Expedition aus dem Süden. Zwei Jahre her. Die letzte Eintragung, in verblasster, aber ordentlicher Schrift: <span class="hl">"Tag 40. Die Tür gewinnt. Wir ziehen weiter nach Westen. Falls jemand das liest: Bringt einen Schlüssel mit. Bringt um Himmels willen einen Schlüssel mit."</span>' },
-      { narrator: 'Niemand sagt etwas. Aber du spürst das Gewicht in deiner Tasche plötzlich sehr deutlich.' }
-    ],
-    next: 'ch11_standoff'
-  },
-
-  ch11_standoff: {
-    chapter: 'KAPITEL 11 — DER LETZTE FUNKE',
-    text: [
-      { narrator: 'Ihr habt einen halben Tag Vorsprung — genug, um das Gelände zu kennen, als am Nachmittag sieben Gestalten den Hang heraufkommen. Sie sehen euch, bleiben stehen, und für einen langen Moment steht die Welt still. Dann löst sich einer aus der Gruppe und kommt allein weiter. Jarik.', showIf: { flag: 'ch10_ahead' } },
-      { narrator: 'Sie haben euch natürlich längst gesehen — man erreicht diese Tür nicht, ohne an ihrem Lager vorbeizukommen. Sieben Gestalten setzen sich in Bewegung, den Hang herauf, ohne Hast: Wer vier Tage gegen eine Tür verloren hat, rennt nicht mehr. Einer geht voraus. Jarik.', showIf: { flag: 'ch10_ahead', invert: true } },
-      { narrator: 'Er ist jünger, als die Führungsstimme im Funk klang — Ende zwanzig vielleicht, mit dem wachen, rastlosen Blick von jemandem, der zu lange auf den Moment gewartet hat, in dem er endlich selbst entscheidet.' },
-      { speaker: 'Jarik', line: '"Ich weiß, wer ihr seid. Die Bauern, die Henrik weich geklopft haben." Er spuckt das Wort aus wie einen Kirschkern. "Drei Jahre haben wir genommen, was wir brauchten, und es hat funktioniert. Und dann kommt ihr mit eurer Mathematik, und plötzlich soll ich Rüben ernten."', showIf: { flag: 'sammler_deal' } },
-      { speaker: 'Jarik', line: '"Ich weiß, wer ihr seid. Die mit dem Zaun, der gehalten hat." Er sagt es ohne Groll, fast anerkennend. "Henrik ist nach der Nacht nach Norden, den Schwanz eingezogen. Ich nicht. Wer das hier kontrolliert—" er nickt zur Tür, "—kontrolliert, wer mit wem redet. Das ist mehr wert als jede Ernte."', showIf: { flag: 'sammler_deal', invert: true } },
-      { speaker: 'Jarik', line: '"Und jetzt ratet mal, was wir seit vier Tagen rausgefunden haben: Die Tür geht nicht auf. Für niemanden. Also entweder habt ihr etwas, das wir nicht haben — oder wir stehen alle zusammen vor derselben verschlossenen Tür und können auch gleich Freunde werden."' },
-      { narrator: 'Sein Blick sagt, dass er die Antwort längst ahnt. Sieben Leute hinter ihm, müde und durchgefroren. Der Schlüssel in deiner Tasche. Und eine Entscheidung, die größer ist als dieser Hügel.' }
-    ],
-    choices: [
-      { label: '"Wir haben den Schlüssel. Und das Netz da drin gehört niemandem — auch euch."', to: 'ch11_include_jarik' },
-      { label: '"Wir haben den Schlüssel. Ihr habt die Wahl: umkehren oder zusehen."', to: 'ch11_lock_out' },
-    ]
-  },
-
-  ch11_include_jarik: {
-    chapter: 'KAPITEL 11 — DER LETZTE FUNKE',
-    text: [
-      { narrator: 'Du sagst es laut genug, dass die sieben am Hang es hören. Jarik lacht — kurz, ungläubig.' },
-      { speaker: 'Jarik', line: '"Gehört niemandem. Klar. Und Rüben wachsen von allein. Warum sollte ich einem Wort davon glauben?"' },
-      { speaker: 'Finn', line: '"Weil ich hier stehe." Finn tritt vor, und Jariks Gesicht ändert sich — er kennt ihn. Natürlich kennt er ihn. "Halb verblutet haben sie mich aufgenommen, Jarik. Keine Bedingungen. Frag deine Leute, wie oft ihnen das bei uns passiert wäre."', showIf: { flag: 'helped_finn' } },
-      { narrator: 'Und dann, über das Handfunkgerät, das du wortlos aufdrehst, die Stimme, die den Ausschlag gibt — blechern, weit weg, und trotzdem im Raum: Elenas Abendmeldung, mitten im Satz, Alltagskram — Erntemengen, eine reparierte Pumpe, Grüße an die Expedition. Kein Befehl, keine Drohung. Nur der Klang von einem Ort, an dem Menschen leben statt nehmen.', showIf: { flag: 'expedition_full_backing' } },
-      { narrator: 'Eine Frau in Jariks Gruppe sagt leise etwas, das ihr nicht hört. Aber Jarik hört es. Und seine Schultern sinken um genau den Zentimeter, der zwischen Sturheit und Erschöpfung liegt.' },
-      { speaker: 'Jarik', line: '"...Vier Tage vor einer Tür, die nicht aufgeht. Wisst ihr, was das mit einem macht? Man fängt an zu verstehen, dass Nehmen nur funktioniert, wenn irgendwer baut." Er schaut zu seinen Leuten, dann zur Tür, dann zu dir. "Also gut. Zeig mir, was Rüben können."' }
-    ],
-    onEnter: { flags: ['jarik_included'] },
-    next: 'ch11_door'
-  },
-
-  ch11_lock_out: {
-    chapter: 'KAPITEL 11 — DER LETZTE FUNKE',
-    text: [
-      { narrator: 'Du sagst es ruhig, ohne Triumph — nur als Tatsache. Jarik mustert dich lange, und man kann zusehen, wie er rechnet: sieben müde Leute, keine Vorräte für eine Belagerung, ein Winter, der näher kommt, und eine Tür, die vier Tage lang gewonnen hat.' },
-      { speaker: 'Jarik', line: '"Weißt du, was das Bittere ist? Henrik hätte genau dasselbe gesagt. Nur andersrum."' },
-      { narrator: 'Sie ziehen noch am selben Abend ab, nach Westen, den Spuren der alten Expedition hinterher — dorthin, wo vielleicht etwas anderes wartet, oder nichts. Zwei von ihnen drehen sich am Fuß des Hangs noch einmal um. Sie kommen nicht zurück. Aber sie merken sich den Weg, das sieht man sogar auf die Entfernung.' },
-      { speaker: 'Rosa', line: '"Das war die sichere Entscheidung. Ich sag nicht, dass sie falsch war. Ich sag nur: Türen, vor denen man Leute stehen lässt, bleiben einem im Gedächtnis. Auf beiden Seiten."', showIf: { flag: 'rosa_companion' } }
-    ],
-    onEnter: { flags: ['jarik_locked_out'] },
-    next: 'ch11_door'
-  },
-
-  ch11_door: {
-    chapter: 'KAPITEL 11 — DER LETZTE FUNKE',
-    location: 'DIE TÜR',
-    text: [
-      { narrator: 'Und dann ist es so weit. Der verrostete Schlüssel aus einem Technikraum, den du vor einer Ewigkeit in einer anderen Welt eingesteckt hast — aus alter Gewohnheit, weil Türen mal etwas bedeutet haben.' },
-      { narrator: 'Er klemmt. Natürlich klemmt er. Drei Jahre Rost auf beiden Seiten geben sich nicht kampflos geschlagen. Aber dann, mit einem Knirschen, das durch den ganzen Hang zu gehen scheint, dreht er sich — und die Tür, die vierzig Tage lang eine Expedition besiegt hat, schwingt auf, als hätte sie nur auf die richtige Berechtigung gewartet.' },
-      { narrator: 'Dahinter: eine Treppe, hinab in Dunkelheit, die nach Maschinenöl und angehaltener Zeit riecht.' }
-    ],
-    next: 'ch11_inside'
-  },
-
-  ch11_inside: {
-    chapter: 'KAPITEL 11 — DER LETZTE FUNKE',
-    location: 'LEITSTELLE, UNTERGESCHOSS',
-    text: [
-      { narrator: 'Die Leitstelle ist kein Bunker aus einem Film — keine blinkenden Konsolen, keine Notbeleuchtung. Nur Räume voller ordentlich beschrifteter Technik unter Staubplanen, ein Dieselaggregat von der Größe eines Kleinwagens, und an jeder Wand laminierte Anweisungen in der ruhigsten Behördensprache der Welt.' },
-      { narrator: 'Das Aggregat springt an, als hätte es nur auf jemanden gewartet, der schon einmal einen störrischen Generator zum Leben überredet hat. Du kennst das Ritual: Kontakte prüfen, Geduld haben, im richtigen Moment beherzt sein. Rosas Generator war eine gute Schule.', showIf: { flag: 'gave_wire' } },
-      { narrator: 'Das Aggregat ziert sich — zwei Stunden lang, in denen Flüche in drei Tonlagen durch den Maschinenraum hallen. Dann, mit einem Husten, das klingt wie eine sehr alte Entschuldigung, springt es an.', showIf: { flag: 'gave_wire', invert: true } },
-      { narrator: 'Licht flackert auf, Raum für Raum. Und am Ende des Gangs, hinter einer Glastür, die niemand abgeschlossen hat, weil die Stahltür draußen ja reichen sollte: der Kontrollraum. Ein Halbrund aus Pulten, eine Wandkarte des ganzen Landes — dieselben Dreiecke, dieselben Linien wie auf eurer Karte, nur größer. Viel größer.' }
-    ],
-    next: 'ch11_power_up'
-  },
-
-  ch11_power_up: {
-    chapter: 'KAPITEL 11 — DER LETZTE FUNKE',
-    location: 'KONTROLLRAUM',
-    text: [
-      { narrator: 'Mit dem Netzhandbuch aus Station 9 ist die Inbetriebnahme fast unheimlich unspektakulär: Seite 12, "Wiederanlauf nach Totalausfall", vierzehn nummerierte Schritte. Ihr arbeitet sie ab wie ein Rezept, und mit jedem Schritt erwacht ein weiteres Pult aus dem Staub.', showIf: { item: 'netzhandbuch' } },
-      { narrator: 'Ohne Anleitung wird die Inbetriebnahme zu einem langen Abend aus Versuch, Irrtum und dem Satz "Das würde ich jetzt nicht drücken", der in wechselnden Stimmlagen durch den Kontrollraum geht. Dreimal fliegt eine Sicherung, einmal riecht es kurz beunruhigend — aber gegen Mitternacht erwacht das letzte Pult, und niemand gibt zu, wie knapp es war.', showIf: { item: 'netzhandbuch', invert: true } },
-      { narrator: 'Und dann steht ihr davor: das Hauptpult. Drei Betriebsarten, sauber beschriftet, als hätte jemand gewusst, dass eines Tages Leute ohne Einweisung hier stehen würden. Vielleicht hat das jemand.' },
-      { narrator: '<span class="hl">VOLLBETRIEB</span> — alle Stationen, Dauersendung, offene Frequenzen. Das Netz weckt jeden Empfänger im Land.' },
-      { narrator: '<span class="hl">TEILBETRIEB</span> — ausgewählte Stationen, gerichtete Verbindungen. Ein Netz für die, die sich kennen.' },
-      { narrator: '<span class="hl">BEREITSCHAFT</span> — alles bleibt, wie es ist. Gewartet, versiegelt, wartend. Für eine Welt, die vielleicht erst noch so weit sein muss.' },
-      { speaker: 'Shini', line: '"Falls ihr mich da unten noch empfangt: kein Druck. Ihr steht nur gerade am wichtigsten Schalter des Kontinents. Wie gesagt — kein Druck."' }
-    ],
-    next: 'ch11_final_choice'
-  },
-
-  ch11_final_choice: {
-    chapter: 'KAPITEL 11 — DER LETZTE FUNKE',
-    text: [
-      { narrator: 'Alle im Raum schauen dich an. Nicht, weil du das Recht hättest, allein zu entscheiden — sondern weil du derjenige bist, der vor einer Ewigkeit an eine Tür in Rattenbach geklopft hat, und alles hier die Folge davon ist. Manche Entscheidungen suchen sich ihre Leute selbst aus.' }
-    ],
-    choices: [
-      { label: 'VOLLBETRIEB — die ganze Welt soll hören, dass es weitergeht.', to: 'ch11_epilogue_dawn' },
-      { label: 'TEILBETRIEB — das Netz wächst so, wie Vertrauen wächst: Verbindung für Verbindung.', to: 'ch11_epilogue_quiet' },
-      { label: 'BEREITSCHAFT — Tür verriegeln, Schlüssel behalten. Noch nicht. Vielleicht bald.', to: 'ch11_epilogue_ember' },
-    ]
-  },
-
-  /* ── Epilog A: Vollbetrieb ── */
-
-  ch11_epilogue_dawn: {
-    chapter: 'EPILOG',
-    location: 'LEITSTELLE, KURZ NACH MITTERNACHT',
-    text: [
-      { narrator: 'Der Hebel rastet ein, und für einen Moment passiert: nichts. Dann beginnt die Wandkarte zu leben — ein Dreieck nach dem anderen glimmt auf, zögernd, wie Kerzen, die jemand nach langer Zeit wieder anzündet. Station 9. Station 12. Dutzende mehr, quer über das ganze Land, Orte, von denen niemand wusste, dass dort noch etwas auf ein Signal wartet.' },
-      { narrator: 'Du reichst Rosa das Mikrofon. Sie schüttelt den Kopf, nimmt es dann doch — die Frau, die drei Jahre lang nachts am Empfänger saß und Rauschen hörte, und die jetzt als Erste in ein Land hineinspricht, das wieder zuhört.', showIf: { flag: 'rosa_companion' } },
-      { speaker: 'Rosa', line: '"Hier spricht... ach, wisst ihr was: Hier spricht einfach jemand, der drei Jahre gewartet hat. Ihr seid nicht allein da draußen. Ihr wart es nie. Wir haben uns nur alle nicht gehört."', showIf: { flag: 'rosa_companion' } },
-      { narrator: 'Du sprichst die ersten Worte selbst — kein großer Satz, keine Rede. Nur eine Ortsangabe, eine Frequenz und die älteste Nachricht der Welt: Wir sind hier. Meldet euch.', showIf: { flag: 'rosa_companion', invert: true } },
-      { narrator: 'Die erste Antwort kommt nach elf Minuten. Eine zittrige Stimme von irgendwo weit im Norden, die dreimal fragt, ob das echt ist. Die zweite Antwort ist Shini, der der zittrigen Stimme geduldig versichert, dass ja, das echt ist, und nein, das keine Falle ist, und ob sie zufällig Kaffee haben.' },
-      { speaker: 'Shini', line: '"Station zwölf an Leitstelle: Ich protokolliere den offiziellen Neustart der Zivilisation. Zeitstempel: mitten in der Nacht, wie sich das gehört. Und an die Leute da unten am Pult — ich hab drei Jahre jede Frequenz abgehört, die es gibt. Das hier ist die erste, bei der ich froh bin, dass jemand zugehört hat."' },
-      { narrator: 'Jariks Leute stehen im Kontrollraum verteilt und starren auf die Wandkarte wie auf ein Lagerfeuer. Einer von ihnen fragt leise, ob das Dreieck da im Osten in der Nähe seines Heimatdorfs liegt. Es liegt in der Nähe seines Heimatdorfs.', showIf: { flag: 'jarik_included' } },
-      { narrator: 'Irgendwo im Westen, ein paar Tagesmärsche entfernt, ziehen sieben Gestalten durch die Nacht — und über ihnen, unsichtbar, füllt sich der Äther mit Stimmen. Vielleicht hören sie es auf irgendeinem Empfänger. Vielleicht drehen sie um. Die Tür wäre jetzt offen.', showIf: { flag: 'jarik_locked_out' } },
-      { narrator: 'In Königsmühle, das erfahrt ihr später, hat Elena die halbe Nacht am Funkgerät gesessen und Neuankömmlinge sortiert wie früher Wachpläne. Der lange Tisch wird wieder zu kurz werden. Diesmal ist das ein schönes Problem.', showIf: { flag: 'network_alive' } },
-      { narrator: 'Henrik meldet sich drei Tage später aus dem Norden auf der offenen Frequenz — keine Entschuldigung, keine Erklärung, nur eine Frage: ob das Angebot mit dem Saatgut noch steht. Es steht.', showIf: { flag: 'sammler_deal' } }
-    ],
-    next: 'ch11_end_dawn'
-  },
-
-  ch11_end_dawn: {
-    type: 'end',
-    badge: 'ENDE',
-    title: 'DER LETZTE FUNKE',
-    text: 'Die Zivilisation ist nicht mit einem Knall untergegangen, sondern mit einem Achselzucken. Zurück kam sie anders: mit einem Knirschen im Schloss, einem Hebel, der einrastet, und hundert kleinen Lichtern auf einer Wandkarte. Es war nie der letzte Funke. Es war der erste.'
-  },
-
-  /* ── Epilog B: Teilbetrieb ── */
-
-  ch11_epilogue_quiet: {
-    chapter: 'EPILOG',
-    location: 'LEITSTELLE, KURZ NACH MITTERNACHT',
-    text: [
-      { narrator: 'Ihr wählt die Stationen von Hand aus, eine nach der anderen: Neun, der Turm. Zwölf, Shini. Die Relais-Reichweite um Königsmühle, um Rattenbach, um das Silo. Auf der großen Wandkarte glimmt ein kleines, dichtes Netz auf — ein Fleck aus Licht in einem dunklen Land.' },
-      { narrator: 'Es ist keine Revolution. Es ist etwas Besseres: ein Anfang, der weiß, dass er einer ist.' },
-      { speaker: 'Shini', line: '"Teilbetrieb. Wisst ihr, was mir daran gefällt? Es ist genau die Sorte Entscheidung, die Leute treffen, die vorhaben, noch lange da zu sein. Vollgas kann jeder. Haushalten ist die eigentliche Kunst."' },
-      { speaker: 'Rosa', line: '"Drei Dörfer, ein Silo, ein schlafloser Mann an einem Wetterrelais. Vor einem halben Jahr hätte ich gesagt: Das ist nicht viel. Heute weiß ich: Das ist mehr, als die meisten Welten je wieder zusammenkriegen."', showIf: { flag: 'rosa_companion' } },
-      { narrator: 'Jarik steht lange vor der Wandkarte und zählt die dunklen Dreiecke — all die Stationen, die noch warten. "Irgendwann", sagt er, mehr zu sich selbst, "schalten wir die auch an. Aber erst, wenn wir wissen, was wir denen sagen wollen." Es ist das Klügste, was du ihn je hast sagen hören.', showIf: { flag: 'jarik_included' } },
-      { narrator: 'Die Bereitschafts-Frequenz lasst ihr offen — eine einzige, leise Kanalstelle, auf der das Netz von sich aus zuhört. Falls da draußen jemand ruft, wird jemand antworten. Das ist der Kompromiss: nicht laut werden, aber nie wieder taub sein.' },
-      { narrator: 'In den Wochen danach wächst das Netz um genau zwei Stationen — eine Siedlung an einem Stausee, die Station elf seit Jahren als Lagerhalle nutzt, und eine wortkarge Gruppe im Süden, die erst drei Wochen lang nur zuhört, bevor sie sich meldet. Vertrauen, Verbindung für Verbindung. Genau wie geplant.', showIf: { flag: 'network_alive' } }
-    ],
-    next: 'ch11_end_quiet'
-  },
-
-  ch11_end_quiet: {
-    type: 'end',
-    badge: 'ENDE',
-    title: 'DER LETZTE FUNKE',
-    text: 'Kein Feuerwerk, kein Ruf an alle. Nur ein kleines Netz aus vertrauten Stimmen, das jede Nacht ein bisschen weiter reicht — und eine offene Frequenz für alle, die irgendwann bereit sind. Manche Funken macht man nicht größer. Man schützt sie vor dem Wind.'
-  },
-
-  /* ── Epilog C: Bereitschaft ── */
-
-  ch11_epilogue_ember: {
-    chapter: 'EPILOG',
-    location: 'LEITSTELLE, KURZ NACH MITTERNACHT',
-    text: [
-      { narrator: 'Es ist die schwerste der drei Entscheidungen, und ihr trefft sie gemeinsam, nach einer langen Nacht voller Argumente: Das Netz bleibt in Bereitschaft. Gewartet, dokumentiert, versiegelt. Die Welt da draußen hat Sammler hervorgebracht, Splittergruppen, Türen mit Kratzspuren — und ein Werkzeug dieser Größe braucht Hände, die so weit sind. Eure Dörfer sind es vielleicht. Das ganze Land ist es noch nicht.' },
-      { speaker: 'Shini', line: '"Ihr macht das Ding AUS? Ihr steht am wichtigsten Schalter des Kontinents und entscheidet euch für: später? ... Wisst ihr was, ich hab drei Tage gebraucht, um das zu verdauen. Und dann ist mir aufgefallen: Genau deshalb wart ihr die Richtigen an dem Schalter. Leute, die sowas anfassen wollen, sollte man fernhalten. Leute, die zögern, sollte man hinschicken."' },
-      { narrator: 'Ihr wartet das Aggregat, versiegelt die Räume nach Handbuch und dokumentiert alles in Station 9 — den Weg, die Protokolle, die Betriebsarten. Das Wissen gehört jetzt dem Netz der Dörfer, nicht einer einzelnen Tasche.', showIf: { item: 'netzhandbuch' } },
-      { speaker: 'Rosa', line: '"Weißt du, was ich an dieser Entscheidung mag? Sie behandelt die Zukunft wie einen Gast, auf den man das gute Geschirr aufhebt. Nicht wie einen Einbrecher, dem man zuvorkommen muss."', showIf: { flag: 'rosa_companion' } },
-      { narrator: 'Jarik ist es, der am Ende den Riegel von innen prüft — der Mann, der vier Tage gegen diese Tür verloren hat, sorgt jetzt dafür, dass sie richtig schließt. Er lacht selbst über die Ironie. "Falls ihr irgendwann aufsperrt", sagt er, "will ich dabei sein. Ich kenn die Tür inzwischen persönlich."', showIf: { flag: 'jarik_included' } },
-      { narrator: 'Der Schlüssel wandert zurück in deine Tasche — dasselbe rostige Ding, dieselbe alte Gewohnheit. Nur dass jetzt jeder im Umkreis von hundert Kilometern weiß, was er bedeutet: nicht Macht. Ein Versprechen mit offenem Datum.' },
-      { narrator: 'Auf dem Rückweg, am Viadukt, dreht sich Mira noch einmal zu den Hügeln um. "Wir kommen wieder", sagt sie. Es klingt nicht wie Trost. Es klingt wie ein Termin.', showIf: { flag: 'tobias_joined' } }
-    ],
-    next: 'ch11_end_ember'
-  },
-
-  ch11_end_ember: {
-    type: 'end',
-    badge: 'ENDE',
-    title: 'DER LETZTE FUNKE',
-    text: 'Die Leitstelle schläft weiter, gewartet und versiegelt, mit einem Schlüssel, der jetzt eine Adresse hat. Vielleicht in einem Jahr. Vielleicht in zehn. Ein Funke, der wartet, ist nicht erloschen — er ist Glut. Und Glut überdauert jeden Sturm.'
+    text: 'Ein Schlüssel, der in ein amtliches Schloss passt. Ein Handbuch, das behauptet, eine einzige Person könne das Netz wiederbeleben. Und irgendwo auf dem Weg zur Leitstelle: Schritte im Dunkeln, die dasselbe Ziel haben. Morgen früh beginnt der weiteste Weg seit dem Zusammenbruch. Kapitel 10 folgt bald.'
   },
 
 };
@@ -2649,6 +2361,41 @@ const STORY = {
    ══════════════════════════════════════════════════════════════ */
 goTo('title', true);
 
+</script>
+  <script>
+(function(){
+  var SESS='om_profile_session';
+  var acct=document.getElementById('acct'); if(!acct) return;
+  var s=null; try{ s=JSON.parse(localStorage.getItem(SESS)||'null'); }catch(e){ s=null; }
+  var login=document.getElementById('acctLogin');
+  var chip=document.getElementById('acctChip');
+  var menu=document.getElementById('acctMenu');
+  function initial(n){ n=(n||'').trim(); return n?n.charAt(0).toUpperCase():'?'; }
+  function paintAv(el){ if(!el)return; if(s&&s.avatarUrl){ el.style.backgroundImage='url("'+s.avatarUrl+'")'; el.classList.add('has-img'); el.textContent=''; } else { el.textContent=initial(s&&(s.displayName||s.name)); } }
+  if(!s||!s.id){ if(login)login.hidden=false; return; }
+  if(chip)chip.hidden=false;
+  var name=s.displayName||s.name||'Profil';
+  var full=name+(s.discriminator?('#'+s.discriminator):'');
+  document.getElementById('acctName').textContent=name;
+  document.getElementById('acctMenuName').textContent=full;
+  paintAv(document.getElementById('acctAv'));
+  paintAv(document.getElementById('acctAvLg'));
+  if(s.level!=null){ var lv=document.getElementById('acctLvl'); lv.hidden=false; lv.textContent='LV '+s.level; }
+  if(s.title){ var ti=document.getElementById('acctMenuTitle'); ti.hidden=false; ti.textContent=s.title; }
+  if(s.xp!=null&&s.xpNext!=null){ var xp=document.getElementById('acctXp'); xp.hidden=false;
+    document.getElementById('acctXpLabel').textContent='Level '+(s.level!=null?s.level:1);
+    document.getElementById('acctXpVal').textContent=s.xp+' / '+s.xpNext+' XP';
+    var pct=s.xpNext?Math.max(0,Math.min(100,s.xp/s.xpNext*100)):0;
+    document.getElementById('acctXpFill').style.width=pct+'%';
+  }
+  function closeM(){ menu.hidden=true; chip.setAttribute('aria-expanded','false'); }
+  function openM(){ menu.hidden=false; chip.setAttribute('aria-expanded','true'); }
+  chip.addEventListener('click',function(e){ e.stopPropagation(); if(menu.hidden)openM();else closeM(); });
+  document.addEventListener('click',function(e){ if(!acct.contains(e.target))closeM(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape')closeM(); });
+  var lo=document.getElementById('acctLogout');
+  if(lo)lo.addEventListener('click',function(){ try{localStorage.removeItem(SESS);}catch(e){} location.href='profile.html'; });
+})();
 </script>
 </body>
 </html>
