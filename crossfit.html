@@ -53,7 +53,7 @@
     .dot{color:var(--blaze);margin-right:9px}
     @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
-    .hero{display:grid;grid-template-columns:1fr 1.05fr;gap:48px;align-items:start;padding-bottom:64px}
+    .hero{display:grid;grid-template-columns:1fr 1.05fr;gap:48px;align-items:stretch;padding-bottom:64px}
     .hero-left{padding-top:8px}
     .hero-kicker{font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:var(--blaze);margin-bottom:20px}
     .hero-title{font-family:'Bebas Neue';font-size:clamp(3.6rem,11vw,8.2rem);line-height:.82;letter-spacing:.01em}
@@ -65,7 +65,7 @@
     .hero-quip .qi{margin-right:8px}
 
     /* live standings board (right) */
-    .board{border:1px solid var(--line);background:var(--field)}
+    .board{border:1px solid var(--line);background:var(--field);display:flex;flex-direction:column}
     .board-head{display:flex;justify-content:space-between;align-items:baseline;
       padding:14px 18px;border-bottom:1px solid var(--line)}
     .board-head-l{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--chalk)}
@@ -76,6 +76,20 @@
     .board-stat+.board-stat{border-left:1px solid var(--line)}
     .board-stat-l{font-size:.54rem;letter-spacing:.16em;text-transform:uppercase;color:var(--chalk);margin-bottom:5px}
     .board-stat-v{font-family:'Bebas Neue';font-size:1.9rem;line-height:1;letter-spacing:.02em}
+    .board-list{flex:1;display:flex;flex-direction:column;border-bottom:1px solid var(--line)}
+    .board-list-head{font-size:.54rem;letter-spacing:.16em;text-transform:uppercase;color:var(--chalk);padding:13px 18px 9px}
+    .board-list-rows{flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:0 18px 16px}
+    .board-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
+    .board-row-pos{font-family:'Bebas Neue';font-size:1.1rem;line-height:1;color:var(--chalk);width:20px}
+    .board-row.lead .board-row-pos{color:var(--blaze)}
+    .board-row-main{min-width:0}
+    .board-row-name{font-size:.72rem;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .board-row.lead .board-row-name{color:var(--blaze)}
+    .board-row-bar{height:3px;background:var(--line);margin-top:5px;overflow:hidden}
+    .board-row-bar-fill{height:100%;background:var(--blaze)}
+    .board-row-bar-fill.done{background:var(--green,#22c55e)}
+    .board-row-val{font-family:'DM Mono',monospace;font-size:.66rem;color:var(--chalk);white-space:nowrap}
+    .board-empty{flex:1;display:flex;align-items:center;justify-content:center;padding:24px 18px;font-size:.68rem;color:var(--chalk);font-style:italic;text-align:center}
     .board-cta{display:flex;align-items:center;justify-content:space-between;gap:12px;
       padding:15px 18px;background:var(--blaze);color:var(--ink);text-decoration:none;
       font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;font-weight:500;transition:background .2s}
@@ -237,6 +251,9 @@
             <div class="board-stat-v" id="ms-leader">—</div>
           </div>
         </div>
+        <div class="board-list" id="ms-list">
+          <div class="board-empty">Lädt Rangliste…</div>
+        </div>
         <a href="challenge.html" class="board-cta">
           <span>Zeit eintragen</span>
           <span class="arr">→</span>
@@ -320,22 +337,46 @@
     const now=new Date(),m=now.getMonth()+1,y=now.getFullYear();
     try{
       const rows=await sbFetch(`/rest/v1/season_months?season_year=eq.${y}&month=eq.${m}&select=*,exercises(*)`);
+      const msList=document.getElementById('ms-list');
       if(!rows||!rows.length||rows[0].is_december_vote||!rows[0].exercises){
         document.getElementById('ms-challenge').textContent=rows&&rows[0]&&rows[0].is_december_vote?'Dezember Voting':'—';
         document.getElementById('ms-count').textContent='—';
         document.getElementById('ms-leader').textContent='—';
+        if(msList)msList.innerHTML='<div class="board-empty">'+(rows&&rows[0]&&rows[0].is_december_vote?'Voting läuft — noch keine Rangliste.':'Diesen Monat läuft keine Challenge.')+'</div>';
         return;
       }
       const ex=rows[0].exercises;
+      const goal=rows[0].custom_goal||ex.default_goal||60;
+      const unit=ex.default_unit||'';
       const challengeId=slugify(ex.name);
       document.getElementById('ms-challenge').textContent=ex.name;
       const data=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${challengeId}&select=*`);
       document.getElementById('ms-count').textContent=data?data.length:0;
       if(data&&data.length){
-        const sorted=[...data].sort((a,b)=>b.value1-a.value1);
+        const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const sorted=[...data].sort((a,b)=>(b.value1||0)-(a.value1||0));
         document.getElementById('ms-leader').textContent=sorted[0].name;
-      } else document.getElementById('ms-leader').textContent='—';
-    }catch(e){document.getElementById('ms-count').textContent='—'}
+        if(msList){
+          const top=sorted.slice(0,3);
+          msList.innerHTML='<div class="board-list-head">Top '+top.length+' im Rennen</div><div class="board-list-rows">'
+            +top.map((e,i)=>{
+              const v=e.value1||0, pct=Math.min(100,Math.round(v/goal*100)), done=v>=goal;
+              return '<div class="board-row'+(i===0?' lead':'')+'">'
+                +'<span class="board-row-pos">'+(i+1<10?'0':'')+(i+1)+'</span>'
+                +'<div class="board-row-main"><div class="board-row-name">'+esc(e.name)+'</div>'
+                +'<div class="board-row-bar"><div class="board-row-bar-fill'+(done?' done':'')+'" style="width:'+pct+'%"></div></div></div>'
+                +'<span class="board-row-val">'+v+' '+esc(unit)+'</span></div>';
+            }).join('')+'</div>';
+        }
+      } else {
+        document.getElementById('ms-leader').textContent='—';
+        if(msList)msList.innerHTML='<div class="board-empty">Noch keine Einträge — sei der Erste.</div>';
+      }
+    }catch(e){
+      document.getElementById('ms-count').textContent='—';
+      const msList=document.getElementById('ms-list');
+      if(msList)msList.innerHTML='<div class="board-empty">Rangliste konnte nicht geladen werden.</div>';
+    }
   }
   loadMiniStatus();
 
