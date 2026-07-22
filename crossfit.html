@@ -4,140 +4,164 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CrossFit — onlymakkus</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
     :root, [data-theme="dark"]{
-      --black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--orange2:#ff6b3d;--muted:#9a9488;
-      --card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08);
-      --body-bg:var(--black);--body-text:var(--cream);color-scheme:dark;
+      --ink:#0b0b09;--paper:#f2ede4;--blaze:#ff4e1a;--blaze2:#ff6b3d;--chalk:#8f8a7d;
+      --field:#16150f;--field2:#1d1c15;--line:#2b2920;--line-soft:rgba(242,237,228,.09);
+      --body-bg:var(--ink);--body-text:var(--paper);color-scheme:dark;
     }
 
     [data-theme="light"]{color-scheme:light;
-      --black:#2A2420;--cream:#2A2420;--orange:#FF6E35;--orange2:#e85a1f;--muted:#8A8078;
-      --card:#FFFFFF;--card2:#FFF6EE;--border:rgba(42,36,32,0.1);
-      --body-bg:#FBF6EE;--body-text:#2A2420;
+      --ink:#2a2420;--paper:#2a2420;--blaze:#e8480f;--blaze2:#c93d0a;--chalk:#8a8078;
+      --field:#ffffff;--field2:#fbf4ea;--line:#dcd4c6;--line-soft:rgba(42,36,32,.1);
+      --body-bg:#f4efe6;--body-text:#2a2420;
     }
 
     html{scroll-behavior:smooth}
-    body{background:var(--body-bg);color:var(--body-text);font-family:'DM Mono',monospace;overflow-x:hidden;cursor:none;transition:background .3s,color .3s}
-    .cursor{position:fixed;width:12px;height:12px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .15s,height .15s}
-    .cursor.big{width:36px;height:36px}
-    [data-theme="light"] .cursor{mix-blend-mode:normal;background:var(--orange)}
+    body{background:var(--body-bg);color:var(--body-text);font-family:'DM Mono',monospace;overflow-x:hidden;transition:background .3s,color .3s;-webkit-font-smoothing:antialiased}
+    ::selection{background:var(--blaze);color:var(--ink)}
+    a{color:inherit}
+    :focus-visible{outline:2px solid var(--blaze);outline-offset:3px}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-    .page-content{opacity:1}
-
-    nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;mix-blend-mode:difference}
-    [data-theme="light"] nav{mix-blend-mode:normal;background:rgba(251,246,238,.88);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
-    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--body-text);text-decoration:none}
-    .nav-right{display:flex;gap:20px;align-items:center}
-    .nav-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--body-text);text-decoration:none;opacity:.5;transition:opacity .2s;cursor:pointer;background:none;border:none;font-family:'DM Mono'}
-    .nav-link:hover{opacity:1}
-    .theme-toggle{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--body-text);background:transparent;border:1px solid var(--border);padding:7px 12px;cursor:pointer;}
-    .theme-toggle:hover{border-color:var(--orange);color:var(--orange);}
-    [data-theme="light"] .theme-toggle{mix-blend-mode:normal}
-
-    .hero{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 40px 60px;text-align:center;position:relative;overflow:hidden}
-    .hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#0a0a08 40%,#1a0c06 100%)}
-    [data-theme="light"] .hero-bg{background:linear-gradient(135deg,#FBF6EE 40%,#FFF0E6 100%)}
-    .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,78,26,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,78,26,.04) 1px,transparent 1px);background-size:60px 60px}
-    [data-theme="light"] .hero-grid{background-image:linear-gradient(rgba(255,110,53,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,110,53,.06) 1px,transparent 1px)}
-    #particle-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-    .hero-tag{font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:var(--orange);margin-bottom:16px;position:relative}
-    .hero-title{font-family:'Bebas Neue';font-size:clamp(4rem,15vw,10rem);line-height:.9;position:relative}
-    .hero-title span{color:var(--orange)}
-    .hero-sub{margin-top:18px;font-size:.78rem;color:var(--muted);max-width:440px;line-height:1.8;position:relative}
-
-    .marquee-wrap{overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:14px 0;background:var(--card)}
-    .marquee-track{display:flex;gap:60px;animation:marquee 22s linear infinite;white-space:nowrap}
-    .marquee-item{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
-    .dot{color:var(--orange);margin-right:10px}
-
-    .section{padding:80px 40px;max-width:1100px;margin:0 auto}
-    .section-label{font-size:.6rem;letter-spacing:.35em;text-transform:uppercase;color:var(--orange);margin-bottom:44px;display:flex;align-items:center;justify-content:center;gap:16px}
-    .section-label::before,.section-label::after{content:'';flex:0 0 40px;height:1px;background:var(--border)}
-
-    .hub-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2px}
-    [data-theme="light"] .hub-cards{gap:16px}
-    .hub-card{background:var(--card);padding:48px 36px;text-decoration:none;color:var(--body-text);display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;transition:background .3s,box-shadow .3s;cursor:none}
-    [data-theme="light"] .hub-card{cursor:pointer;box-shadow:0 2px 12px rgba(42,36,32,.05)}
-    .hub-card:hover{background:var(--card2)}
-    [data-theme="light"] .hub-card:hover{box-shadow:0 8px 28px rgba(255,110,53,.15)}
-    .hub-card-num{font-family:'Bebas Neue';font-size:5rem;color:rgba(255,255,255,.04);line-height:1;position:absolute;top:16px;right:20px}
-    [data-theme="light"] .hub-card-num{color:rgba(42,36,32,.04)}
-    .hub-card-icon{font-size:2.2rem}
-    .hub-card-title{font-family:'Bebas Neue';font-size:2.6rem;line-height:.95;letter-spacing:.02em}
-    .hub-card-sub{font-family:'Instrument Serif';font-style:italic;font-size:1rem;color:var(--orange)}
-    .hub-card-desc{font-size:.7rem;color:var(--muted);line-height:1.9}
-    .hub-card-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
-    .tag{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;border:1px solid rgba(255,255,255,.1);padding:3px 10px;color:var(--muted)}
-    [data-theme="light"] .tag{border-color:rgba(42,36,32,.15)}
-    .hub-card-arrow{font-size:1.1rem;color:var(--orange);margin-top:auto;transition:transform .2s}
-    .hub-card:hover .hub-card-arrow{transform:translate(4px,-4px)}
-
-    .status-panel{position:relative;background:linear-gradient(160deg,var(--card) 0%,#1a0f08 100%);border:1px solid rgba(255,78,26,.15);padding:32px 36px;overflow:hidden}
-    [data-theme="light"] .status-panel{background:linear-gradient(160deg,#FFFFFF 0%,#FFF6EE 100%);border-color:rgba(255,110,53,.15);box-shadow:0 4px 20px rgba(42,36,32,.05)}
-    .status-panel-glow{position:absolute;top:-60%;right:-10%;width:280px;height:280px;background:radial-gradient(circle,rgba(255,78,26,.12) 0%,transparent 70%);pointer-events:none}
-    .status-top{display:flex;align-items:center;gap:10px;margin-bottom:24px;position:relative}
-    .status-live-dot{width:8px;height:8px;border-radius:50%;background:var(--orange);box-shadow:0 0 8px var(--orange);animation:livepulse 2s infinite}
-    @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.4}}
-    .status-live-label{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--orange);font-weight:600}
-    .status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;position:relative}
-    .status-item-label{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-    .status-item-val{font-family:'Bebas Neue';font-size:1.7rem;color:var(--body-text);line-height:1}
-    .moto-inline{display:flex;gap:12px;align-items:center;margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,255,.06);position:relative}
-    [data-theme="light"] .moto-inline{border-top:1px solid var(--border)}
-    .moto-icon{font-size:1.2rem;flex-shrink:0}
-    .moto-text{font-size:.7rem;color:var(--muted);line-height:1.7;font-style:italic}
-    .moto-text strong{color:var(--body-text);font-style:normal}
-    @media(max-width:600px){.status-grid{grid-template-columns:1fr;gap:14px}.status-panel{padding:24px}}
-    .status-cta{display:inline-block;margin-top:20px;padding:10px 22px;background:var(--orange);color:var(--black);font-size:.65rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;text-decoration:none;transition:background .2s;position:relative}
-    [data-theme="light"] .status-cta{color:#FFFFFF}
-    .status-cta:hover{background:var(--orange2)}
-
-    footer{padding:36px 40px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:32px;font-size:.6rem;color:var(--muted);letter-spacing:.15em;flex-wrap:wrap}
-    footer a{color:var(--muted);text-decoration:none}
-
-    @media(max-width:600px){nav{padding:16px 20px}.hero{padding:100px 20px 50px}.section{padding:60px 20px}}
-    @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
-    /* --- account widget --- */
+    /* ---------- NAV ---------- */
+    nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;
+      padding:14px 28px;background:color-mix(in srgb,var(--body-bg) 88%,transparent);
+      backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+    .nav-logo{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;
+      color:var(--body-text);text-decoration:none;display:flex;align-items:center;gap:8px}
+    .nav-logo b{font-family:'Bebas Neue';font-size:1.15rem;letter-spacing:.06em;color:var(--blaze)}
     .nav-right{display:flex;align-items:center;gap:14px}
     .navrow-right{display:flex;align-items:center;gap:14px}
+    .theme-toggle{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+      color:var(--chalk);background:transparent;border:1px solid var(--line);padding:7px 11px;cursor:pointer;transition:.2s}
+    .theme-toggle:hover{border-color:var(--blaze);color:var(--blaze)}
+
+    /* ---------- HERO: SCORE SHEET ---------- */
+    .sheet{max-width:1120px;margin:0 auto;padding:56px 28px 0}
+    .sheet-top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;
+      padding-bottom:14px;border-bottom:2px solid var(--body-text)}
+    .sheet-meta{font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:var(--chalk)}
+    .sheet-meta b{color:var(--blaze);font-weight:500}
+
+    .marquee-line{overflow:hidden;padding:9px 0;border-bottom:1px solid var(--line);margin-bottom:34px}
+    .marquee-track{display:flex;gap:44px;animation:marquee 26s linear infinite;white-space:nowrap;width:max-content}
+    .marquee-item{font-size:.58rem;letter-spacing:.28em;text-transform:uppercase;color:var(--chalk);flex-shrink:0}
+    .dot{color:var(--blaze);margin-right:9px}
+    @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+    .hero{display:grid;grid-template-columns:1fr 1.05fr;gap:48px;align-items:start;padding-bottom:64px}
+    .hero-left{padding-top:8px}
+    .hero-kicker{font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:var(--blaze);margin-bottom:20px}
+    .hero-title{font-family:'Bebas Neue';font-size:clamp(3.6rem,11vw,8.2rem);line-height:.82;letter-spacing:.01em}
+    .hero-title .cut{display:block;color:var(--blaze);-webkit-text-stroke:0}
+    .hero-sub{margin-top:22px;font-size:.76rem;line-height:1.9;color:var(--chalk);max-width:30ch}
+    .hero-quip{margin-top:24px;padding:14px 16px;border-left:2px solid var(--blaze);background:var(--field);
+      font-size:.72rem;line-height:1.7;color:var(--chalk)}
+    .hero-quip strong{color:var(--body-text);font-weight:500}
+    .hero-quip .qi{margin-right:8px}
+
+    /* live standings board (right) */
+    .board{border:1px solid var(--line);background:var(--field)}
+    .board-head{display:flex;justify-content:space-between;align-items:baseline;
+      padding:14px 18px;border-bottom:1px solid var(--line)}
+    .board-head-l{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--chalk)}
+    .board-head-l b{color:var(--body-text);font-weight:500}
+    .board-now{font-family:'Bebas Neue';font-size:1.5rem;color:var(--blaze);line-height:1;letter-spacing:.03em}
+    .board-stats{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line)}
+    .board-stat{padding:14px 18px}
+    .board-stat+.board-stat{border-left:1px solid var(--line)}
+    .board-stat-l{font-size:.54rem;letter-spacing:.16em;text-transform:uppercase;color:var(--chalk);margin-bottom:5px}
+    .board-stat-v{font-family:'Bebas Neue';font-size:1.9rem;line-height:1;letter-spacing:.02em}
+    .board-cta{display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:15px 18px;background:var(--blaze);color:var(--ink);text-decoration:none;
+      font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;font-weight:500;transition:background .2s}
+    .board-cta:hover{background:var(--blaze2)}
+    .board-cta .arr{font-family:'Bebas Neue';font-size:1.3rem;transition:transform .2s}
+    .board-cta:hover .arr{transform:translateX(4px)}
+
+    /* ---------- INDEX / BEREICHE ---------- */
+    .section{max-width:1120px;margin:0 auto;padding:0 28px 80px}
+    .section-label{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--chalk);
+      display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:0}
+    .section-label b{color:var(--body-text);font-weight:500}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--line)}
+
+    .index{border:1px solid var(--line);border-top:none}
+    .index-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:24px;
+      padding:26px 24px;text-decoration:none;color:var(--body-text);
+      border-top:1px solid var(--line);position:relative;transition:background .18s}
+    .index-row:first-child{border-top:none}
+    .index-row:hover{background:var(--field)}
+    .index-tag{font-family:'DM Mono',monospace;font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;
+      color:var(--chalk);width:74px;flex-shrink:0}
+    .index-main{min-width:0}
+    .index-title{font-family:'Bebas Neue';font-size:2.1rem;line-height:.95;letter-spacing:.03em;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+    .index-note{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blaze)}
+    .index-desc{font-size:.68rem;line-height:1.8;color:var(--chalk);margin-top:8px;max-width:64ch}
+    .index-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+    .tag{font-size:.53rem;letter-spacing:.16em;text-transform:uppercase;border:1px solid var(--line);padding:3px 9px;color:var(--chalk)}
+    .index-arrow{font-family:'Bebas Neue';font-size:2rem;color:var(--line);transition:color .18s,transform .18s;align-self:center}
+    .index-row:hover .index-arrow{color:var(--blaze);transform:translateX(5px)}
+
+    /* ---------- FOOTER ---------- */
+    footer{border-top:1px solid var(--line);padding:28px;display:flex;justify-content:center;gap:26px;
+      font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk);flex-wrap:wrap}
+    footer a{color:var(--chalk);text-decoration:none}
+    footer a:hover{color:var(--blaze)}
+
+    /* ---------- RESPONSIVE ---------- */
+    @media(max-width:820px){
+      .hero{grid-template-columns:1fr;gap:34px}
+      .hero-sub{max-width:none}
+    }
+    @media(max-width:560px){
+      nav{padding:12px 18px}
+      .sheet{padding:34px 18px 0}
+      .section{padding:0 18px 60px}
+      .hero{padding-bottom:48px}
+      .board-stats{grid-template-columns:1fr}
+      .board-stat+.board-stat{border-left:none;border-top:1px solid var(--line)}
+      .index-row{grid-template-columns:1fr;gap:10px;padding:22px 18px}
+      .index-arrow{display:none}
+      .index-tag{width:auto}
+    }
+
+    /* ---------- ACCOUNT WIDGET ---------- */
     .acct{position:relative;display:flex;align-items:center}
-    .acct-login{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--body-text);background:transparent;border:1px solid var(--border);padding:7px 12px;cursor:pointer;text-decoration:none;transition:border-color .2s,color .2s}
-    .acct-login:hover{border-color:var(--orange);color:var(--orange)}
-    .acct-chip{display:flex;align-items:center;gap:9px;background:transparent;border:1px solid var(--border);border-radius:999px;padding:4px 12px 4px 4px;cursor:pointer;font-family:'DM Mono',monospace;color:var(--body-text);transition:border-color .2s}
-    .acct-chip:hover{border-color:var(--orange)}
-    .acct-av{width:26px;height:26px;border-radius:50%;background:var(--orange);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:#0a0a08;flex-shrink:0;overflow:hidden;line-height:1}
+    .acct-login{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--body-text);background:transparent;border:1px solid var(--line);padding:7px 11px;cursor:pointer;text-decoration:none;transition:border-color .2s,color .2s}
+    .acct-login:hover{border-color:var(--blaze);color:var(--blaze)}
+    .acct-chip{display:flex;align-items:center;gap:9px;background:transparent;border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 4px;cursor:pointer;font-family:'DM Mono',monospace;color:var(--body-text);transition:border-color .2s}
+    .acct-chip:hover{border-color:var(--blaze)}
+    .acct-av{width:26px;height:26px;border-radius:50%;background:var(--blaze);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:#0a0a08;flex-shrink:0;overflow:hidden;line-height:1}
     .acct-av.lg{width:44px;height:44px;font-size:1.5rem}
-    .acct-av.has-img{color:transparent;background-color:var(--card2)}
+    .acct-av.has-img{color:transparent;background-color:var(--field2)}
     .acct-name{font-size:.68rem;letter-spacing:.06em;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .acct-lvl{font-size:.52rem;letter-spacing:.1em;color:var(--orange);border:1px solid var(--border);border-radius:999px;padding:2px 7px;flex-shrink:0}
-    .acct-menu{position:absolute;top:calc(100% + 10px);right:0;min-width:236px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px;flex-direction:column;gap:2px;box-shadow:0 14px 40px rgba(0,0,0,.4);z-index:500;display:flex}
+    .acct-lvl{font-size:.52rem;letter-spacing:.1em;color:var(--blaze);border:1px solid var(--line);border-radius:999px;padding:2px 7px;flex-shrink:0}
+    .acct-menu{position:absolute;top:calc(100% + 10px);right:0;min-width:236px;background:var(--field);border:1px solid var(--line);border-radius:12px;padding:8px;flex-direction:column;gap:2px;box-shadow:0 14px 40px rgba(0,0,0,.4);z-index:500;display:flex}
     [data-theme="light"] .acct-menu{box-shadow:0 14px 40px rgba(42,36,32,.16)}
     .acct-menu-head{display:flex;align-items:center;gap:12px;padding:10px 10px 12px}
     .acct-menu-name{font-size:.82rem;letter-spacing:.04em;color:var(--body-text)}
-    .acct-menu-title{font-family:'Instrument Serif',serif;font-style:italic;font-size:.92rem;color:var(--orange);margin-top:2px}
-    .acct-xp{padding:8px 10px 12px;border-top:1px solid var(--border)}
-    .acct-xp-info{display:flex;justify-content:space-between;font-size:.54rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
-    .acct-xp-bar{height:6px;border-radius:999px;background:var(--border);overflow:hidden}
-    .acct-xp-fill{height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:999px;transition:width .5s ease}
+    .acct-menu-title{font-family:'DM Mono',monospace;font-style:italic;font-size:.72rem;color:var(--blaze);margin-top:3px;letter-spacing:.04em}
+    .acct-xp{padding:8px 10px 12px;border-top:1px solid var(--line)}
+    .acct-xp-info{display:flex;justify-content:space-between;font-size:.54rem;letter-spacing:.08em;color:var(--chalk);text-transform:uppercase;margin-bottom:6px}
+    .acct-xp-bar{height:6px;border-radius:999px;background:var(--line);overflow:hidden}
+    .acct-xp-fill{height:100%;width:0;background:linear-gradient(90deg,var(--blaze),var(--blaze2));border-radius:999px;transition:width .5s ease}
     .acct-menu-item{display:block;width:100%;padding:10px;border-radius:8px;font-family:'DM Mono',monospace;font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;color:var(--body-text);text-decoration:none;background:transparent;border:none;text-align:left;cursor:pointer;transition:background .15s,color .15s}
-    .acct-menu-item:hover{background:var(--card2)}
-    .acct-menu-item.danger{color:var(--muted)}
+    .acct-menu-item:hover{background:var(--field2)}
+    .acct-menu-item.danger{color:var(--chalk)}
     .acct-menu-item.danger:hover{color:#ff5555;background:rgba(255,68,68,.09)}
     .acct-login[hidden],.acct-chip[hidden],.acct-menu[hidden],.acct-lvl[hidden],.acct-menu-title[hidden],.acct-xp[hidden]{display:none}
-
   </style>
 </head>
 <body>
-<div class="cursor" id="cursor"></div>
 
-<div class="page-content visible" id="pageContent">
+<div class="page-content" id="pageContent">
   <nav>
-    <a class="nav-logo" href="index.html">← OM</a>
+    <a class="nav-logo" href="index.html">←&nbsp; <b>OM</b> / crossfit</a>
     <div class="nav-right">
       <div class="acct" id="acct">
         <a class="acct-login" id="acctLogin" href="profile.html" hidden>Anmelden</a>
@@ -166,95 +190,100 @@
     </div>
   </nav>
 
-  <section class="hero">
-    <div class="hero-bg"></div>
-    <div class="hero-grid"></div>
-    <canvas id="particle-canvas"></canvas>
-    <p class="hero-tag">// schmerz ist optional. aufhören auch.</p>
-    <h1 class="hero-title">CROSS<span>FIT</span></h1>
-    <p class="hero-sub">Challenges, Ranking, Saisonplan — alles an einem Ort. Für die Gruppe die sich freiwillig quält.</p>
-  </section>
-
-  <div class="marquee-wrap">
-    <div class="marquee-track">
-      <span class="marquee-item"><span class="dot">●</span>side plank</span>
-      <span class="marquee-item"><span class="dot">●</span>punkte sammeln</span>
-      <span class="marquee-item"><span class="dot">●</span>kein aufhören</span>
-      <span class="marquee-item"><span class="dot">●</span>dezember boss</span>
-      <span class="marquee-item"><span class="dot">●</span>side plank</span>
-      <span class="marquee-item"><span class="dot">●</span>punkte sammeln</span>
-      <span class="marquee-item"><span class="dot">●</span>kein aufhören</span>
-      <span class="marquee-item"><span class="dot">●</span>dezember boss</span>
+  <!-- SCORE SHEET HEADER -->
+  <div class="sheet">
+    <div class="sheet-top">
+      <span class="sheet-meta">Gruppen-Wettkampf</span>
+      <span class="sheet-meta">Saison <b>2026</b></span>
     </div>
   </div>
-
-  <div class="section" style="padding-bottom:0;">
-    <div class="status-panel">
-      <div class="status-panel-glow"></div>
-      <div class="status-top">
-        <span class="status-live-dot"></span>
-        <span class="status-live-label">Live Status</span>
+  <div class="sheet" style="padding-top:0;padding-bottom:0">
+    <div class="marquee-line">
+      <div class="marquee-track">
+        <span class="marquee-item"><span class="dot">●</span>side plank</span>
+        <span class="marquee-item"><span class="dot">●</span>punkte sammeln</span>
+        <span class="marquee-item"><span class="dot">●</span>kein aufhören</span>
+        <span class="marquee-item"><span class="dot">●</span>dezember boss</span>
+        <span class="marquee-item"><span class="dot">●</span>side plank</span>
+        <span class="marquee-item"><span class="dot">●</span>punkte sammeln</span>
+        <span class="marquee-item"><span class="dot">●</span>kein aufhören</span>
+        <span class="marquee-item"><span class="dot">●</span>dezember boss</span>
       </div>
-      <div class="status-grid">
-        <div class="status-item">
-          <div class="status-item-label">Aktuelle Challenge</div>
-          <div class="status-item-val" id="ms-challenge">—</div>
-        </div>
-        <div class="status-item">
-          <div class="status-item-label">Teilnehmer</div>
-          <div class="status-item-val" id="ms-count">—</div>
-        </div>
-        <div class="status-item">
-          <div class="status-item-label">Anführer</div>
-          <div class="status-item-val" id="ms-leader">—</div>
-        </div>
-      </div>
-      <div class="moto-inline">
-        <span class="moto-icon" id="motoIcon">💀</span>
-        <p class="moto-text" id="motoQuote"></p>
-      </div>
-      <a href="challenge.html" class="status-cta">Jetzt eintragen →</a>
     </div>
+
+    <section class="hero">
+      <div class="hero-left">
+        <p class="hero-kicker">// schmerz ist optional. aufhören auch.</p>
+        <h1 class="hero-title">CROSS<span class="cut">FIT</span></h1>
+        <p class="hero-sub">Challenges, Ranking, Saisonplan — alles an einem Ort. Für die Gruppe, die sich freiwillig quält.</p>
+        <div class="hero-quip">
+          <span class="qi" id="motoIcon">💀</span>
+          <span id="motoQuote"></span>
+        </div>
+      </div>
+
+      <div class="board">
+        <div class="board-head">
+          <span class="board-head-l">Aktuell im Rennen — <b id="ms-challenge">—</b></span>
+          <span class="board-now">LIVE</span>
+        </div>
+        <div class="board-stats">
+          <div class="board-stat">
+            <div class="board-stat-l">Teilnehmer</div>
+            <div class="board-stat-v" id="ms-count">—</div>
+          </div>
+          <div class="board-stat">
+            <div class="board-stat-l">Führt gerade</div>
+            <div class="board-stat-v" id="ms-leader">—</div>
+          </div>
+        </div>
+        <a href="challenge.html" class="board-cta">
+          <span>Zeit eintragen</span>
+          <span class="arr">→</span>
+        </a>
+      </div>
+    </section>
   </div>
 
+  <!-- INDEX / BEREICHE -->
   <div class="section">
-    <p class="section-label">bereiche</p>
-    <div class="hub-cards">
-      <a href="challenge.html" class="hub-card">
-        <div class="hub-card-num">01</div>
-        <div class="hub-card-icon">🔥</div>
-        <div class="hub-card-title">CHALLENGE</div>
-        <div class="hub-card-sub">Aktiver Monat</div>
-        <p class="hub-card-desc">Zeit eintragen, Leaderboard, Tipps für Anfänger bis Profi. Hier passiert die eigentliche Action.</p>
-        <div class="hub-card-tags"><span class="tag">live tracker</span><span class="tag">pin geschützt</span></div>
-        <div class="hub-card-arrow">→</div>
+    <p class="section-label"><b>Index</b> — vier Bereiche</p>
+    <div class="index">
+      <a href="challenge.html" class="index-row">
+        <span class="index-tag">Challenge</span>
+        <div class="index-main">
+          <div class="index-title">Aktiver Monat <span class="index-note">// live tracker</span></div>
+          <p class="index-desc">Zeit eintragen, Leaderboard, Tipps für Anfänger bis Profi. Hier passiert die eigentliche Action.</p>
+          <div class="index-tags"><span class="tag">live tracker</span><span class="tag">pin geschützt</span></div>
+        </div>
+        <span class="index-arrow">→</span>
       </a>
-      <a href="ranking.html" class="hub-card">
-        <div class="hub-card-num">02</div>
-        <div class="hub-card-icon">🏆</div>
-        <div class="hub-card-title">RANKING</div>
-        <div class="hub-card-sub">Saison 2026</div>
-        <p class="hub-card-desc">Punktestand, Hall of Fame der Monatssieger, und das Voting für die Dezember-Bosschallenge.</p>
-        <div class="hub-card-tags"><span class="tag">punkte</span><span class="tag">voting</span></div>
-        <div class="hub-card-arrow">→</div>
+      <a href="ranking.html" class="index-row">
+        <span class="index-tag">Ranking</span>
+        <div class="index-main">
+          <div class="index-title">Saison 2026 <span class="index-note">// hall of fame</span></div>
+          <p class="index-desc">Punktestand, Hall of Fame der Monatssieger, und das Voting für die Dezember-Bosschallenge.</p>
+          <div class="index-tags"><span class="tag">punkte</span><span class="tag">voting</span></div>
+        </div>
+        <span class="index-arrow">→</span>
       </a>
-      <a href="kalender.html" class="hub-card">
-        <div class="hub-card-num">03</div>
-        <div class="hub-card-icon">📅</div>
-        <div class="hub-card-title">KALENDER</div>
-        <div class="hub-card-sub">Jahresplan</div>
-        <p class="hub-card-desc">Alle Challenges des Jahres auf einen Blick — was kommt als nächstes, wie schwer wird's.</p>
-        <div class="hub-card-tags"><span class="tag">jahresplan</span><span class="tag">level</span></div>
-        <div class="hub-card-arrow">→</div>
+      <a href="kalender.html" class="index-row">
+        <span class="index-tag">Kalender</span>
+        <div class="index-main">
+          <div class="index-title">Jahresplan <span class="index-note">// was kommt</span></div>
+          <p class="index-desc">Alle Challenges des Jahres auf einen Blick — was kommt als nächstes, wie schwer wird's.</p>
+          <div class="index-tags"><span class="tag">jahresplan</span><span class="tag">level</span></div>
+        </div>
+        <span class="index-arrow">→</span>
       </a>
-      <a href="uebungen.html" class="hub-card">
-        <div class="hub-card-num">04</div>
-        <div class="hub-card-icon">📖</div>
-        <div class="hub-card-title">ÜBUNGEN</div>
-        <div class="hub-card-sub">Katalog & Anleitungen</div>
-        <p class="hub-card-desc">Alle Challenge-Übungen erklärt, plus jede Menge Bonus-Material für Anfänger bis Profi.</p>
-        <div class="hub-card-tags"><span class="tag">anleitung</span><span class="tag">skalierbar</span></div>
-        <div class="hub-card-arrow">→</div>
+      <a href="uebungen.html" class="index-row">
+        <span class="index-tag">Übungen</span>
+        <div class="index-main">
+          <div class="index-title">Katalog <span class="index-note">// anleitungen</span></div>
+          <p class="index-desc">Alle Challenge-Übungen erklärt, plus jede Menge Bonus-Material für Anfänger bis Profi.</p>
+          <div class="index-tags"><span class="tag">anleitung</span><span class="tag">skalierbar</span></div>
+        </div>
+        <span class="index-arrow">→</span>
       </a>
     </div>
   </div>
@@ -263,7 +292,7 @@
     <span>© 2026 onlymakkus.de</span>
     <a href="impressum.html">Impressum</a>
     <a href="datenschutz.html">Datenschutz</a>
-    <span>made with pain & php</span>
+    <span>made with pain &amp; supabase</span>
   </footer>
 </div>
 
@@ -280,10 +309,6 @@
   themeToggle.addEventListener('click',()=>{
     applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark');
   });
-
-  const cursor=document.getElementById('cursor');
-  document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});
-  document.querySelectorAll('a,button').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('big'));el.addEventListener('mouseleave',()=>cursor.classList.remove('big'))});
 
   const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co';
   const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
@@ -314,58 +339,6 @@
   }
   loadMiniStatus();
 
-  (function(){
-    const canvas = document.getElementById('particle-canvas');
-    const ctx = canvas.getContext('2d');
-    let w, h, particles = [];
-
-    function resize(){
-      w = canvas.width = canvas.offsetWidth;
-      h = canvas.height = canvas.offsetHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    function makeParticle(startAtBottom){
-      return {
-        x: Math.random()*w,
-        y: startAtBottom ? h + Math.random()*40 : Math.random()*h,
-        r: 0.6 + Math.random()*1.8,
-        speed: 0.15 + Math.random()*0.35,
-        drift: (Math.random()-0.5) * 0.3,
-        opacity: 0.08 + Math.random()*0.22,
-        wobble: Math.random()*Math.PI*2,
-        wobbleSpeed: 0.008 + Math.random()*0.015
-      };
-    }
-
-    const PARTICLE_COUNT = 46;
-    for(let i=0;i<PARTICLE_COUNT;i++) particles.push(makeParticle(false));
-
-    function draw(){
-      ctx.clearRect(0,0,w,h);
-      const isLight=html.getAttribute('data-theme')==='light';
-      particles.forEach(p=>{
-        p.y -= p.speed;
-        p.wobble += p.wobbleSpeed;
-        p.x += p.drift + Math.sin(p.wobble)*0.15;
-
-        if(p.y < -10){
-          Object.assign(p, makeParticle(true));
-        }
-        if(p.x < -10) p.x = w+10;
-        if(p.x > w+10) p.x = -10;
-
-        ctx.beginPath();
-        ctx.fillStyle = isLight ? `rgba(255,110,53,${p.opacity*0.7})` : `rgba(255,150,100,${p.opacity})`;
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        ctx.fill();
-      });
-      requestAnimationFrame(draw);
-    }
-    draw();
-  })();
-
   const QUOTES=[
     {icon:'💀',text:'<strong>Heute ist ein guter Tag</strong> um Schmerzen zu ignorieren.'},
     {icon:'🔥',text:'Du hast keine Ausreden. Nur <strong>schlechte Entscheidungen.</strong>'},
@@ -384,7 +357,7 @@
   document.getElementById('motoQuote').innerHTML=q.text;
   document.getElementById('motoIcon').textContent=q.icon;
 </script>
-  <script>
+<script>
 (function(){
   var SESS='om_profile_session';
   var acct=document.getElementById('acct'); if(!acct) return;
