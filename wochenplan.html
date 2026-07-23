@@ -228,6 +228,28 @@
           <option value="4" selected>4 Tage</option>
         </select>
       </div>
+      <div class="field">
+        <label>Vorwoche · Samstag</label>
+        <select id="prevSat">
+          <option value="hard">Hart trainiert</option>
+          <option value="ga">GA</option>
+          <option value="rest" selected>Rest</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Vorwoche · Sonntag</label>
+        <select id="prevSun">
+          <option value="hard">Hart trainiert</option>
+          <option value="ga">GA</option>
+          <option value="rest" selected>Rest</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Montag</label>
+        <div class="chips" id="mondayRestChip">
+          <div class="chip" id="mondayRestToggle">Rest fest einplanen</div>
+        </div>
+      </div>
       <button class="genbtn" id="genBtn">Vorschlag generieren →</button>
     </div>
   </section>
@@ -255,6 +277,13 @@ const TYPES = {
 
 let eveningDays = new Set();
 let schedule = Array(7).fill('rest');
+let forceMondayRest = false;
+
+document.getElementById('mondayRestToggle').onclick = function(){
+  forceMondayRest = !forceMondayRest;
+  this.classList.toggle('active', forceMondayRest);
+  generate();
+};
 
 function buildEveningChips(){
   const el = document.getElementById('eveningChips');
@@ -275,8 +304,13 @@ function buildEveningChips(){
 function generate(){
   const desiredClasses = parseInt(document.getElementById('desiredClasses').value,10);
   const arneDaysTotal = parseInt(document.getElementById('arneDays').value,10);
+  const prevSatHard = document.getElementById('prevSat').value === 'hard';
+  const prevSunHard = document.getElementById('prevSun').value === 'hard';
 
   const sched = Array(7).fill(null);
+
+  // 0. Monday fixed as Rest, if toggled on
+  if(forceMondayRest){ sched[0] = 'rest'; }
 
   // 1. Class days — only Di/Do, only if not an evening-shift day
   const classCandidates = CLASS_DAY_IDX.filter(d=>!eveningDays.has(d));
@@ -289,9 +323,11 @@ function generate(){
     if(sched[d]===null){ sched[d]='ga'; gaPlaced=true; break; }
   }
 
-  // 3. Walk through the week, filling hard Arne / GA / Rest with streak control
+  // 3. Walk through the week, filling hard Arne / GA / Rest with streak control.
+  //    Streak starts primed from last week's Sat/Sun so Monday knows if it's
+  //    already day 2 or 3 of a hard streak carried over from the weekend.
   let arneHardBudget = arneDaysTotal - 1; // one of the Arne days is the GA day
-  let streak = 0;
+  let streak = prevSunHard ? (prevSatHard ? 2 : 1) : 0;
   for(let d=0; d<7; d++){
     if(sched[d]!==null){
       streak = TYPES[sched[d]].hard ? streak+1 : 0;
@@ -307,13 +343,16 @@ function generate(){
   }
 
   // 4. If Arne-hard days are still left over (streak rules blocked them), try to
-  //    swap them into existing Rest days where it stays safe.
+  //    swap them into existing Rest days where it stays safe — checking back
+  //    across the week boundary into last week's Sat/Sun where relevant.
+  const hardFlag = [prevSatHard, prevSunHard, ...sched.map(s=>!!(TYPES[s] && TYPES[s].hard))];
   for(let d=0; d<7 && arneHardBudget>0; d++){
     if(sched[d]==='rest'){
-      const prevHard = d>0 && TYPES[sched[d-1]]?.hard;
-      const prevPrevHard = d>1 && TYPES[sched[d-2]]?.hard;
+      const prevHard = hardFlag[d+1];     // day d-1
+      const prevPrevHard = hardFlag[d];   // day d-2
       if(!(prevHard && prevPrevHard)){
         sched[d]='arne'; arneHardBudget--;
+        hardFlag[d+2] = true;
       }
     }
   }
