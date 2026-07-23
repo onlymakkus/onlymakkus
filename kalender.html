@@ -60,9 +60,8 @@
     .tl-body{background:var(--field);padding:20px 26px;display:flex;flex-direction:column;justify-content:center;gap:6px}
     .tl-exercise{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.02em;line-height:1}
     .tl-goal{font-size:.64rem;color:var(--chalk)}
-    .tl-meta{background:var(--field);padding:20px 22px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:8px;border-left:1px solid var(--line)}
+    .tl-meta{background:var(--field);padding:20px 22px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;border-left:1px solid var(--line)}
     .tl-level{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;padding:3px 10px;border:1px solid;white-space:nowrap}
-    .tl-pts{font-size:.58rem;color:var(--chalk)}
 
     /* aktiver Monat */
     .tl-row.active .tl-month{background:var(--blaze)}
@@ -85,6 +84,17 @@
     [data-theme="dark"] .level-medium{color:#facc15;border-color:#facc15}
     .level-hard{color:var(--blaze);border-color:var(--blaze)}
     .level-boss{color:var(--dec-purple);border-color:var(--dec-purple)}
+
+    /* ---------- VORSCHAU NAECHSTE SAISON ---------- */
+    .preview-wrap{margin-top:44px}
+    .preview-wrap[hidden]{display:none}
+    .section-label{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--chalk);display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+    .section-label b{color:var(--body-text);font-weight:500}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--line)}
+    .preview-note{font-size:.62rem;color:var(--chalk);line-height:1.8;padding:16px 0 18px;letter-spacing:.03em}
+    .preview-list{border:1px solid var(--line);opacity:.55}
+    .preview-list .tl-row-link{pointer-events:none}
+    .preview-empty{border:1px solid var(--line);background:var(--field);padding:24px 26px;font-size:.66rem;color:var(--chalk);line-height:1.8}
 
     /* ---------- FOOTER ---------- */
     footer{padding:28px;border-top:1px solid var(--line);display:flex;justify-content:center;gap:26px;font-size:.58rem;color:var(--chalk);letter-spacing:.14em;text-transform:uppercase;flex-wrap:wrap}
@@ -162,30 +172,86 @@
   <main>
     <div class="sheet-top">
       <span class="sheet-meta">Jahresplan</span>
-      <span class="sheet-meta">Saison <b>2026</b></span>
+      <span class="sheet-meta">Saison <b id="seasonYear">2026</b></span>
     </div>
     <h1 class="page-title">JAHRES<span>PLAN</span></h1>
     <p class="page-sub">Alle Challenges der Saison im Überblick — was kommt, wie schwer wird's.</p>
     <div class="timeline" id="timeline">
       <div class="tl-row"><div class="tl-month"></div><div class="tl-body" style="color:var(--chalk);font-size:.7rem;">Lädt Saison…</div><div class="tl-meta"></div></div>
     </div>
+    <section class="preview-wrap" id="previewWrap" hidden>
+      <div class="section-label">Vorschau <b id="previewYear"></b></div>
+      <p class="preview-note" id="previewNote" hidden></p>
+      <div id="previewBody"></div>
+    </section>
   </main>
   <footer>
-    <span>© 2026 onlymakkus.de</span>
+    <span>© <span id="footerYear">2026</span> onlymakkus.de</span>
     <a href="impressum.html">Impressum</a>
     <a href="datenschutz.html">Datenschutz</a>
   </footer>
 </div>
 <script>
   const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co';
-  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
-  async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
+  const SB_KEY='sb_publishable_fA2Dca6SVp0eB8k_WuqLrw_zplTnXBU';
+  async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',...o.headers}});const t=await r.text();if(!r.ok){console.error('sbFetch '+r.status+' '+p,t);throw new Error('HTTP '+r.status);}return t?JSON.parse(t):null}
+
+  (function(){var y=new Date().getFullYear();var a=document.getElementById('seasonYear');if(a)a.textContent=y;var b=document.getElementById('footerYear');if(b)b.textContent=y;})();
 
   const MONTH_NAMES=['','JAN','FEB','MÄR','APR','MAI','JUN','JUL','AUG','SEP','OKT','NOV','DEZ'];
   function levelClass(goal,unit){
     // Heuristic: just cosmetic, based on goal size — could be refined later via DB field
     if(unit==='Reps')return goal>=400?'level-hard':goal>=250?'level-medium':'level-easy';
     return goal>=60?'level-medium':'level-easy';
+  }
+
+  // Vorschau auf die naechste Saison: ab 6. Dezember.
+  // Nikolaus-Hinweis nur am 6. und 7.12., danach schlichte Ueberschrift.
+  async function loadPreview(){
+    const now=new Date(),month=now.getMonth()+1,day=now.getDate();
+    if(month!==12||day<6)return;
+    const nextYear=now.getFullYear()+1;
+    const wrap=document.getElementById('previewWrap');
+    const body=document.getElementById('previewBody');
+    document.getElementById('previewYear').textContent='Saison '+nextYear;
+    const nikolaus=(day===6||day===7);
+    let rows=null;
+    try{
+      rows=await sbFetch(`/rest/v1/season_months?season_year=eq.${nextYear}&select=*,exercises(*)&order=month.asc`);
+    }catch(e){ return; }
+    if(rows&&rows.length){
+      if(nikolaus){
+        const note=document.getElementById('previewNote');
+        note.hidden=false;
+        note.textContent='🎁 Der Nikolaus hat euch was mitgebracht — so sieht '+nextYear+' aus.';
+      }
+      body.innerHTML='<div class="preview-list">'+rows.map(row=>{
+        const monthLabel=MONTH_NAMES[row.month];
+        if(row.is_december_vote){
+          return `<div class="tl-row december">
+            <div class="tl-month"><div class="tl-month-name">${monthLabel}</div><div class="tl-month-sub">🗳️ vote</div></div>
+            <div class="tl-body"><div class="tl-exercise">Bonus Challenge — Gruppe voted</div><div class="tl-goal">Die härteste Challenge des Jahres — doppelte Punkte!</div></div>
+            <div class="tl-meta"><span class="tl-level level-boss">Boss</span></div>
+          </div>`;
+        }
+        const ex=row.exercises;
+        if(!ex)return '';
+        const goal=row.custom_goal||ex.default_goal;
+        const goalText=ex.default_dual?`${goal} ${ex.default_unit} / Seite sammeln`:`${goal} ${ex.default_unit} gesamt sammeln`;
+        const lvlClass=levelClass(goal,ex.default_unit);
+        const lvlLabel=lvlClass==='level-easy'?'Einstieg':lvlClass==='level-medium'?'Mittel':'Hart';
+        return `<div class="tl-row">
+          <div class="tl-month"><div class="tl-month-name">${monthLabel}</div><div class="tl-month-sub"></div></div>
+          <div class="tl-body"><div class="tl-exercise">${ex.name}</div><div class="tl-goal">${goalText}</div></div>
+          <div class="tl-meta"><span class="tl-level ${lvlClass}">${lvlLabel}</span></div>
+        </div>`;
+      }).join('')+'</div>';
+    } else {
+      body.innerHTML='<div class="preview-empty">'+(nikolaus
+        ? '🎁 Nikolaus war da — aber die Saison '+nextYear+' wird noch geplant.'
+        : 'Die Saison '+nextYear+' wird noch geplant.')+'</div>';
+    }
+    wrap.hidden=false;
   }
 
   async function loadTimeline(){
@@ -205,7 +271,7 @@
           return `<div class="tl-row december ${isActive?'active':''}">
             <div class="tl-month"><div class="tl-month-name">${monthLabel}</div><div class="tl-month-sub">🗳️ vote</div></div>
             <div class="tl-body"><div class="tl-exercise">Bonus Challenge — Gruppe voted</div><div class="tl-goal">Die härteste Challenge des Jahres — doppelte Punkte!</div></div>
-            <div class="tl-meta"><span class="tl-level level-boss">Boss</span><span class="tl-pts">bis 20 Pts</span></div>
+            <div class="tl-meta"><span class="tl-level level-boss">Boss</span></div>
           </div>`;
         }
         const ex=row.exercises;
@@ -217,7 +283,7 @@
         const rowHTML=`
           <div class="tl-month"><div class="tl-month-name">${monthLabel}</div><div class="tl-month-sub">${isActive?'✦ aktiv':''}</div></div>
           <div class="tl-body"><div class="tl-exercise">${ex.name}</div><div class="tl-goal">${goalText}</div></div>
-          <div class="tl-meta"><span class="tl-level ${lvlClass}">${lvlLabel}</span><span class="tl-pts">bis 10 Pts</span></div>
+          <div class="tl-meta"><span class="tl-level ${lvlClass}">${lvlLabel}</span></div>
         `;
         if(isActive){
           return `<a href="challenge.html" class="tl-row active tl-row-link">${rowHTML}</a>`;
@@ -264,6 +330,7 @@
   }
 
   loadTimeline();
+  loadPreview();
 </script>
   <script>
 (function(){
@@ -283,6 +350,18 @@
   document.getElementById('acctMenuName').textContent=full;
   paintAv(document.getElementById('acctAv'));
   paintAv(document.getElementById('acctAvLg'));
+  // Avatar aus Supabase nachladen, falls Session veraltet ist (z.B. Upload auf anderem Gerät)
+  (async function(){
+    try{
+      var rows=await sbFetch('/rest/v1/profiles?id=eq.'+s.id+'&select=avatar_url');
+      if(rows&&rows.length&&(rows[0].avatar_url||null)!==(s.avatarUrl||null)){
+        s.avatarUrl=rows[0].avatar_url||null;
+        localStorage.setItem(SESS,JSON.stringify(s));
+        paintAv(document.getElementById('acctAv'));
+        paintAv(document.getElementById('acctAvLg'));
+      }
+    }catch(e){}
+  })();
   if(s.level!=null){ var lv=document.getElementById('acctLvl'); lv.hidden=false; lv.textContent='LV '+s.level; }
   if(s.title){ var ti=document.getElementById('acctMenuTitle'); ti.hidden=false; ti.textContent=s.title; }
   if(s.xp!=null&&s.xpNext!=null){ var xp=document.getElementById('acctXp'); xp.hidden=false;
