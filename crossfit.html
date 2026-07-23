@@ -121,6 +121,41 @@
     .index-arrow{font-family:'Bebas Neue';font-size:2rem;color:var(--line);transition:color .18s,transform .18s;align-self:center}
     .index-row:hover .index-arrow{color:var(--blaze);transform:translateX(5px)}
 
+    /* ---------- DEZEMBER-VOTE ---------- */
+    .vote-wrap{max-width:1120px;margin:0 auto;padding:0 28px 80px}
+    .vote-wrap[hidden]{display:none}
+    .vote-box{border:1px solid var(--line);border-top:none}
+    .vote-intro{padding:22px 24px;border-top:1px solid var(--line);background:var(--field);
+      font-size:.68rem;line-height:1.8;color:var(--chalk)}
+    .vote-intro b{color:var(--body-text);font-weight:500}
+    .vote-deadline{display:block;margin-top:8px;font-size:.56rem;letter-spacing:.16em;text-transform:uppercase;color:var(--blaze)}
+    .vote-opt{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;
+      width:100%;text-align:left;padding:18px 24px;border:none;border-top:1px solid var(--line);
+      background:var(--field);color:var(--body-text);font-family:'DM Mono',monospace;
+      cursor:pointer;transition:background .15s}
+    .vote-opt:hover:not(:disabled){background:var(--field2)}
+    .vote-opt:disabled{cursor:default}
+    .vote-opt.mine{box-shadow:inset 3px 0 0 var(--blaze)}
+    .vote-opt-month{font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk);width:44px;flex-shrink:0}
+    .vote-opt-name{font-family:'Bebas Neue';font-size:1.45rem;letter-spacing:.03em;line-height:1}
+    .vote-opt.mine .vote-opt-name{color:var(--blaze)}
+    .vote-opt-goal{font-size:.6rem;color:var(--chalk);margin-top:4px}
+    .vote-opt-bar{height:4px;background:var(--line);margin-top:9px;overflow:hidden}
+    .vote-opt-bar span{display:block;height:100%;background:var(--blaze);width:0;transition:width .4s ease}
+    .vote-opt-count{font-size:.62rem;color:var(--chalk);white-space:nowrap;text-align:right}
+    .vote-opt-count b{font-family:'Bebas Neue';font-size:1.3rem;color:var(--body-text);font-weight:400;display:block;line-height:1}
+    .vote-foot{padding:16px 24px;border-top:1px solid var(--line);background:var(--field);
+      font-size:.56rem;line-height:1.9;color:var(--chalk);letter-spacing:.04em;
+      display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    .vote-foot a{color:var(--blaze);text-decoration:none}
+    .vote-msg{padding:22px 24px;border-top:1px solid var(--line);background:var(--field);font-size:.68rem;line-height:1.8;color:var(--chalk)}
+    .vote-msg a{color:var(--blaze);text-decoration:none}
+    @media(max-width:560px){
+      .vote-wrap{padding:0 18px 60px}
+      .vote-opt{grid-template-columns:1fr auto;gap:12px;padding:16px 18px}
+      .vote-opt-month{display:none}
+    }
+
     /* ---------- FOOTER ---------- */
     footer{border-top:1px solid var(--line);padding:28px;display:flex;justify-content:center;gap:26px;
       font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk);flex-wrap:wrap}
@@ -262,6 +297,12 @@
     </section>
   </div>
 
+  <!-- DEZEMBER-VOTE -->
+  <section class="vote-wrap" id="voteWrap" hidden>
+    <p class="section-label"><b>Dezember-Voting</b> — <span id="voteYear"></span></p>
+    <div class="vote-box" id="voteBox"></div>
+  </section>
+
   <!-- INDEX / BEREICHE -->
   <div class="section">
     <p class="section-label"><b>Index</b> — vier Bereiche</p>
@@ -328,8 +369,8 @@
   });
 
   const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co';
-  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
-  async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',...o.headers}});const t=await r.text();return t?JSON.parse(t):null}
+  const SB_KEY='sb_publishable_fA2Dca6SVp0eB8k_WuqLrw_zplTnXBU';
+  async function sbFetch(p,o={}){const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',...o.headers}});const t=await r.text();if(!r.ok){console.error('sbFetch '+r.status+' '+p,t);throw new Error('HTTP '+r.status);}return t?JSON.parse(t):null}
 
   function slugify(name){return name.toLowerCase().replace(/[^a-z0-9]+/g,'').trim()}
 
@@ -379,6 +420,118 @@
     }
   }
   loadMiniStatus();
+
+  // ---------- DEZEMBER-VOTE (05.11.–30.11.) ----------
+  const VOTE_START_MONTH=11, VOTE_START_DAY=5, VOTE_END_DAY=30;
+  const MONTH_ABBR=['','JAN','FEB','MÄR','APR','MAI','JUN','JUL','AUG','SEP','OKT','NOV','DEZ'];
+
+  function voteWindowOpen(d){
+    const m=d.getMonth()+1, day=d.getDate();
+    return m===VOTE_START_MONTH && day>=VOTE_START_DAY && day<=VOTE_END_DAY;
+  }
+
+  async function loadVote(){
+    const now=new Date();
+    if(!voteWindowOpen(now))return;
+    const year=now.getFullYear();
+    const wrap=document.getElementById('voteWrap');
+    const box=document.getElementById('voteBox');
+    document.getElementById('voteYear').textContent='welche Challenge kommt zurück?';
+
+    let sess=null;
+    try{ sess=JSON.parse(localStorage.getItem('om_profile_session')||'null'); }catch(e){ sess=null; }
+
+    let opts=null;
+    try{
+      opts=await sbFetch(`/rest/v1/season_months?season_year=eq.${year}&is_december_vote=not.is.true&select=month,custom_goal,exercises(id,name,default_goal,default_unit)&order=month.asc`);
+    }catch(e){ return; }
+    if(!opts||!opts.length)return;
+    opts=opts.filter(o=>o.exercises);
+    if(!opts.length)return;
+
+    const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    async function render(){
+      // eigene Stimme
+      let mine=null;
+      if(sess&&sess.id){
+        try{
+          const r=await sbFetch(`/rest/v1/december_votes?season_year=eq.${year}&profile_id=eq.${sess.id}&select=id,exercise_id`);
+          if(r&&r.length)mine=r[0];
+        }catch(e){}
+      }
+      // Zwischenstand erst nach eigener Stimme
+      let counts={},total=0;
+      if(mine){
+        try{
+          const all=await sbFetch(`/rest/v1/december_votes?season_year=eq.${year}&select=exercise_id`);
+          (all||[]).forEach(v=>{counts[v.exercise_id]=(counts[v.exercise_id]||0)+1;total++;});
+        }catch(e){}
+      }
+
+      let html='<div class="vote-intro">Im Dezember läuft die <b>Boss-Challenge</b> — und ihr entscheidet, welche Übung aus diesem Jahr nochmal ran muss. Eine Stimme pro Person, änderbar bis zum Schluss.<span class="vote-deadline">Abstimmung bis 30. November</span></div>';
+
+      if(!sess||!sess.id){
+        html+='<div class="vote-msg">Zum Abstimmen musst du <a href="profile.html">angemeldet</a> sein.</div>';
+        box.innerHTML=html; wrap.hidden=false; return;
+      }
+
+      const max=Math.max(1,...Object.values(counts));
+      opts.forEach(o=>{
+        const ex=o.exercises;
+        const goal=o.custom_goal||ex.default_goal;
+        const isMine=mine&&mine.exercise_id===ex.id;
+        const n=counts[ex.id]||0;
+        const pct=mine?Math.round(n/max*100):0;
+        html+='<button class="vote-opt'+(isMine?' mine':'')+'" type="button" data-ex="'+ex.id+'">'
+          +'<span class="vote-opt-month">'+MONTH_ABBR[o.month]+'</span>'
+          +'<span><span class="vote-opt-name">'+esc(ex.name)+'</span>'
+          +'<span class="vote-opt-goal">'+goal+' '+esc(ex.default_unit||'')+'</span>'
+          +(mine?'<span class="vote-opt-bar"><span style="width:'+pct+'%"></span></span>':'')
+          +'</span>'
+          +'<span class="vote-opt-count">'+(mine?'<b>'+n+'</b>'+(n===1?'Stimme':'Stimmen'):(isMine?'deine Wahl':'wählen'))+'</span>'
+          +'</button>';
+      });
+
+      html+='<div class="vote-foot"><span>'
+        +(mine?'Deine Stimme zählt — tippe eine andere Übung, um sie zu ändern.':'Der Zwischenstand wird sichtbar, sobald du abgestimmt hast.')
+        +'</span><span>'+(mine?total+' abgegeben':'')+'</span></div>';
+      html+='<div class="vote-foot"><span>Bei Gleichstand gewinnt die Übung mit den meisten Teilnehmern, danach die früher im Jahr gelaufene.</span></div>';
+
+      box.innerHTML=html;
+      wrap.hidden=false;
+
+      box.querySelectorAll('.vote-opt').forEach(btn=>{
+        btn.addEventListener('click',async()=>{
+          const exId=parseInt(btn.dataset.ex,10);
+          if(mine&&mine.exercise_id===exId)return;
+          box.querySelectorAll('.vote-opt').forEach(b=>b.disabled=true);
+          try{
+            if(mine){
+              await sbFetch('/rest/v1/december_votes?id=eq.'+mine.id,{
+                method:'PATCH',
+                headers:{'Prefer':'return=minimal'},
+                body:JSON.stringify({exercise_id:exId,updated_at:new Date().toISOString()})
+              });
+            } else {
+              await sbFetch('/rest/v1/december_votes',{
+                method:'POST',
+                headers:{'Prefer':'return=minimal'},
+                body:JSON.stringify({season_year:year,profile_id:sess.id,exercise_id:exId})
+              });
+            }
+            await render();
+          }catch(e){
+            box.querySelectorAll('.vote-opt').forEach(b=>b.disabled=false);
+            const f=box.querySelector('.vote-foot span');
+            if(f)f.textContent='Stimme konnte nicht gespeichert werden. Nochmal versuchen?';
+          }
+        });
+      });
+    }
+    await render();
+  }
+  loadVote();
 
   const QUOTES=[
     {icon:'💀',text:'<strong>Heute ist ein guter Tag</strong> um Schmerzen zu ignorieren.'},
