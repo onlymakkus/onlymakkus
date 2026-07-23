@@ -870,7 +870,7 @@
         msg.textContent='❌ Falsches Passwort';msg.className='auth-msg err';
         btn.disabled=false;btn.textContent='Einloggen →';return;
       }
-      localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name,discriminator:profile.discriminator,displayName:profile.display_name||profile.name}));
+      localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name,discriminator:profile.discriminator,displayName:profile.display_name||profile.name,avatarUrl:profile.avatar_url||null}));
       msg.textContent='✓ Eingeloggt!';msg.className='auth-msg ok';
       setTimeout(()=>showProfile(profile),400);
     }catch(e){
@@ -1107,7 +1107,7 @@
       document.getElementById('profileSince').textContent='Profil seit '+date.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
     }
     // Session immer synchron zum aktuellen DB-Stand halten
-    localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name,discriminator:profile.discriminator,displayName}));
+    localStorage.setItem(SESSION_KEY,JSON.stringify({id:profile.id,name:profile.name,discriminator:profile.discriminator,displayName,avatarUrl:profile.avatar_url||null}));
     // Bewusst ohne await: das Profil ist sofort da, die History kommt nach.
     renderHistory(profile.id);
     renderAchievements(profile.id);

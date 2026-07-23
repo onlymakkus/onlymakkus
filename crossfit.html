@@ -407,7 +407,7 @@
   var chip=document.getElementById('acctChip');
   var menu=document.getElementById('acctMenu');
   function initial(n){ n=(n||'').trim(); return n?n.charAt(0).toUpperCase():'?'; }
-  function paintAv(el){ if(!el)return; if(s&&s.avatarUrl){ el.style.backgroundImage='url("'+s.avatarUrl+'")'; el.classList.add('has-img'); el.textContent=''; } else { el.textContent=initial(s&&(s.displayName||s.name)); } }
+  function paintAv(el){ if(!el)return; if(s&&s.avatarUrl){ el.style.backgroundImage='url("'+s.avatarUrl+'")'; el.classList.add('has-img'); el.textContent=''; } else { el.style.backgroundImage=''; el.classList.remove('has-img'); el.textContent=initial(s&&(s.displayName||s.name)); } }
   if(!s||!s.id){ if(login)login.hidden=false; return; }
   if(chip)chip.hidden=false;
   var name=s.displayName||s.name||'Profil';
@@ -416,6 +416,18 @@
   document.getElementById('acctMenuName').textContent=full;
   paintAv(document.getElementById('acctAv'));
   paintAv(document.getElementById('acctAvLg'));
+  // Avatar aus Supabase nachladen, falls Session veraltet ist (z.B. Upload auf anderem Gerät oder alte Session vor diesem Fix)
+  (async function(){
+    try{
+      var rows=await sbFetch('/rest/v1/profiles?id=eq.'+s.id+'&select=avatar_url');
+      if(rows&&rows.length&&(rows[0].avatar_url||null)!==(s.avatarUrl||null)){
+        s.avatarUrl=rows[0].avatar_url||null;
+        localStorage.setItem(SESS,JSON.stringify(s));
+        paintAv(document.getElementById('acctAv'));
+        paintAv(document.getElementById('acctAvLg'));
+      }
+    }catch(e){}
+  })();
   if(s.level!=null){ var lv=document.getElementById('acctLvl'); lv.hidden=false; lv.textContent='LV '+s.level; }
   if(s.title){ var ti=document.getElementById('acctMenuTitle'); ti.hidden=false; ti.textContent=s.title; }
   if(s.xp!=null&&s.xpNext!=null){ var xp=document.getElementById('acctXp'); xp.hidden=false;
