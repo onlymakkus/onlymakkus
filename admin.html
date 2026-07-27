@@ -6,83 +6,192 @@
   <title>Admin — onlymakkus</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+  <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('om_cf_theme')||'dark')}catch(e){document.documentElement.setAttribute('data-theme','dark')}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{--black:#0a0a08;--cream:#f2ede4;--orange:#ff4e1a;--muted:#9a9488;--card:#141410;--card2:#1c1c18;--border:rgba(255,255,255,0.08);--red:#ff4444;--green:#22c55e}
-    body{background:var(--black);color:var(--cream);font-family:'DM Mono',monospace;cursor:default;overflow-x:hidden}
-    .login-overlay{position:fixed;inset:0;z-index:9999;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px}
+
+    :root,[data-theme="dark"]{
+      --ink:#0b0b09;--paper:#f2ede4;--blaze:#ff4e1a;--blaze2:#ff6b3d;--chalk:#8f8a7d;
+      --field:#16150f;--field2:#1d1c15;--line:#2b2920;
+      --body-bg:var(--ink);--body-text:var(--paper);color-scheme:dark;
+      /* Alias-Tokens — das JS schreibt diese Namen zur Laufzeit ins Markup. Namen nicht ändern. */
+      --orange:#ff4e1a;--muted:#8f8a7d;--green:#5fae72;--red:#d94c3d;
+    }
+    [data-theme="light"]{color-scheme:light;
+      --ink:#2a2420;--paper:#2a2420;--blaze:#e8480f;--blaze2:#c93d0a;--chalk:#8a8078;
+      --field:#ffffff;--field2:#fbf4ea;--line:#dcd4c6;
+      --body-bg:#f4efe6;--body-text:#2a2420;
+      --orange:#e8480f;--muted:#8a8078;--green:#3f8a55;--red:#c0392b;
+    }
+
+    body{background:var(--body-bg);color:var(--body-text);font-family:'DM Mono',monospace;overflow-x:hidden;transition:background .2s,color .2s}
+    ::selection{background:var(--blaze);color:var(--ink)}
+    :focus-visible{outline:2px solid var(--blaze);outline-offset:3px}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+    /* ── Login-Gate ── */
+    .login-overlay{position:fixed;inset:0;z-index:9999;background:var(--body-bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px}
     .login-overlay.hidden{display:none}
-    .login-logo{font-family:'Bebas Neue';font-size:2.4rem}
-    .login-logo span{color:var(--orange)}
-    .login-sub{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted)}
-    .login-form{display:flex;flex-direction:column;gap:10px;width:280px;padding:0 20px}
-    .login-input{background:var(--card);border:1px solid var(--border);color:var(--cream);font-family:'DM Mono';font-size:.85rem;padding:13px 16px;outline:none;width:100%}
-    .login-input:focus{border-color:var(--orange)}
-    .login-btn{padding:13px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.7rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
-    .login-error{font-size:.62rem;color:var(--red);text-align:center;min-height:16px}
+    .login-logo{font-family:'Bebas Neue';font-size:3.2rem;letter-spacing:.05em;line-height:1}
+    .login-logo span{color:var(--blaze)}
+    .login-sub{font-size:.58rem;letter-spacing:.28em;text-transform:uppercase;color:var(--chalk)}
+    .login-form{display:flex;flex-direction:column;gap:0;width:100%;max-width:300px;border:1px solid var(--line)}
+    .login-input{background:var(--field);border:none;border-bottom:1px solid var(--line);color:var(--body-text);font-family:'DM Mono',monospace;font-size:.82rem;padding:14px 16px;outline:none;width:100%}
+    .login-input:focus{background:var(--field2)}
+    .login-btn{padding:14px;background:var(--blaze);color:var(--ink);border:none;font-family:'DM Mono',monospace;font-size:.62rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;cursor:pointer;transition:background .18s}
+    .login-btn:hover{background:var(--blaze2)}
+    .login-error{font-size:.6rem;letter-spacing:.08em;color:var(--red);text-align:center;min-height:16px}
+    .login-note{font-size:.68rem;line-height:1.8;color:var(--body-text);text-align:center;max-width:38ch}
+    .gate-link{color:var(--blaze);text-decoration:none;border-bottom:1px solid var(--blaze)}
+    .gate-alt{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:6px}
+    .gate-alt-label{font-size:.52rem;letter-spacing:.28em;text-transform:uppercase;color:var(--chalk)}
+
     .page-content{display:none}
     .page-content.visible{display:block}
-    nav{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
-    .nav-logo{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:.1em;color:var(--orange);text-decoration:none}
-    .nav-badge{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;background:var(--orange);color:var(--black);padding:3px 10px;font-weight:600}
-    main{max-width:1100px;margin:0 auto;padding:32px 24px 80px}
-    .tabs{display:flex;gap:2px;margin-bottom:24px;flex-wrap:wrap}
-    .tab{padding:12px 20px;background:var(--card);border:none;color:var(--muted);font-family:'DM Mono';font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s}
-    .tab.active{background:var(--orange);color:var(--black)}
+
+    /* ── Navigation ── */
+    nav{position:sticky;top:0;z-index:100;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;background:color-mix(in srgb,var(--body-bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+    .nav-logo{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--body-text);text-decoration:none;display:flex;align-items:center;gap:8px}
+    .nav-logo b{font-family:'Bebas Neue';font-size:1.15rem;letter-spacing:.06em;color:var(--blaze)}
+    .nav-right{display:flex;align-items:center;gap:14px}
+    .nav-badge{font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;color:var(--blaze);border:1px solid var(--line);padding:5px 10px}
+    .theme-toggle{background:none;border:1px solid var(--line);color:var(--chalk);font-family:'DM Mono',monospace;font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;padding:5px 12px;cursor:pointer;transition:color .18s,border-color .18s}
+    .theme-toggle:hover{color:var(--blaze);border-color:var(--blaze)}
+
+    main{max-width:1100px;margin:0 auto;padding:38px 24px 60px}
+
+    /* ── Score-Sheet-Kopf ── */
+    .sheet-top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding-bottom:12px;border-bottom:2px solid var(--body-text);margin-bottom:26px}
+    .sheet-meta{font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:var(--chalk)}
+    .sheet-meta b{color:var(--blaze);font-weight:500}
+    .page-title{font-family:'Bebas Neue';font-size:clamp(2.5rem,7vw,4rem);line-height:.92;letter-spacing:.02em;margin-bottom:6px}
+    .page-lead{font-size:.68rem;line-height:1.8;color:var(--chalk);max-width:64ch;margin-bottom:30px}
+
+    /* ── Tabs ── */
+    .tabs{display:flex;flex-wrap:wrap;gap:0;margin-bottom:26px;border-bottom:1px solid var(--line)}
+    .tab{padding:13px 18px;background:none;border:none;color:var(--chalk);font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;transition:color .18s,background .18s;box-shadow:inset 0 -2px 0 transparent}
+    .tab:hover{color:var(--body-text);background:var(--field)}
+    .tab.active{color:var(--body-text);box-shadow:inset 0 -2px 0 var(--blaze)}
     .tab-panel{display:none}
     .tab-panel.active{display:block}
-    .panel-title{font-family:'Bebas Neue';font-size:1.8rem;margin-bottom:16px;color:var(--cream)}
+
+    .panel-title{font-family:'Bebas Neue';font-size:2.1rem;line-height:.95;letter-spacing:.03em;margin-bottom:10px}
+    .panel-lead{font-size:.68rem;line-height:1.8;color:var(--chalk);max-width:70ch;margin-bottom:20px}
+
+    /* ── Formularelemente ── */
     .select-row{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
-    .select-row label{font-size:.65rem;color:var(--muted);letter-spacing:.1em}
-    select,input[type=text],input[type=number]{background:var(--card2);border:1px solid var(--border);color:var(--cream);font-family:'DM Mono';font-size:.78rem;padding:9px 12px;outline:none}
-    select:focus,input:focus{border-color:var(--orange)}
-    .btn{padding:9px 18px;background:var(--orange);color:var(--black);border:none;font-family:'DM Mono';font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s}
-    .btn:hover{background:#ff6b3d}
-    .btn.danger{background:var(--red);color:#fff}
-    .btn.danger:hover{background:#ff6666}
-    .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+    .select-row label{font-size:.56rem;letter-spacing:.16em;text-transform:uppercase;color:var(--chalk)}
+    select,input[type=text],input[type=number],input[type=password]{background:var(--field);border:1px solid var(--line);color:var(--body-text);font-family:'DM Mono',monospace;font-size:.74rem;padding:9px 12px;outline:none;transition:border-color .18s}
+    select:focus,input:focus{border-color:var(--blaze)}
+    input[type=checkbox]{accent-color:var(--blaze)}
+
+    .btn{padding:9px 16px;background:var(--blaze);color:var(--ink);border:1px solid var(--blaze);font-family:'DM Mono',monospace;font-size:.58rem;font-weight:500;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;transition:background .18s,border-color .18s,color .18s}
+    .btn:hover{background:var(--blaze2);border-color:var(--blaze2)}
+    .btn.danger{background:transparent;border-color:var(--red);color:var(--red)}
+    .btn.danger:hover{background:var(--red);color:var(--body-bg)}
+    .btn.ghost{background:transparent;border-color:var(--line);color:var(--chalk)}
+    .btn.ghost:hover{border-color:var(--blaze);color:var(--blaze)}
     .btn:disabled{opacity:.4;cursor:not-allowed}
-    table{width:100%;border-collapse:collapse;font-size:.72rem}
-    th{text-align:left;padding:10px 12px;background:var(--card2);color:var(--muted);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
-    td{padding:10px 12px;background:var(--card);border-top:2px solid var(--black)}
+
+    /* ── Tabellen ── */
+    table{width:100%;border-collapse:collapse;font-size:.7rem;background:var(--field);border:1px solid var(--line)}
+    th{text-align:left;padding:11px 12px;background:var(--field2);color:var(--chalk);font-size:.54rem;letter-spacing:.16em;text-transform:uppercase;font-weight:400;border-bottom:1px solid var(--line)}
+    td{padding:11px 12px;background:transparent;border-top:1px solid var(--line);vertical-align:middle}
+    tr:first-child td{border-top:none}
     td input{width:70px}
-    .row-actions{display:flex;gap:6px}
-    .msg{font-size:.68rem;padding:10px 14px;margin-bottom:16px;display:none}
+    .row-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+    /* ── Meldungen & Blöcke ── */
+    .msg{font-size:.66rem;letter-spacing:.04em;padding:11px 14px;margin-bottom:18px;display:none;border-left:3px solid var(--line)}
     .msg.show{display:block}
-    .msg.ok{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.3)}
-    .msg.err{background:rgba(255,68,68,.1);color:var(--red);border:1px solid rgba(255,68,68,.3)}
-    .empty{padding:32px;text-align:center;color:#555;font-style:italic;font-size:.72rem;background:var(--card)}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
-    @media(max-width:700px){.grid2{grid-template-columns:1fr}table{font-size:.62rem}td,th{padding:7px 8px}}
+    .msg.ok{background:var(--field);color:var(--green);border-left-color:var(--green)}
+    .msg.err{background:var(--field);color:var(--red);border-left-color:var(--red)}
+    .empty{padding:30px;text-align:center;color:var(--chalk);font-size:.68rem;letter-spacing:.08em;background:var(--field);border:1px solid var(--line)}
+
+    .form-block{margin-top:24px;padding:18px;background:var(--field);border:1px solid var(--line);border-left:3px solid var(--blaze)}
+    .form-block-label{font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:var(--chalk);margin-bottom:12px}
+    .hint{font-size:.6rem;line-height:1.7;color:var(--chalk);margin-top:8px}
+    .hint code{background:var(--field2);padding:1px 5px;border:1px solid var(--line)}
+    .check-label{font-size:.6rem;letter-spacing:.1em;color:var(--chalk);display:flex;align-items:center;gap:7px}
+
+    /* ── Bausteine der Erweiterungs-Tabs ── */
+    .section-label{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--chalk);display:flex;align-items:center;gap:14px;padding-bottom:14px;border-bottom:1px solid var(--line);margin:32px 0 16px}
+    .section-label:first-child{margin-top:0}
+    .section-label b{color:var(--body-text);font-weight:500}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--line)}
+    code{font-family:'DM Mono',monospace;background:var(--field2);border:1px solid var(--line);padding:1px 5px;font-size:.92em}
+    .vbar{height:7px;background:var(--field2);border:1px solid var(--line);position:relative;min-width:70px}
+    .vbar span{position:absolute;top:0;bottom:0;left:0;background:var(--blaze)}
+    .dots{display:flex;gap:3px;align-items:center}
+    .dot{display:block;width:9px;height:9px;border:1px solid var(--line);background:transparent}
+    .dot.on{background:var(--blaze);border-color:var(--blaze)}
+    .tag-box{padding:14px 16px;background:var(--field);border:1px solid var(--line);margin-bottom:18px}
+    .tag{display:inline-block;font-size:.54rem;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk);border:1px solid var(--line);padding:3px 8px;margin:3px 4px 3px 0}
+    .tag.on{color:var(--blaze);border-color:var(--blaze)}
+
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}    .info-cell{background:var(--field);padding:20px}
+    .info-cell dt{font-size:.54rem;letter-spacing:.2em;text-transform:uppercase;color:var(--chalk);margin-bottom:5px}
+    .info-cell dd{font-size:.72rem;line-height:1.7;color:var(--body-text);margin-bottom:20px}
+    .info-cell dd:last-child{margin-bottom:0}
+    .info-cell dd code{background:var(--field2);padding:1px 5px;border:1px solid var(--line);font-size:.66rem}
+    .info-cell dd small{color:var(--chalk);font-size:.64rem;line-height:1.7;display:block;margin-top:4px}
+
+    footer{border-top:1px solid var(--line);padding:22px 28px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.54rem;letter-spacing:.2em;text-transform:uppercase;color:var(--chalk)}
+
+    @media(max-width:700px){
+      .grid2{grid-template-columns:1fr}
+      table{font-size:.62rem}
+      td,th{padding:8px 8px}
+      nav{padding:12px 16px}
+      main{padding:28px 16px 50px}
+      .tab{padding:11px 13px}
+    }
   </style>
 </head>
 <body>
 
 <div class="login-overlay" id="loginOverlay">
-  <div class="login-logo">ADMIN<span>•</span></div>
-  <p class="login-sub">// onlymakkus CrossFit Verwaltung</p>
-  <div class="login-form">
-    <input type="password" class="login-input" id="pwInput" placeholder="Admin-Passwort" autocomplete="off">
-    <button class="login-btn" id="loginBtn">Einloggen →</button>
+  <div class="login-logo">ADMIN<span>.</span></div>
+  <p class="login-sub">onlymakkus / Verwaltung</p>
+  <p class="login-note" id="gateNote">Zugang wird geprüft…</p>
+  <div class="gate-alt">
+    <div class="gate-alt-label">Ersatzweg</div>
+    <form class="login-form" id="loginForm">
+      <input type="password" class="login-input" id="pwInput" placeholder="Admin-Passwort" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button type="submit" class="login-btn" id="loginBtn">Einloggen</button>
+    </form>
     <p class="login-error" id="loginError"></p>
   </div>
 </div>
 
 <div class="page-content" id="pageContent">
   <nav>
-    <a class="nav-logo" href="crossfit.html">← OM Admin</a>
-    <span class="nav-badge">🔐 Admin Modus</span>
+    <a class="nav-logo" href="crossfit.html">←&nbsp; <b>OM</b> / admin</a>
+    <div class="nav-right">
+      <span class="nav-badge" id="navBadge">Admin-Modus</span>
+      <button class="theme-toggle" id="themeToggle">Light</button>
+    </div>
   </nav>
 
   <main>
+    <div class="sheet-top">
+      <span class="sheet-meta">Verwaltung</span>
+      <span class="sheet-meta">Saison <b id="sheetYear">2026</b></span>
+    </div>
+    <h1 class="page-title">Admin</h1>
+    <p class="page-lead">Direkter Zugriff auf die Live-Datenbank. Änderungen wirken sofort, ein automatisches Backup gibt es nicht.</p>
+
     <div class="tabs">
       <button class="tab active" data-tab="entries">Einträge</button>
       <button class="tab" data-tab="profiles">Profile</button>
       <button class="tab" data-tab="history">Verlauf</button>
       <button class="tab" data-tab="seasonplan">Saison-Planung</button>
+      <button class="tab" data-tab="vote">Voting</button>
       <button class="tab" data-tab="exercises">Übungskatalog</button>
       <button class="tab" data-tab="season">Saison-Punkte</button>
       <button class="tab" data-tab="hof">Hall of Fame</button>
+      <button class="tab" data-tab="gami">Gamification</button>
+      <button class="tab" data-tab="scores">Game-Scores</button>
       <button class="tab" data-tab="info">Info</button>
     </div>
 
@@ -91,44 +200,64 @@
     <!-- ENTRIES TAB -->
     <div class="tab-panel active" id="panel-entries">
       <h2 class="panel-title">Challenge-Einträge bearbeiten</h2>
+      <p class="panel-lead">Werte korrigieren oder Einträge entfernen. Bei Links/Rechts-Übungen erscheint automatisch eine zweite Spalte.</p>
       <div class="select-row">
-        <label>Challenge:</label>
+        <label>Challenge</label>
         <select id="challengeSelect"></select>
-        <button class="btn ghost" id="reloadEntries">🔄 Aktualisieren</button>
+        <button class="btn ghost" id="reloadEntries">Aktualisieren</button>
       </div>
       <div id="entriesTableWrap"><div class="empty">Lädt…</div></div>
+    </div>
+
+    <!-- PROFILES TAB -->
+    <div class="tab-panel" id="panel-profiles">
+      <h2 class="panel-title">Profile verwalten</h2>
+      <p class="panel-lead">Übersicht aller registrierten Profile. Bei vergessenem Passwort kannst du hier ein neues setzen — der Person mitteilen, damit sie es sich merken oder ändern kann.</p>
+      <div id="profilesTableWrap"><div class="empty">Lädt…</div></div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div class="tab-panel" id="panel-history">
+      <h2 class="panel-title">Eintrags-Verlauf</h2>
+      <p class="panel-lead">Chronologischer Verlauf aller Challenge-Einträge — jede Änderung wird protokolliert. Sprünge über 500 werden farblich markiert.</p>
+      <div class="select-row">
+        <label>Filter</label>
+        <select id="historyFilterChallenge"><option value="">Alle Challenges</option></select>
+        <button class="btn ghost" id="reloadHistory">Aktualisieren</button>
+      </div>
+      <div id="historyTableWrap"><div class="empty">Lädt…</div></div>
     </div>
 
     <!-- SEASON PLANNING TAB -->
     <div class="tab-panel" id="panel-seasonplan">
       <h2 class="panel-title">Saison-Planung</h2>
-      <p style="font-size:.68rem;color:var(--muted);margin-bottom:16px;">Hier legst du fest welche Übung in welchem Monat als Challenge läuft. Wähle das Jahr, dann pro Monat eine Übung aus dem Katalog.</p>
+      <p class="panel-lead">Legt fest, welche Übung in welchem Monat als Challenge läuft. Jahr wählen, dann pro Monat eine Übung aus dem Katalog zuweisen.</p>
       <div class="select-row">
-        <label>Saison-Jahr:</label>
+        <label>Saison-Jahr</label>
         <select id="seasonYearSelect"></select>
-        <button class="btn ghost" id="reloadSeasonPlan">🔄 Aktualisieren</button>
+        <button class="btn ghost" id="reloadSeasonPlan">Aktualisieren</button>
       </div>
       <div id="seasonPlanWrap"><div class="empty">Lädt…</div></div>
-      <div style="margin-top:24px;padding:16px;background:var(--card);border:1px solid var(--border);">
-        <div style="font-size:.65rem;color:var(--muted);margin-bottom:10px;">Neue Saison anlegen:</div>
-        <div class="select-row">
-          <input type="number" id="newSeasonYear" placeholder="Jahr, z.B. 2027" style="width:140px">
+      <div class="form-block">
+        <div class="form-block-label">Neue Saison anlegen</div>
+        <div class="select-row" style="margin-bottom:0">
+          <input type="number" id="newSeasonYear" placeholder="Jahr, z.B. 2027" style="width:150px">
           <button class="btn" id="addSeasonBtn">+ Saison anlegen</button>
         </div>
-        <p style="font-size:.6rem;color:var(--muted);margin-top:8px;">Legt 12 leere Monate an (Dezember automatisch als Voting-Monat). Übungen danach pro Monat zuweisen.</p>
+        <p class="hint">Legt den Dezember automatisch als Voting-Monat an. Die übrigen Monate danach einzeln zuweisen.</p>
       </div>
     </div>
 
     <!-- EXERCISES TAB -->
     <div class="tab-panel" id="panel-exercises">
       <h2 class="panel-title">Übungskatalog verwalten</h2>
-      <p style="font-size:.68rem;color:var(--muted);margin-bottom:16px;">Übungen bearbeiten, Video-Links hinzufügen, oder neue Übungen für künftige Challenges anlegen.</p>
+      <p class="panel-lead">Video-Links pflegen, Übungen entfernen oder neue Übungen für künftige Challenges anlegen.</p>
       <div id="exercisesTableWrap"><div class="empty">Lädt…</div></div>
-      <div style="margin-top:24px;padding:16px;background:var(--card);border:1px solid var(--border);">
-        <div style="font-size:.65rem;color:var(--muted);margin-bottom:10px;">Neue Übung hinzufügen:</div>
-        <div class="select-row" style="flex-wrap:wrap;">
-          <input type="text" id="newExName" placeholder="Name" style="width:140px">
-          <input type="text" id="newExIcon" placeholder="Icon (Emoji)" style="width:90px">
+      <div class="form-block">
+        <div class="form-block-label">Neue Übung hinzufügen</div>
+        <div class="select-row" style="flex-wrap:wrap;margin-bottom:8px">
+          <input type="text" id="newExName" placeholder="Name" style="width:150px">
+          <input type="text" id="newExIcon" placeholder="Icon" style="width:80px">
           <select id="newExCat">
             <option value="core">Core</option>
             <option value="push">Push</option>
@@ -140,13 +269,13 @@
             <option value="min">min</option>
             <option value="Reps">Reps</option>
           </select>
-          <input type="number" id="newExGoal" placeholder="Standard-Ziel" style="width:110px">
-          <label style="font-size:.65rem;color:var(--muted);display:flex;align-items:center;gap:6px;"><input type="checkbox" id="newExDual"> Links/Rechts</label>
+          <input type="number" id="newExGoal" placeholder="Standard-Ziel" style="width:120px">
+          <label class="check-label"><input type="checkbox" id="newExDual"> Links/Rechts</label>
         </div>
-        <div class="select-row" style="margin-top:8px;">
+        <div class="select-row" style="margin-bottom:8px">
           <input type="text" id="newExDesc" placeholder="Beschreibung" style="flex:1;min-width:200px">
         </div>
-        <div class="select-row" style="margin-top:8px;">
+        <div class="select-row" style="margin-bottom:0">
           <button class="btn" id="addExBtn">+ Übung hinzufügen</button>
         </div>
       </div>
@@ -155,90 +284,173 @@
     <!-- SEASON TAB -->
     <div class="tab-panel" id="panel-season">
       <h2 class="panel-title">Saison-Gesamtranking</h2>
-      <p style="font-size:.68rem;color:var(--muted);margin-bottom:16px;">Punkte und Siege manuell anpassen — z.B. um Fehler bei der automatischen Berechnung zu korrigieren.</p>
+      <p class="panel-lead">Punkte und Siege manuell anpassen — etwa um Fehler der automatischen Berechnung zu korrigieren.</p>
       <div id="seasonTableWrap"><div class="empty">Lädt…</div></div>
-      <div style="margin-top:20px;padding:16px;background:var(--card);border:1px solid var(--border);">
-        <div style="font-size:.65rem;color:var(--muted);margin-bottom:10px;">Neuen Eintrag hinzufügen — wähle ein bestehendes Profil, damit die Punkte eindeutig zugeordnet werden:</div>
-        <div class="select-row">
-          <select id="newRankProfile" style="min-width:180px">
+      <div class="form-block">
+        <div class="form-block-label">Neuen Eintrag hinzufügen</div>
+        <div class="select-row" style="margin-bottom:0">
+          <select id="newRankProfile" style="min-width:190px">
             <option value="">— Profil wählen —</option>
           </select>
-          <input type="number" id="newRankPts" placeholder="Punkte" style="width:90px">
-          <input type="number" id="newRankWins" placeholder="Siege" style="width:80px">
+          <input type="number" id="newRankPts" placeholder="Punkte" style="width:100px">
+          <input type="number" id="newRankWins" placeholder="Siege" style="width:90px">
           <button class="btn" id="addRankBtn">+ Hinzufügen</button>
         </div>
-        <p style="font-size:.58rem;color:var(--muted);margin-top:8px;">Kein passendes Profil dabei? Die Person muss sich zuerst unter <code>profile.html</code> registrieren.</p>
+        <p class="hint">Immer ein bestehendes Profil wählen, damit die Punkte eindeutig zugeordnet sind. Kein passendes dabei? Die Person muss sich zuerst unter <code>profile.html</code> registrieren.</p>
       </div>
     </div>
 
     <!-- HOF TAB -->
     <div class="tab-panel" id="panel-hof">
       <h2 class="panel-title">Hall of Fame — Monatsergebnisse</h2>
-      <p style="font-size:.68rem;color:var(--muted);margin-bottom:16px;">Hier siehst du alle bereits finalisierten Challenges. Löschen setzt den Monat zurück — die automatische Berechnung läuft dann beim nächsten Monatswechsel erneut.</p>
+      <p class="panel-lead">Alle bereits finalisierten Challenges. Löschen setzt den Monat zurück — die automatische Berechnung läuft dann beim nächsten Monatswechsel erneut.</p>
       <div id="hofTableWrap"><div class="empty">Lädt…</div></div>
     </div>
 
-    <!-- INFO TAB -->
-    <!-- PROFILES TAB -->
-    <div class="tab-panel" id="panel-profiles">
-      <h2 class="panel-title">Profile verwalten</h2>
-      <p style="font-size:.68rem;color:var(--muted);margin-bottom:16px;">Übersicht aller registrierten Profile. Bei vergessenem Passwort kannst du hier ein neues Passwort setzen (der Person mitteilen, damit sie es sich merken/ändern kann).</p>
-      <div id="profilesTableWrap"><div class="empty">Lädt…</div></div>
-    </div>
-
-    <div class="tab-panel" id="panel-history">
-      <h2 class="panel-title">Eintrags-Verlauf</h2>
-      <p style="font-size:.68rem;color:var(--muted);margin-bottom:16px;">Chronologischer Verlauf aller Challenge-Einträge — jede Änderung wird protokolliert. Praktisch um verdächtige oder unrealistische Sprünge nachzuvollziehen.</p>
-      <div class="select-row" style="margin-bottom:16px;">
-        <label style="font-size:.65rem;color:var(--muted);">Filter:</label>
-        <select id="historyFilterChallenge"><option value="">Alle Challenges</option></select>
-        <button class="btn ghost" id="reloadHistory">🔄 Aktualisieren</button>
+    <!-- VOTE TAB -->
+    <div class="tab-panel" id="panel-vote">
+      <h2 class="panel-title">Dezember-Voting</h2>
+      <p class="panel-lead">Abstimmung über die Dezember-Challenge, gewählt wird vom 5. bis 30. November aus den Übungen der laufenden Saison. Den Gewinner setzt normalerweise der <code>pg_cron</code>-Job am 1. Dezember.</p>
+      <div class="select-row">
+        <label>Saison</label>
+        <select id="voteYear"></select>
+        <button class="btn ghost" id="reloadVote">Aktualisieren</button>
+        <button class="btn ghost" id="finalizeVoteBtn">Voting jetzt abschließen</button>
       </div>
-      <div id="historyTableWrap"><div class="empty">Lädt…</div></div>
+      <div id="voteWrap"><div class="empty">Wird beim Öffnen geladen…</div></div>
     </div>
 
+    <!-- GAMIFICATION TAB -->
+    <div class="tab-panel" id="panel-gami">
+      <h2 class="panel-title">Gamification</h2>
+      <p class="panel-lead">Erfolge und tägliche Streaks. Erfolge vergibt sonst <code>grant_achievements()</code> beim Öffnen der Profilseite — hier lässt sich nachhelfen oder korrigieren.</p>
+
+      <div class="section-label"><b>Erfolge</b></div>
+      <div class="select-row">
+        <label>Profil</label>
+        <select id="achFilterProfile"><option value="">Alle Profile</option></select>
+        <label>Erfolg</label>
+        <select id="achFilterCode"><option value="">Alle Erfolge</option></select>
+        <button class="btn ghost" id="reloadAch">Aktualisieren</button>
+        <button class="btn ghost" id="achRunBtn">grant_achievements() ausführen</button>
+      </div>
+      <div id="achWrap"><div class="empty">Wird beim Öffnen geladen…</div></div>
+      <div class="form-block">
+        <div class="form-block-label">Erfolg manuell vergeben</div>
+        <div class="select-row" style="margin-bottom:0">
+          <select id="achGrantProfile" style="min-width:190px"><option value="">— Profil wählen —</option></select>
+          <input type="text" id="achGrantCode" list="achCodeList" placeholder="Code, z.B. season_gold_2026" style="min-width:220px">
+          <datalist id="achCodeList"></datalist>
+          <button class="btn" id="achGrantBtn">+ Vergeben</button>
+        </div>
+        <p class="hint">Die Vorschlagsliste enthält alle Codes, die bereits mindestens einmal vergeben wurden.</p>
+      </div>
+
+      <div class="section-label"><b>Streaks</b> · berechnet aus <code>daily_log</code></div>
+      <div id="streakWrap"><div class="empty">Wird beim Öffnen geladen…</div></div>
+    </div>
+
+    <!-- SCORES TAB -->
+    <div class="tab-panel" id="panel-scores">
+      <h2 class="panel-title">Game-Scores</h2>
+      <p class="panel-lead">Highscores der Mini-Spiele. Das Spiel wird am Namenspräfix erkannt: <code>BB:</code> Blockblast, <code>TT:</code> Tetris, <code>FB:</code> Flappy, ohne Präfix Snake.</p>
+      <div class="select-row">
+        <label>Spiel</label>
+        <select id="scoresGame">
+          <option value="">Alle</option>
+          <option value="Snake">Snake</option>
+          <option value="Blockblast">Blockblast</option>
+          <option value="Tetris">Tetris</option>
+          <option value="Flappy">Flappy</option>
+        </select>
+        <button class="btn ghost" id="reloadScores">Aktualisieren</button>
+      </div>
+      <div id="scoresWrap"><div class="empty">Wird beim Öffnen geladen…</div></div>
+    </div>
+
+    <!-- INFO TAB -->
     <div class="tab-panel" id="panel-info">
       <h2 class="panel-title">System-Info</h2>
+      <p class="panel-lead">Statuswerte und Betriebshinweise zu dieser Seite.</p>
       <div class="grid2">
-        <div>
-          <p style="font-size:.7rem;color:var(--muted);line-height:2;">
-            <strong style="color:var(--cream)">Aktuelle Challenge (automatisch):</strong><br>
-            <span id="info-active">—</span><br><br>
-            <strong style="color:var(--cream)">Heutiges Datum:</strong><br>
-            <span id="info-date">—</span><br><br>
-            <strong style="color:var(--cream)">Gruppenpasswort Challenge/Ranking:</strong><br>
-            plank2026 (im Code änderbar)
-          </p>
-        </div>
-        <div>
-          <p style="font-size:.7rem;color:var(--muted);line-height:2;">
-            <strong style="color:var(--cream)">Punktesystem:</strong><br>
-            🥇 Teilnahme 1 Pt · pro 10% Fortschritt +1 Pt · Platz 1 +5 Pts · Platz 2 +3 Pts · Platz 3 +2 Pts<br>
-            Dezember: alles ×2<br><br>
-            <strong style="color:var(--cream)">Hinweis:</strong><br>
-            Änderungen hier wirken sich direkt auf die Live-Datenbank aus. Bei Unsicherheit lieber vorsichtig sein — es gibt kein automatisches Backup.
-          </p>
-        </div>
+        <dl class="info-cell">
+          <dt>Aktuelle Challenge (automatisch)</dt>
+          <dd id="info-active">—</dd>
+          <dt>Heutiges Datum</dt>
+          <dd id="info-date">—</dd>
+          <dt>Datenbank-Schlüssel</dt>
+          <dd><code>sb_publishable_…</code><small>Publishable Key, identisch mit den übrigen Seiten.</small></dd>
+        </dl>
+        <dl class="info-cell">
+          <dt>Punktesystem</dt>
+          <dd>Teilnahme 1&nbsp;Pt · pro 10&nbsp;% Fortschritt +1&nbsp;Pt · Platz&nbsp;1 +5&nbsp;Pts · Platz&nbsp;2 +3&nbsp;Pts · Platz&nbsp;3 +2&nbsp;Pts<small>Im Dezember zählt alles doppelt.</small></dd>
+          <dt>Zugang</dt>
+          <dd>Offen für die Profile in <code>ADMIN_PROFILE_IDS</code> — derzeit nur ID&nbsp;1.<small>Wer als eines dieser Profile angemeldet ist, kommt ohne Nachfrage rein. Weitere Personen: ID in die Liste eintragen.</small></dd>
+          <dt>Ersatzweg &amp; Passwort ändern</dt>
+          <dd>Ohne Anmeldung geht es weiter per Admin-Passwort. Neuen Hash erzeugen:<br><code>dcodeIO.bcrypt.hashSync('neuespasswort',10)</code><small>Ergebnis im Skript bei <code>ADMIN_PW_HASH</code> eintragen. Mit <code>REQUIRE_PW_ALWAYS=true</code> wird das Passwort zusätzlich zur Anmeldung verlangt.</small></dd>
+          <dt>Sicherheitshinweis</dt>
+          <dd>Beide Wege sind Sichtbarkeitssperren, kein echter Schutz — die Seite läuft vollständig im Browser.<small>Der eigentliche Schutz sind die RLS-Regeln in Supabase. Alles, was hier nicht passieren darf, muss dort verboten sein.</small></dd>
+        </dl>
       </div>
     </div>
   </main>
+
+  <footer>
+    <span>onlymakkus / admin</span>
+    <span>made with pain &amp; supabase</span>
+  </footer>
 </div>
 
 <script>
+  // ── Theme ──
+  (function(){
+    var KEY='om_cf_theme',btn=document.getElementById('themeToggle'),root=document.documentElement;
+    function paint(){btn.textContent=root.getAttribute('data-theme')==='dark'?'Light':'Dark'}
+    paint();
+    btn.addEventListener('click',function(){
+      var next=root.getAttribute('data-theme')==='dark'?'light':'dark';
+      root.setAttribute('data-theme',next);
+      try{localStorage.setItem(KEY,next)}catch(e){}
+      paint();
+    });
+    document.getElementById('sheetYear').textContent=new Date().getFullYear();
+  })();
+</script>
+
+<script>
   // ── Auth ──
-  const ADMIN_PASSWORD='makkusboss2026';
+  // Der Admin-Bereich gehört diesen Profil-IDs. Markus = 1.
+  const ADMIN_PROFILE_IDS=[1];
+  const SESS='om_profile_session';
+  // Auf true setzen, wenn zusätzlich zur Anmeldung immer das Passwort verlangt
+  // werden soll — sinnvoll auf Geräten, die du aus der Hand gibst.
+  const REQUIRE_PW_ALWAYS=false;
+  // Ersatzweg, falls auf diesem Gerät kein Profil angemeldet ist.
+  // Neues Passwort: dcodeIO.bcrypt.hashSync('neuespasswort',10) in der Konsole dieser Seite.
+  // Achtung: beides ist nur eine Sichtbarkeitssperre — der echte Schutz sind die
+  // RLS-Regeln in Supabase.
+  const ADMIN_PW_HASH='$2a$10$LSmB6L7q2YTBnCX8yy.vZedw.WOIxDLJ/QgWuwgUZ45jWfveLtxCK';
   const overlay=document.getElementById('loginOverlay');
   const content=document.getElementById('pageContent');
   const pwInput=document.getElementById('pwInput');
   const loginError=document.getElementById('loginError');
-  function unlock(){overlay.classList.add('hidden');content.classList.add('visible');initAdmin()}
-  function tryLogin(){if(pwInput.value.trim()===ADMIN_PASSWORD){unlock()}else{loginError.textContent='✕ falsches admin-passwort';pwInput.value=''}}
-  document.getElementById('loginBtn').addEventListener('click',tryLogin);
-  pwInput.addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin()});
+  function omSession(){try{return JSON.parse(localStorage.getItem(SESS)||'null')}catch(e){return null}}
+  function unlock(who){
+    overlay.classList.add('hidden');content.classList.add('visible');
+    const b=document.getElementById('navBadge');
+    if(b)b.textContent=who?('Admin · '+who):'Admin-Modus';
+    initAdmin();
+  }
+  function tryLogin(){
+    let ok=false;
+    try{ok=dcodeIO.bcrypt.compareSync(pwInput.value.trim(),ADMIN_PW_HASH)}catch(e){}
+    if(ok){unlock(null)}else{loginError.textContent='✕ falsches admin-passwort';pwInput.value=''}
+  }
+  document.getElementById('loginForm').addEventListener('submit',e=>{e.preventDefault();tryLogin()});
 
   // ── Supabase ──
   const SB_URL='https://bsubsesbcxdaqofmkiqg.supabase.co';
-  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzdWJzZXNiY3hkYXFvZm1raXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.yZsDpMlf5X6oMqY3p_QbTKd-V1-IPD2iH4sFz17VJVs';
+  const SB_KEY='sb_publishable_fA2Dca6SVp0eB8k_WuqLrw_zplTnXBU';
   async function sbFetch(p,o={}){
     const r=await fetch(SB_URL+p,{...o,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':o.prefer||'',...o.headers}});
     const t=await r.text();
@@ -370,10 +582,12 @@
   };
 
   // ── ENTRIES ──
+  const DUAL_BY_SLUG={};
   async function loadChallengeSelectOptions(){
     const sel=document.getElementById('challengeSelect');
     try{
-      const exercises=await sbFetch('/rest/v1/exercises?select=id,name&order=name.asc');
+      const exercises=await sbFetch('/rest/v1/exercises?select=id,name,default_dual&order=name.asc');
+      (exercises||[]).forEach(ex=>{DUAL_BY_SLUG[slugify(ex.name)]=!!ex.default_dual});
       sel.innerHTML=(exercises||[]).map(ex=>`<option value="${slugify(ex.name)}">${ex.name}</option>`).join('');
       loadEntries();
     }catch(e){sel.innerHTML='<option>Fehler beim Laden</option>'}
@@ -383,17 +597,19 @@
 
   async function loadEntries(){
     const challenge=document.getElementById('challengeSelect').value;
+    const dual=!!DUAL_BY_SLUG[challenge];
     const wrap=document.getElementById('entriesTableWrap');
     wrap.innerHTML='<div class="empty">Lädt…</div>';
     try{
       const data=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${challenge}&select=*&order=value1.desc`);
       if(!data||!data.length){wrap.innerHTML='<div class="empty">Keine Einträge für diese Challenge.</div>';return}
-      let html='<table><tr><th>Name</th><th>Wert</th><th>Auth</th><th>Aktionen</th></tr>';
+      let html=`<table><tr><th>Name</th><th>${dual?'Links':'Wert'}</th>${dual?'<th>Rechts</th>':''}<th>Auth</th><th>Aktionen</th></tr>`;
       data.forEach(e=>{
         const authInfo = e.profile_id ? '👤 Profil' : (e.pin_hash ? '🔑 Alt-PIN' : '— keine');
         html+=`<tr data-id="${e.id}">
           <td>${e.name}</td>
           <td><input type="number" value="${e.value1}" class="edit-v1"></td>
+          ${dual?`<td><input type="number" value="${e.value2==null?'':e.value2}" class="edit-v2"></td>`:''}
           <td>${authInfo}</td>
           <td class="row-actions">
             <button class="btn" onclick="saveEntry(${e.id})">Speichern</button>
@@ -408,10 +624,13 @@
   }
 
   window.saveEntry=async(id)=>{
-    const row=document.querySelector(`tr[data-id="${id}"]`);
+    const row=document.querySelector(`#entriesTableWrap tr[data-id="${id}"]`);
     const v1=parseInt(row.querySelector('.edit-v1').value)||0;
+    const v2El=row.querySelector('.edit-v2');
+    const payload={value1:v1};
+    if(v2El)payload.value2=v2El.value===''?null:(parseInt(v2El.value)||0);
     try{
-      await sbFetch(`/rest/v1/challenge_entries?id=eq.${id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({value1:v1})});
+      await sbFetch(`/rest/v1/challenge_entries?id=eq.${id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(payload)});
       showMsg('✓ Eintrag aktualisiert','ok');
       loadEntries();
     }catch(e){showMsg('❌ Fehler beim Speichern','err')}
@@ -730,6 +949,361 @@
       }
     }catch(e){document.getElementById('info-active').textContent='Fehler beim Laden'}
   }
+
+  // ── Zugangsprüfung ──
+  // Läuft bewusst als Letztes: unlock() startet initAdmin(), und das braucht
+  // SB_URL/SB_KEY, die weiter oben als const stehen und vorher noch nicht
+  // initialisiert wären.
+  (function gate(){
+    const s=omSession(),note=document.getElementById('gateNote');
+    const isAdmin=!!(s&&s.id&&ADMIN_PROFILE_IDS.indexOf(Number(s.id))>-1);
+    const who=s?(s.displayName||s.name||('Profil #'+s.id)):null;
+    if(isAdmin&&!REQUIRE_PW_ALWAYS){unlock(who);return}
+    if(isAdmin){
+      note.textContent='Angemeldet als '+who+'. Zur Sicherheit ist zusätzlich das Admin-Passwort nötig.';
+    }else if(s&&s.id){
+      note.textContent='Angemeldet als '+who+' — dieses Konto hat keinen Admin-Zugang.';
+    }else{
+      note.innerHTML='Auf diesem Gerät ist kein Profil angemeldet. <a class="gate-link" href="profile.html">Zur Anmeldung</a>';
+    }
+  })();
 </script>
+
+<script>
+/* ── Erweiterung: Dezember-Voting · Gamification · Game-Scores ──────────────
+   Eigener Block, damit das Hauptskript darüber unangetastet bleibt.
+   sbFetch / showMsg stammen aus dem Block darüber.
+   Die Tabs laden erst beim ersten Öffnen, nicht schon beim Einloggen.     */
+(function(){
+
+  /* Tabelle der Spiel-Highscores. Heißt sie anders, hier dauerhaft ändern —
+     beim Öffnen des Tabs bietet die Seite sonst eine Auswahl an.          */
+  let SCORES_TABLE='scores';
+
+  const LAZY={vote:renderVote,gami:loadGami,scores:renderScores},DONE={};
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      const k=t.dataset.tab;
+      if(LAZY[k]&&!DONE[k]){DONE[k]=1;LAZY[k]()}
+    });
+  });
+
+  /* ── Helfer ── */
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c])}
+  function dt(v){if(!v)return '—';const d=new Date(v);return d.toLocaleDateString('de-DE')+' '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}
+  function pLabel(p){if(!p)return '— ohne Profil';const h=p.discriminator?p.name+'#'+p.discriminator:p.name;const d=p.display_name||p.name;return d===h?h:d+' ('+h+')'}
+  function byId(a){const o={};(a||[]).forEach(x=>o[x.id]=x);return o}
+  function toKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+  function fromKey(k){const p=String(k).slice(0,10).split('-');return new Date(+p[0],+p[1]-1,+p[2])}
+  function shift(k,n){const d=fromKey(k);d.setDate(d.getDate()+n);return toKey(d)}
+  function fail(el,e){document.getElementById(el).innerHTML='<div class="empty">Fehler beim Laden: '+esc(e.message)+'</div>'}
+
+  /* Ruft eine RPC-Funktion mit mehreren möglichen Signaturen auf, bis eine passt. */
+  async function rpcTry(fn,variants){
+    let last;
+    for(const v of variants){
+      try{return await sbFetch('/rest/v1/rpc/'+fn,{method:'POST',body:JSON.stringify(v)})}catch(e){last=e}
+    }
+    throw last;
+  }
+
+  let PROFILES=null;
+  async function profiles(){
+    if(!PROFILES)PROFILES=await sbFetch('/rest/v1/profiles?select=id,name,discriminator,display_name&order=name.asc');
+    return PROFILES;
+  }
+
+  /* ══ DEZEMBER-VOTING ══════════════════════════════════════════ */
+  async function renderVote(){
+    const wrap=document.getElementById('voteWrap'),ysel=document.getElementById('voteYear');
+    wrap.innerHTML='<div class="empty">Lädt…</div>';
+    if(!ysel.options.length){
+      const now=new Date().getFullYear();
+      try{
+        const seasons=await sbFetch('/rest/v1/seasons?select=year&order=year.desc');
+        ysel.innerHTML=(seasons||[]).map(s=>'<option value="'+s.year+'">'+s.year+'</option>').join('');
+      }catch(e){}
+      if(!ysel.options.length)ysel.innerHTML='<option value="'+now+'">'+now+'</option>';
+      for(const o of ysel.options)if(o.value===String(now))ysel.value=String(now);
+    }
+    const year=ysel.value;
+    try{
+      const [votes,exs,prs]=await Promise.all([
+        sbFetch('/rest/v1/december_votes?season_year=eq.'+year+'&select=*&order=created_at.asc'),
+        sbFetch('/rest/v1/exercises?select=id,name,icon&order=name.asc'),
+        profiles()
+      ]);
+      const EX=byId(exs),PR=byId(prs),n=(votes||[]).length;
+      let html='<div class="section-label"><b>Zwischenstand</b> · '+n+' '+(n===1?'Stimme':'Stimmen')+'</div>';
+
+      if(!n){
+        html+='<div class="empty">Für '+esc(year)+' liegen noch keine Stimmen vor.</div>';
+      }else{
+        const tally={};
+        votes.forEach(v=>{tally[v.exercise_id]=(tally[v.exercise_id]||0)+1});
+        const rows=Object.keys(tally).map(k=>({id:+k,n:tally[k]})).sort((a,b)=>b.n-a.n);
+        const top=rows[0].n,tied=rows.filter(r=>r.n===top).length>1;
+        html+='<table><tr><th>Übung</th><th>Stimmen</th><th>Anteil</th><th>Verteilung</th></tr>';
+        rows.forEach(r=>{
+          const ex=EX[r.id],pct=Math.round(r.n/n*100),lead=r.n===top;
+          html+='<tr><td>'+(ex?esc(((ex.icon||'')+' '+ex.name).trim()):'Übung #'+r.id)+'</td>'+
+                '<td style="color:'+(lead?'var(--blaze)':'inherit')+'">'+r.n+'</td>'+
+                '<td>'+pct+'&nbsp;%</td>'+
+                '<td style="width:38%"><div class="vbar"><span style="width:'+pct+'%"></span></div></td></tr>';
+        });
+        html+='</table>';
+        if(tied)html+='<p class="hint">Gleichstand an der Spitze — der Tiebreaker der Serverfunktion entscheidet: meiste Teilnehmer, danach früherer Monat.</p>';
+      }
+
+      html+='<div class="section-label"><b>Einzelstimmen</b></div>';
+      if(!n){
+        html+='<div class="empty">Keine Einträge.</div>';
+      }else{
+        html+='<table><tr><th>Profil</th><th>Gewählt</th><th>Abgegeben</th><th>Geändert</th><th>Aktion</th></tr>';
+        votes.forEach(v=>{
+          const ex=EX[v.exercise_id];
+          html+='<tr><td>'+esc(pLabel(PR[v.profile_id]))+'</td>'+
+                '<td>'+(ex?esc(ex.name):'Übung #'+v.exercise_id)+'</td>'+
+                '<td>'+dt(v.created_at)+'</td>'+
+                '<td>'+(v.updated_at&&v.updated_at!==v.created_at?dt(v.updated_at):'—')+'</td>'+
+                '<td><button class="btn danger" onclick="omDeleteVote('+v.id+')">Löschen</button></td></tr>';
+        });
+        html+='</table>';
+      }
+
+      const voted=new Set((votes||[]).map(v=>v.profile_id));
+      const missing=(prs||[]).filter(p=>!voted.has(p.id));
+      html+='<div class="section-label"><b>Noch nicht abgestimmt</b> · '+missing.length+'</div>';
+      html+=missing.length
+        ? '<div class="tag-box">'+missing.map(p=>'<span class="tag">'+esc(pLabel(p))+'</span>').join('')+'</div>'
+        : '<div class="empty">Alle Profile haben abgestimmt.</div>';
+
+      wrap.innerHTML=html;
+    }catch(e){fail('voteWrap',e)}
+  }
+
+  document.getElementById('voteYear').addEventListener('change',renderVote);
+  document.getElementById('reloadVote').addEventListener('click',renderVote);
+
+  document.getElementById('finalizeVoteBtn').addEventListener('click',async()=>{
+    const year=document.getElementById('voteYear').value;
+    if(!confirm('Voting für '+year+' jetzt abschließen? Die Serverfunktion setzt den Gewinner als Dezember-Challenge — normalerweise erledigt das der pg_cron-Job am 1. Dezember.'))return;
+    try{
+      await rpcTry('finalize_december_vote',[{},{p_year:+year},{season_year:+year},{p_season_year:+year}]);
+      showMsg('✓ finalize_december_vote() ausgeführt','ok');
+      renderVote();
+    }catch(e){showMsg('❌ '+e.message,'err')}
+  });
+
+  window.omDeleteVote=async id=>{
+    if(!confirm('Diese Stimme löschen? Die Person kann danach neu abstimmen.'))return;
+    try{
+      await sbFetch('/rest/v1/december_votes?id=eq.'+id,{method:'DELETE',prefer:'return=minimal'});
+      showMsg('✓ Stimme gelöscht','ok');renderVote();
+    }catch(e){showMsg('❌ '+e.message,'err')}
+  };
+
+  /* ══ GAMIFICATION ═════════════════════════════════════════════ */
+  async function loadGami(){await renderAch();await renderStreaks()}
+
+  let ACH=[];
+  async function renderAch(){
+    const wrap=document.getElementById('achWrap');
+    wrap.innerHTML='<div class="empty">Lädt…</div>';
+    try{
+      const [ach,prs]=await Promise.all([
+        sbFetch('/rest/v1/achievements?select=*&order=unlocked_at.desc&limit=2000'),
+        profiles()
+      ]);
+      ACH=ach||[];
+      const codes=[...new Set(ACH.map(a=>a.code))].sort();
+      const opts=(prs||[]).map(p=>'<option value="'+p.id+'">'+esc(pLabel(p))+'</option>').join('');
+      const fp=document.getElementById('achFilterProfile'),fc=document.getElementById('achFilterCode'),gp=document.getElementById('achGrantProfile');
+      const kp=fp.value,kc=fc.value,kg=gp.value;
+      fp.innerHTML='<option value="">Alle Profile</option>'+opts;
+      fc.innerHTML='<option value="">Alle Erfolge</option>'+codes.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join('');
+      gp.innerHTML='<option value="">— Profil wählen —</option>'+opts;
+      fp.value=kp;fc.value=kc;gp.value=kg;
+      document.getElementById('achCodeList').innerHTML=codes.map(c=>'<option value="'+esc(c)+'">').join('');
+      paintAch();
+    }catch(e){fail('achWrap',e)}
+  }
+
+  function paintAch(){
+    const wrap=document.getElementById('achWrap');
+    const fp=document.getElementById('achFilterProfile').value,fc=document.getElementById('achFilterCode').value;
+    const PR=byId(PROFILES),cnt={};
+    ACH.forEach(a=>{cnt[a.profile_id]=(cnt[a.profile_id]||0)+1});
+    let list=ACH;
+    if(fp)list=list.filter(a=>String(a.profile_id)===fp);
+    if(fc)list=list.filter(a=>a.code===fc);
+    let html='<div class="tag-box">'+(PROFILES||[]).map(p=>
+      '<span class="tag'+(cnt[p.id]?' on':'')+'">'+esc(p.display_name||p.name)+' · '+(cnt[p.id]||0)+'</span>').join('')+'</div>';
+    if(!list.length){wrap.innerHTML=html+'<div class="empty">Keine Erfolge für diese Auswahl.</div>';return}
+    html+='<table><tr><th>Profil</th><th>Code</th><th>Freigeschaltet</th><th>Aktion</th></tr>';
+    list.forEach(a=>{
+      html+='<tr><td>'+esc(pLabel(PR[a.profile_id]))+'</td>'+
+            '<td><code>'+esc(a.code)+'</code></td>'+
+            '<td>'+dt(a.unlocked_at)+'</td>'+
+            '<td><button class="btn danger" onclick="omDeleteAch('+a.id+')">Entziehen</button></td></tr>';
+    });
+    wrap.innerHTML=html+'</table>';
+  }
+
+  document.getElementById('achFilterProfile').addEventListener('change',paintAch);
+  document.getElementById('achFilterCode').addEventListener('change',paintAch);
+  document.getElementById('reloadAch').addEventListener('click',renderAch);
+
+  window.omDeleteAch=async id=>{
+    if(!confirm('Diesen Erfolg entziehen? Wenn die Bedingung weiter erfüllt ist, vergibt grant_achievements() ihn beim nächsten Lauf erneut.'))return;
+    try{
+      await sbFetch('/rest/v1/achievements?id=eq.'+id,{method:'DELETE',prefer:'return=minimal'});
+      showMsg('✓ Erfolg entzogen','ok');renderAch();
+    }catch(e){showMsg('❌ '+e.message,'err')}
+  };
+
+  document.getElementById('achGrantBtn').addEventListener('click',async()=>{
+    const pid=document.getElementById('achGrantProfile').value;
+    const code=document.getElementById('achGrantCode').value.trim();
+    if(!pid||!code){showMsg('⚠ Profil und Code angeben','err');return}
+    try{
+      await sbFetch('/rest/v1/achievements',{method:'POST',prefer:'return=minimal',
+        body:JSON.stringify({profile_id:parseInt(pid),code,unlocked_at:new Date().toISOString()})});
+      showMsg('✓ Erfolg vergeben','ok');
+      document.getElementById('achGrantCode').value='';
+      renderAch();
+    }catch(e){showMsg('❌ '+e.message,'err')}
+  });
+
+  document.getElementById('achRunBtn').addEventListener('click',async()=>{
+    const pid=document.getElementById('achFilterProfile').value;
+    if(!confirm('grant_achievements() jetzt ausführen'+(pid?' (nur für das gefilterte Profil, falls die Funktion das unterstützt)':'')+'?'))return;
+    const variants=pid?[{p_profile_id:+pid},{profile_id:+pid},{}]:[{}];
+    try{
+      await rpcTry('grant_achievements',variants);
+      showMsg('✓ grant_achievements() ausgeführt','ok');renderAch();
+    }catch(e){showMsg('❌ '+e.message,'err')}
+  });
+
+  async function renderStreaks(){
+    const wrap=document.getElementById('streakWrap');
+    wrap.innerHTML='<div class="empty">Lädt…</div>';
+    try{
+      const [log,prs]=await Promise.all([
+        sbFetch('/rest/v1/daily_log?select=profile_id,datum&order=datum.asc&limit=10000'),
+        profiles()
+      ]);
+      const byP={};
+      (log||[]).forEach(r=>{(byP[r.profile_id]=byP[r.profile_id]||new Set()).add(String(r.datum).slice(0,10))});
+      const today=toKey(new Date()),strip=[];
+      for(let i=13;i>=0;i--)strip.push(shift(today,-i));
+      let html='<table><tr><th>Profil</th><th>Aktuell</th><th>Längster</th><th>Tage gesamt</th><th>Letzter Tag</th><th>Letzte 14 Tage</th></tr>';
+      (prs||[]).forEach(p=>{
+        const set=byP[p.id]||new Set(),days=[...set].sort();
+        let longest=0,run=0,prev=null;
+        days.forEach(d=>{run=(prev&&shift(prev,1)===d)?run+1:1;if(run>longest)longest=run;prev=d});
+        let cur=0,cursor=set.has(today)?today:shift(today,-1);
+        while(set.has(cursor)){cur++;cursor=shift(cursor,-1)}
+        html+='<tr><td>'+esc(pLabel(p))+'</td>'+
+              '<td style="color:'+(cur?'var(--blaze)':'inherit')+'">'+cur+'</td>'+
+              '<td>'+longest+'</td><td>'+set.size+'</td>'+
+              '<td>'+(days.length?fromKey(days[days.length-1]).toLocaleDateString('de-DE'):'—')+'</td>'+
+              '<td><div class="dots">'+strip.map(d=>'<i class="dot'+(set.has(d)?' on':'')+'" title="'+d+'"></i>').join('')+'</div></td></tr>';
+      });
+      wrap.innerHTML=html+'</table>';
+    }catch(e){fail('streakWrap',e)}
+  }
+
+  /* ══ GAME-SCORES ══════════════════════════════════════════════ */
+  const PREFIXES=[['BB:','Blockblast'],['TT:','Tetris'],['FB:','Flappy']];
+  function gameOf(name){
+    const s=String(name||'');
+    for(const [p,g] of PREFIXES)if(s.indexOf(p)===0)return g;
+    return 'Snake';
+  }
+
+  let SCORE_ROWS=null,SCORE_COLS=null;
+  async function renderScores(){
+    const wrap=document.getElementById('scoresWrap');
+    wrap.innerHTML='<div class="empty">Lädt…</div>';
+    try{
+      SCORE_ROWS=await sbFetch('/rest/v1/'+SCORES_TABLE+'?select=*&limit=2000');
+    }catch(e){return chooseScoresTable(e.message)}
+    if(!SCORE_ROWS||!SCORE_ROWS.length){
+      wrap.innerHTML='<div class="empty">Tabelle <code>'+esc(SCORES_TABLE)+'</code> ist leer.</div>';return;
+    }
+    SCORE_COLS=Object.keys(SCORE_ROWS[0]);
+    paintScores();
+  }
+
+  function paintScores(){
+    const wrap=document.getElementById('scoresWrap'),cols=SCORE_COLS;
+    const scoreCol=['score','punkte','points','highscore','value','value1'].find(c=>cols.includes(c));
+    const nameCol=['name','player','spieler','nickname'].find(c=>cols.includes(c));
+    const dateCol=['created_at','datum','inserted_at','date'].find(c=>cols.includes(c));
+    const hasId=cols.includes('id'),hasPid=cols.includes('profile_id');
+    if(!scoreCol){
+      wrap.innerHTML='<div class="empty">In <code>'+esc(SCORES_TABLE)+'</code> keine Punktespalte erkannt. Vorhandene Spalten: '+esc(cols.join(', '))+'</div>';return;
+    }
+    const gf=document.getElementById('scoresGame').value;
+    let list=SCORE_ROWS.slice().sort((a,b)=>(+b[scoreCol]||0)-(+a[scoreCol]||0));
+    if(gf)list=list.filter(r=>gameOf(nameCol?r[nameCol]:'')===gf);
+    if(!list.length){wrap.innerHTML='<div class="empty">Keine Scores für diese Auswahl.</div>';return}
+    const shown=list.slice(0,300);
+    let html='<table><tr><th>#</th><th>Spiel</th><th>Name</th><th>Punkte</th>'+
+      (hasPid?'<th>Profil</th>':'')+'<th>Datum</th>'+(hasId?'<th>Aktion</th>':'')+'</tr>';
+    shown.forEach((r,i)=>{
+      const raw=nameCol?String(r[nameCol]||''):'';
+      html+='<tr><td>'+(i+1)+'</td><td>'+gameOf(raw)+'</td>'+
+            '<td>'+esc(raw.replace(/^(BB:|TT:|FB:)\s*/,''))+'</td>'+
+            '<td style="color:var(--blaze)">'+esc(r[scoreCol])+'</td>'+
+            (hasPid?'<td>'+(r.profile_id?'👤 '+esc(r.profile_id):'⚠️ ohne')+'</td>':'')+
+            '<td>'+(dateCol?dt(r[dateCol]):'—')+'</td>'+
+            (hasId?'<td><button class="btn danger" onclick="omDeleteScore('+r.id+')">Löschen</button></td>':'')+
+            '</tr>';
+    });
+    html+='</table>';
+    html+='<p class="hint">Tabelle <code>'+esc(SCORES_TABLE)+'</code> · '+list.length+' Einträge in der Auswahl'+
+          (list.length>shown.length?', angezeigt werden die besten '+shown.length:'')+'.</p>';
+    wrap.innerHTML=html;
+  }
+
+  async function chooseScoresTable(msg){
+    const wrap=document.getElementById('scoresWrap');
+    let names=[];
+    try{
+      const spec=await sbFetch('/rest/v1/');
+      if(spec&&spec.definitions)names=Object.keys(spec.definitions);
+      else if(spec&&spec.paths)names=Object.keys(spec.paths).map(p=>p.replace(/^\//,'')).filter(p=>p&&p.indexOf('rpc/')!==0);
+    }catch(e){}
+    names=names.filter(n=>n&&n.indexOf('(')<0).sort();
+    let html='<div class="empty" style="text-align:left">Tabelle <code>'+esc(SCORES_TABLE)+'</code> nicht erreichbar — '+esc(msg)+'</div>';
+    if(names.length){
+      html+='<div class="form-block"><div class="form-block-label">Richtige Tabelle auswählen</div>'+
+        '<div class="select-row" style="margin-bottom:0"><select id="scoresTablePick" style="min-width:220px">'+
+        names.map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join('')+
+        '</select><button class="btn" onclick="omPickScoresTable()">Verwenden</button></div>'+
+        '<p class="hint">Gilt für diese Sitzung. Dauerhaft: im Skript unten <code>SCORES_TABLE</code> anpassen.</p></div>';
+    }else{
+      html+='<p class="hint">Tabellenliste konnte nicht abgefragt werden. Den richtigen Namen im Skript unten bei <code>SCORES_TABLE</code> eintragen.</p>';
+    }
+    wrap.innerHTML=html;
+  }
+
+  window.omPickScoresTable=()=>{SCORES_TABLE=document.getElementById('scoresTablePick').value;renderScores()};
+  document.getElementById('scoresGame').addEventListener('change',()=>{if(SCORE_ROWS)paintScores()});
+  document.getElementById('reloadScores').addEventListener('click',renderScores);
+
+  window.omDeleteScore=async id=>{
+    if(!confirm('Diesen Highscore löschen? Das kann nicht rückgängig gemacht werden.'))return;
+    try{
+      await sbFetch('/rest/v1/'+SCORES_TABLE+'?id=eq.'+id,{method:'DELETE',prefer:'return=minimal'});
+      showMsg('✓ Score gelöscht','ok');renderScores();
+    }catch(e){showMsg('❌ '+e.message,'err')}
+  };
+
+})();
+</script>
+
 </body>
 </html>
