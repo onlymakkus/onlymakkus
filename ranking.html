@@ -386,7 +386,14 @@
       results.forEach(r=>{winnerOf[r.season_month_id]=r});
 
       if(!months||!months.length){el.innerHTML='<div class="empty">Noch keine Monate angelegt.</div>';return}
-      const years=[...new Set(months.map(r=>r.season_year))].sort((a,b)=>b-a);
+      // Eine Saison erscheint erst, wenn mindestens ein Monat entschieden ist
+      // (erster Sieger). Kuenftige, noch leere Saisons bleiben ausgeblendet.
+      const hasWinner={};
+      months.forEach(r=>{ if(winnerOf[r.id]) hasWinner[r.season_year]=true; });
+      const years=[...new Set(months.map(r=>r.season_year))]
+        .filter(y=>hasWinner[y])
+        .sort((a,b)=>b-a);
+      if(!years.length){el.innerHTML='<div class="empty">Noch keine Challenge entschieden.</div>';return}
 
       el.innerHTML=years.map((year,yi)=>{
         const rows=months.filter(r=>r.season_year===year && !r.is_december_vote);
