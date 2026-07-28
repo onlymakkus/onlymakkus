@@ -226,6 +226,8 @@
         <button class="btn ghost" id="reloadHistory">Aktualisieren</button>
       </div>
       <div id="historyTableWrap"><div class="empty">Lädt…</div></div>
+      <p class="hint" id="historyCount"></p>
+      <button class="btn ghost" id="historyLoadMore" hidden>Mehr laden</button>
     </div>
 
     <!-- SEASON PLANNING TAB -->
@@ -501,37 +503,86 @@
     }catch(e){}
   }
 
+  const HISTORY_PAGE_SIZE=200;
+  let historyOffset=0, historyTotal=null, historyRows=[];
+
+  function historyRowHtml(h){
+    const date=new Date(h.changed_at);
+    const dateStr=date.toLocaleDateString('de-DE')+' '+date.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+    const suspiciouslyHigh=Math.abs(h.change_amount)>500;
+    const sign=h.change_amount>=0?'+':'';
+    return `<tr${suspiciouslyHigh?' style="background:rgba(255,68,68,.08);"':''}>
+      <td style="font-size:.62rem;">${dateStr}</td>
+      <td>${h.name}</td>
+      <td>${h.challenge}</td>
+      <td>${h.old_value1}</td>
+      <td>${h.new_value1}</td>
+      <td style="color:${suspiciouslyHigh?'var(--red)':'var(--green)'}">${sign}${h.change_amount}</td>
+    </tr>`;
+  }
+
+  function renderHistoryTable(){
+    const wrap=document.getElementById('historyTableWrap');
+    const countEl=document.getElementById('historyCount');
+    const moreBtn=document.getElementById('historyLoadMore');
+    if(!historyRows.length){
+      wrap.innerHTML='<div class="empty">Noch keine Verlaufseinträge vorhanden.</div>';
+      countEl.textContent='';
+      moreBtn.hidden=true;
+      return;
+    }
+    wrap.innerHTML='<table><tr><th>Zeitpunkt</th><th>Name</th><th>Challenge</th><th>Vorher</th><th>Nachher</th><th>Änderung</th></tr>'
+      +historyRows.map(historyRowHtml).join('')+'</table>';
+    countEl.textContent=historyTotal!=null?`Zeige ${historyRows.length} von ${historyTotal}`:`${historyRows.length} Einträge geladen`;
+    moreBtn.hidden=historyTotal==null?true:historyRows.length>=historyTotal;
+  }
+
+  // Eigener Fetch statt sbFetch: braucht Prefer:count=exact + Range-Header,
+  // um die echte Gesamtzahl aus Content-Range zu lesen (sbFetch gibt nur den Body zurück).
+  async function fetchHistoryPage(offset){
+    const filterChallenge=document.getElementById('historyFilterChallenge').value;
+    let url='/rest/v1/challenge_entry_history?select=*&order=changed_at.desc';
+    if(filterChallenge)url+=`&challenge=eq.${filterChallenge}`;
+    const r=await fetch(SB_URL+url,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'count=exact','Range-Unit':'items','Range':`${offset}-${offset+HISTORY_PAGE_SIZE-1}`}});
+    const t=await r.text();
+    const data=t?JSON.parse(t):null;
+    if(!r.ok){
+      const errMsg=(data&&(data.message||data.hint||data.details))||`HTTP ${r.status}`;
+      throw new Error(errMsg);
+    }
+    const range=r.headers.get('content-range'); // Format "0-199/734"
+    const total=range&&range.includes('/')?parseInt(range.split('/')[1],10):null;
+    return {data:data||[],total:Number.isNaN(total)?null:total};
+  }
+
   async function loadHistoryTable(){
     await loadHistoryFilterOptions();
+    historyOffset=0;historyRows=[];historyTotal=null;
     const wrap=document.getElementById('historyTableWrap');
     wrap.innerHTML='<div class="empty">Lädt…</div>';
-    const filterChallenge=document.getElementById('historyFilterChallenge').value;
+    document.getElementById('historyCount').textContent='';
+    document.getElementById('historyLoadMore').hidden=true;
     try{
-      let url='/rest/v1/challenge_entry_history?select=*&order=changed_at.desc&limit=200';
-      if(filterChallenge)url+=`&challenge=eq.${filterChallenge}`;
-      const data=await sbFetch(url);
-      if(!data||!data.length){wrap.innerHTML='<div class="empty">Noch keine Verlaufseinträge vorhanden.</div>';return}
-      let html='<table><tr><th>Zeitpunkt</th><th>Name</th><th>Challenge</th><th>Vorher</th><th>Nachher</th><th>Änderung</th></tr>';
-      data.forEach(h=>{
-        const date=new Date(h.changed_at);
-        const dateStr=date.toLocaleDateString('de-DE')+' '+date.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
-        const suspiciouslyHigh=h.change_amount>500;
-        html+=`<tr${suspiciouslyHigh?' style="background:rgba(255,68,68,.08);"':''}>
-          <td style="font-size:.62rem;">${dateStr}</td>
-          <td>${h.name}</td>
-          <td>${h.challenge}</td>
-          <td>${h.old_value1}</td>
-          <td>${h.new_value1}</td>
-          <td style="color:${suspiciouslyHigh?'var(--red)':'var(--green)'}">+${h.change_amount}</td>
-        </tr>`;
-      });
-      html+='</table>';
-      wrap.innerHTML=html;
+      const {data,total}=await fetchHistoryPage(0);
+      historyRows=data;historyTotal=total;historyOffset=data.length;
+      renderHistoryTable();
     }catch(e){wrap.innerHTML='<div class="empty">Fehler beim Laden.</div>'}
+  }
+
+  async function loadHistoryMore(){
+    const moreBtn=document.getElementById('historyLoadMore');
+    moreBtn.disabled=true;moreBtn.textContent='Lädt…';
+    try{
+      const {data,total}=await fetchHistoryPage(historyOffset);
+      historyRows=historyRows.concat(data);historyTotal=total;historyOffset+=data.length;
+      renderHistoryTable();
+    }catch(e){showMsg('❌ Fehler beim Nachladen','err')}
+    moreBtn.disabled=false;moreBtn.textContent='Mehr laden';
   }
 
   document.getElementById('reloadHistory').addEventListener('click',loadHistoryTable);
   document.getElementById('historyFilterChallenge').addEventListener('change',loadHistoryTable);
+  document.getElementById('historyLoadMore').addEventListener('click',loadHistoryMore);
 
   // ── PROFILES ──
   async function loadProfilesTable(){
