@@ -395,7 +395,11 @@
       document.getElementById('ms-count').textContent=data?data.length:0;
       if(data&&data.length){
         const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-        const sorted=[...data].sort((a,b)=>(b.value1||0)-(a.value1||0));
+        // Sortierung identisch zu ranking.html / finalize_challenge:
+        // gedeckelter Wert desc, dann wer zuerst dort war (last_progress_ts asc), dann id
+        const capped=e=>Math.min(e.value1||0,goal);
+        const ts=e=>{const t=e.last_progress_ts?Date.parse(e.last_progress_ts):NaN;return Number.isNaN(t)?Infinity:t};
+        const sorted=[...data].sort((a,b)=>capped(b)-capped(a) || ts(a)-ts(b) || a.id-b.id);
         document.getElementById('ms-leader').textContent=sorted[0].name;
         if(msList){
           const top=sorted.slice(0,3);
