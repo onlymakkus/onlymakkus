@@ -25,10 +25,11 @@
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
     /* ---------- TIMING LINE (scroll progress, signature device) ---------- */
-    .timing-line{position:fixed;top:0;left:0;right:0;height:3px;background:var(--accent);transform:scaleX(0);transform-origin:left;z-index:1000;will-change:transform}
+    .timing-track{position:fixed;top:0;left:0;right:0;height:3px;background:var(--line);z-index:1000;overflow:hidden;transition:background .3s var(--ease)}
+    .timing-line{width:100%;height:100%;background:var(--accent);transform:scaleX(0);transform-origin:left;will-change:transform}
 
     /* ---------- NAV ---------- */
-    nav{position:sticky;top:3px;z-index:100;padding:14px 28px;display:flex;flex-wrap:wrap;row-gap:12px;justify-content:space-between;align-items:center;background:var(--bg);border-bottom:1px solid var(--line);transition:background .3s var(--ease),border-color .3s var(--ease)}
+    nav{position:sticky;top:3px;z-index:100;padding:14px 28px;display:flex;flex-wrap:wrap;row-gap:12px;justify-content:space-between;align-items:center;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);transition:background .3s var(--ease),border-color .3s var(--ease)}
     .nav-logo{font-family:'Big Shoulders Display';font-weight:700;font-size:1.3rem;letter-spacing:.02em;color:var(--ink)}
     .nav-logo span{color:var(--accent)}
     .nav-right{display:flex;align-items:center;gap:26px}
@@ -141,7 +142,7 @@
 </head>
 <body>
 
-<div class="timing-line" id="timingLine"></div>
+<div class="timing-track"><div class="timing-line" id="timingLine"></div></div>
 
 <!-- EASTER EGG -->
 <div class="egg-overlay" id="eggOverlay">
