@@ -99,11 +99,15 @@
     }
 
     /* ---------- PRINCIPLES (about, hairline grid) ---------- */
-    .principles{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:0}
-    .principle{background:var(--bg);padding:26px 24px;transition:background .3s var(--ease)}
-    .principle-t{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-text);margin-bottom:10px}
-    .principle-d{font-size:.82rem;line-height:1.7;color:var(--muted)}
+    .principles{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:0;perspective:800px}
+    .principle{position:relative;background:var(--bg);padding:26px 24px;overflow:hidden;transition:background .3s var(--ease),transform .15s var(--ease-out),box-shadow .3s var(--ease);transform-style:preserve-3d}
+    .principle::after{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 42%,color-mix(in srgb,var(--accent) 10%,transparent) 50%,transparent 58%);transform:translateX(-140%);transition:transform .6s var(--ease-out);pointer-events:none}
+    .principle:hover{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
+    .principle:hover::after{transform:translateX(140%)}
+    .principle-t{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-text);margin-bottom:10px;transform:translateZ(18px)}
+    .principle-d{font-size:.82rem;line-height:1.7;color:var(--muted);transform:translateZ(18px)}
     @media(max-width:720px){.principles{grid-template-columns:1fr}}
+    @media(prefers-reduced-motion:reduce),(hover:none){.principle{transform:none!important}}
 
     /* ---------- STATEMENT ---------- */
     .statement-wrap{max-width:1040px;margin:0 auto;padding:0 28px 88px}
@@ -113,8 +117,10 @@
 
     /* ---------- FOOTER ---------- */
     footer{max-width:1040px;margin:0 auto;padding:28px;border-top:1px solid var(--line);display:flex;justify-content:center;gap:26px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--faint);letter-spacing:.12em;text-transform:uppercase;flex-wrap:wrap;transition:border-color .3s var(--ease)}
-    footer a{color:var(--faint);transition:color .15s var(--ease);padding:4px 0;display:inline-block}
+    footer a{position:relative;color:var(--faint);transition:color .15s var(--ease);padding:4px 0;display:inline-block}
+    footer a::after{content:'';position:absolute;left:0;right:0;bottom:2px;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .18s var(--ease-out)}
     footer a:hover{color:var(--accent-text)}
+    footer a:hover::after{transform:scaleX(1)}
 
     @media(max-width:600px){
       .hero{padding:48px 18px 40px}
@@ -165,14 +171,14 @@
 <main>
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-top">
+    <div class="hero-top reveal" data-hero data-order="0">
       <span>onlymakkus.de</span>
       <span>Est. <b>irgendwann</b></span>
     </div>
-    <h1 class="hero-title">Nur<br><em>Makkus.</em></h1>
-    <p class="hero-sub">Kein Influencer. Kein Coach. Kein Guru. Nur Markus — und das reicht vollkommen.</p>
+    <h1 class="hero-title reveal" data-hero data-order="1">Nur<br><em>Makkus.</em></h1>
+    <p class="hero-sub reveal" data-hero data-order="2">Kein Influencer. Kein Coach. Kein Guru. Nur Markus — und das reicht vollkommen.</p>
 
-    <div class="stat-clock">
+    <div class="stat-clock reveal" data-hero data-order="3">
       <div class="seg"><span class="val" id="liveProfiles">—</span><span class="lbl">Profile</span></div>
       <div class="seg"><span class="val" id="liveGames">—</span><span class="lbl">Gaming-Runden</span></div>
       <div class="seg"><span class="val" id="liveChallenge">—</span><span class="lbl">Challenge-Einträge</span></div>
@@ -233,15 +239,15 @@
   <div class="section-wrap">
     <p class="section-label"><b>Prinzipien</b> — drei Stück</p>
     <div class="principles reveal">
-      <div class="principle">
+      <div class="principle tilt">
         <div class="principle-t">Ehrliche Meinungen</div>
         <p class="principle-d">Keine Sponsoren, keine PR, kein Bullshit. Nur das, was tatsächlich gedacht wird.</p>
       </div>
-      <div class="principle">
+      <div class="principle tilt">
         <div class="principle-t">Alles an einem Ort</div>
         <p class="principle-d">Challenges, Ranking, Tracking, fünf Spiele und ein Text-Adventure — mit einem Profil.</p>
       </div>
-      <div class="principle">
+      <div class="principle tilt">
         <div class="principle-t">Fragwürdige Ideen</div>
         <p class="principle-d">60 Minuten Side Plank? Manche Ideen klingen nachts besser als morgens.</p>
       </div>
@@ -346,9 +352,9 @@
     update();
   })();
 
-  // ── SCROLL REVEAL (stagger) ──
+  // ── SCROLL REVEAL (stagger) — below-fold sections only, hero handled separately ──
   (function(){
-    var els = document.querySelectorAll('.reveal');
+    var els = document.querySelectorAll('.reveal:not([data-hero])');
     if(!('IntersectionObserver' in window)){
       els.forEach(function(el){ el.classList.add('in'); });
       return;
@@ -363,6 +369,76 @@
     }, {threshold:.15});
     els.forEach(function(el){ io.observe(el); });
   })();
+
+  // ── HERO LOAD-IN (orchestrated entrance, always in view so no observer needed) ──
+  (function(){
+    var els = document.querySelectorAll('[data-hero]');
+    els.forEach(function(el){
+      var order = parseInt(el.dataset.order, 10) || 0;
+      setTimeout(function(){ el.classList.add('in'); }, 120 + order * 90);
+    });
+  })();
+
+  // ── LIVE STAT COUNT-UP — observes the protected script's own output from outside,
+  //    never modifies it. Watches for the placeholder "—" turning into a real number. ──
+  (function(){
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function countUp(el, target){
+      if(reduceMotion || !('requestAnimationFrame' in window)){ el.textContent = target; return; }
+      var start = null, dur = 900;
+      function frame(ts){
+        if(!start) start = ts;
+        var p = Math.min(1, (ts - start) / dur);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(eased * target);
+        if(p < 1) requestAnimationFrame(frame);
+        else el.textContent = String(target);
+      }
+      requestAnimationFrame(frame);
+    }
+    ['liveProfiles','liveGames','liveChallenge','navChallenge','navGames','navProfiles'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(!el || !('MutationObserver' in window)) return;
+      var done = false;
+      var mo = new MutationObserver(function(){
+        if(done) return;
+        var num = parseInt(el.textContent.trim(), 10);
+        if(!isNaN(num)){
+          done = true;
+          mo.disconnect();
+          countUp(el, num);
+        }
+      });
+      mo.observe(el, {childList:true, characterData:true, subtree:true});
+    });
+  })();
+
+  // ── MAGNETIC ARROW + TILT CARDS — decorative cursor response, pointer devices only ──
+  if(window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+     !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+
+    document.querySelectorAll('.idx-row').forEach(function(row){
+      var arrow = row.querySelector('.idx-arrow');
+      if(!arrow) return;
+      row.addEventListener('mousemove', function(e){
+        var r = arrow.getBoundingClientRect();
+        var dx = (e.clientX - (r.left + r.width / 2)) * .12;
+        var dy = (e.clientY - (r.top + r.height / 2)) * .12;
+        arrow.style.transform = 'translate(' + (4 + dx) + 'px,' + dy + 'px)';
+      });
+      row.addEventListener('mouseleave', function(){ arrow.style.transform = ''; });
+    });
+
+    document.querySelectorAll('.principle.tilt').forEach(function(card){
+      card.addEventListener('mousemove', function(e){
+        var r = card.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width - .5;
+        var py = (e.clientY - r.top) / r.height - .5;
+        card.style.transform = 'rotateY(' + (px * 6) + 'deg) rotateX(' + (py * -6) + 'deg)';
+      });
+      card.addEventListener('mouseleave', function(){ card.style.transform = ''; });
+    });
+  }
 </script>
 </body>
 </html>
