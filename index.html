@@ -28,7 +28,7 @@
     .timing-line{position:fixed;top:0;left:0;right:0;height:3px;background:var(--accent);transform:scaleX(0);transform-origin:left;z-index:1000;will-change:transform}
 
     /* ---------- NAV ---------- */
-    nav{position:sticky;top:3px;z-index:100;padding:14px 28px;display:flex;flex-wrap:wrap;row-gap:12px;justify-content:space-between;align-items:center;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);transition:background .3s var(--ease),border-color .3s var(--ease)}
+    nav{position:sticky;top:3px;z-index:100;padding:14px 28px;display:flex;flex-wrap:wrap;row-gap:12px;justify-content:space-between;align-items:center;background:var(--bg);border-bottom:1px solid var(--line);transition:background .3s var(--ease),border-color .3s var(--ease)}
     .nav-logo{font-family:'Big Shoulders Display';font-weight:700;font-size:1.3rem;letter-spacing:.02em;color:var(--ink)}
     .nav-logo span{color:var(--accent)}
     .nav-right{display:flex;align-items:center;gap:26px}
@@ -99,15 +99,12 @@
     }
 
     /* ---------- PRINCIPLES (about, hairline grid) ---------- */
-    .principles{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:0;perspective:800px}
-    .principle{position:relative;background:var(--bg);padding:26px 24px;overflow:hidden;transition:background .3s var(--ease),transform .15s var(--ease-out),box-shadow .3s var(--ease);transform-style:preserve-3d}
-    .principle::after{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 42%,color-mix(in srgb,var(--accent) 10%,transparent) 50%,transparent 58%);transform:translateX(-140%);transition:transform .6s var(--ease-out);pointer-events:none}
-    .principle:hover{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
-    .principle:hover::after{transform:translateX(140%)}
-    .principle-t{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-text);margin-bottom:10px;transform:translateZ(18px)}
-    .principle-d{font-size:.82rem;line-height:1.7;color:var(--muted);transform:translateZ(18px)}
+    .principles{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:0}
+    .principle{background:var(--bg);padding:26px 24px;transition:background .18s var(--ease)}
+    .principle:hover{background:color-mix(in srgb,var(--accent) 5%,var(--bg))}
+    .principle-t{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-text);margin-bottom:10px}
+    .principle-d{font-size:.82rem;line-height:1.7;color:var(--muted)}
     @media(max-width:720px){.principles{grid-template-columns:1fr}}
-    @media(prefers-reduced-motion:reduce),(hover:none){.principle{transform:none!important}}
 
     /* ---------- STATEMENT ---------- */
     .statement-wrap{max-width:1040px;margin:0 auto;padding:0 28px 88px}
@@ -239,15 +236,15 @@
   <div class="section-wrap">
     <p class="section-label"><b>Prinzipien</b> — drei Stück</p>
     <div class="principles reveal">
-      <div class="principle tilt">
+      <div class="principle">
         <div class="principle-t">Ehrliche Meinungen</div>
         <p class="principle-d">Keine Sponsoren, keine PR, kein Bullshit. Nur das, was tatsächlich gedacht wird.</p>
       </div>
-      <div class="principle tilt">
+      <div class="principle">
         <div class="principle-t">Alles an einem Ort</div>
         <p class="principle-d">Challenges, Ranking, Tracking, fünf Spiele und ein Text-Adventure — mit einem Profil.</p>
       </div>
-      <div class="principle tilt">
+      <div class="principle">
         <div class="principle-t">Fragwürdige Ideen</div>
         <p class="principle-d">60 Minuten Side Plank? Manche Ideen klingen nachts besser als morgens.</p>
       </div>
@@ -413,7 +410,7 @@
     });
   })();
 
-  // ── MAGNETIC ARROW + TILT CARDS — decorative cursor response, pointer devices only ──
+  // ── MAGNETIC ARROW — decorative cursor response, pointer devices only ──
   if(window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
      !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
 
@@ -427,16 +424,6 @@
         arrow.style.transform = 'translate(' + (4 + dx) + 'px,' + dy + 'px)';
       });
       row.addEventListener('mouseleave', function(){ arrow.style.transform = ''; });
-    });
-
-    document.querySelectorAll('.principle.tilt').forEach(function(card){
-      card.addEventListener('mousemove', function(e){
-        var r = card.getBoundingClientRect();
-        var px = (e.clientX - r.left) / r.width - .5;
-        var py = (e.clientY - r.top) / r.height - .5;
-        card.style.transform = 'rotateY(' + (px * 6) + 'deg) rotateX(' + (py * -6) + 'deg)';
-      });
-      card.addEventListener('mouseleave', function(){ card.style.transform = ''; });
     });
   }
 </script>
