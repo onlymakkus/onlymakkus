@@ -1,0 +1,108 @@
+<!doctype html>
+<title>Kommandozentrale — Richtung 6</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --console:#D9D2B8; --console-2:#CDC5A8; --housing:#4B4A3E; --housing-2:#3D3C32;
+    --amber:#C97A2B; --lamp-ok:#5A7A4E; --ink:#201F1A; --ink-dim:#5E5B4C;
+    --ease-out: cubic-bezier(.23,1,.32,1);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --console:#26251F; --console-2:#302E26; --housing:#17160F; --housing-2:#0E0D09;
+      --amber:#E0912F; --lamp-ok:#7EA46D; --ink:#EAE6D6; --ink-dim:#9C9784;
+    }
+  }
+  :root[data-theme="dark"]{
+    --console:#26251F; --console-2:#302E26; --housing:#17160F; --housing-2:#0E0D09;
+    --amber:#E0912F; --lamp-ok:#7EA46D; --ink:#EAE6D6; --ink-dim:#9C9784;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--housing-2);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif}
+  .wrap{max-width:1040px;margin:0 auto;padding:24px 20px 80px}
+
+  .rack{background:var(--housing);border-radius:14px;padding:18px;box-shadow:0 20px 40px rgba(0,0,0,.35)}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:8px 10px 16px}
+  .brand{font-family:'Archivo Expanded';font-weight:700;font-size:.92rem;letter-spacing:.04em;text-transform:uppercase;color:var(--console)}
+  .acct{display:flex;align-items:center;gap:9px;font-family:'IBM Plex Mono';font-size:.68rem;color:var(--console)}
+  .acct .chip{display:flex;align-items:center;gap:7px;background:var(--housing-2);border-radius:6px;padding:5px 10px}
+  .acct .lamp{width:8px;height:8px;border-radius:50%;background:var(--lamp-ok);box-shadow:0 0 6px var(--lamp-ok)}
+
+  /* status readout panel */
+  .readout{background:var(--console);border-radius:10px;padding:20px;margin:0 6px 16px;color:var(--ink)}
+  .readout-label{font-family:'IBM Plex Mono';font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .readout-label .lamp{width:7px;height:7px;border-radius:50%;background:var(--lamp-ok);animation:pulse 2.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  @media (prefers-reduced-motion: reduce){ .readout-label .lamp{animation:none} }
+  .segments{display:flex;gap:22px;flex-wrap:wrap}
+  .segment .n{font-family:'Archivo Expanded';font-weight:700;font-size:2rem;color:var(--amber);font-variant-numeric:tabular-nums}
+  .segment .l{font-family:'IBM Plex Mono';font-size:.64rem;color:var(--ink-dim);letter-spacing:.06em;text-transform:uppercase}
+
+  h2.section-title{font-family:'Archivo Expanded';font-weight:700;text-transform:uppercase;font-size:.8rem;letter-spacing:.04em;margin:22px 0 12px 6px;color:var(--console-2)}
+
+  /* toggle-switch nav */
+  .switches{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;padding:0 6px}
+  .sw{
+    background:var(--console); border-radius:10px; padding:14px 16px 16px;
+    text-decoration:none; color:var(--ink); display:flex; align-items:center; gap:14px;
+    perspective:300px;
+    transition:transform 150ms var(--ease-out);
+  }
+  .sw:active{transform:scale(.97)}
+  .sw:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+  .sw-toggle{
+    width:30px;height:52px;background:var(--housing-2);border-radius:6px;flex:none;position:relative;
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.4);
+  }
+  .sw-toggle .lever{
+    position:absolute;left:5px;right:5px;top:6px;height:20px;background:linear-gradient(180deg,#7A7867,#57564A);
+    border-radius:4px;transform-origin:center 26px;transform:rotateX(0deg);
+    transition:transform 220ms cubic-bezier(.34,1.7,.64,1); /* snappy toggle-click, slight overshoot */
+  }
+  .sw.on .sw-toggle .lever{transform:translateY(20px) rotateX(0)}
+  .sw-body{display:flex;flex-direction:column;gap:2px}
+  .sw-cat{font-family:'IBM Plex Mono';font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim)}
+  .sw-name{font-family:'Archivo Expanded';font-weight:700;font-size:1.02rem}
+  .sw-meta{font-family:'IBM Plex Mono';font-size:.64rem;color:var(--ink-dim)}
+  @media (hover:hover) and (pointer:fine){
+    .sw:hover .sw-toggle .lever{transform:translateY(4px)}
+  }
+
+  footer{margin-top:16px;padding:14px 10px 4px;font-family:'IBM Plex Mono';font-size:.66rem;color:var(--console-2);display:flex;justify-content:space-between}
+</style>
+
+<div class="wrap">
+  <div class="rack">
+    <div class="topbar">
+      <span class="brand">Onlymakkus — Kontrollpult</span>
+      <div class="acct"><span class="lamp"></span><div class="chip">Rico#0417 · Lv. 7</div></div>
+    </div>
+
+    <div class="readout">
+      <div class="readout-label"><span class="lamp"></span>Status — heute, 13. Sep 2026</div>
+      <div class="segments">
+        <div class="segment"><div class="n">14</div><div class="l">Tage Serie</div></div>
+        <div class="segment"><div class="n">4:12</div><div class="l">Wandsitz PB</div></div>
+        <div class="segment"><div class="n">1840</div><div class="l">kcal heute</div></div>
+        <div class="segment"><div class="n">#2</div><div class="l">Rang Saison</div></div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Systeme anwählen</h2>
+    <div class="switches">
+      <a class="sw on" href="#"><div class="sw-toggle"><div class="lever"></div></div><div class="sw-body"><span class="sw-cat">Challenge</span><span class="sw-name">Wandsitz '26</span><span class="sw-meta">aktiv</span></div></a>
+      <a class="sw on" href="#"><div class="sw-toggle"><div class="lever"></div></div><div class="sw-body"><span class="sw-cat">Ranking</span><span class="sw-name">Tabelle</span><span class="sw-meta">5 Profile</span></div></a>
+      <a class="sw" href="#"><div class="sw-toggle"><div class="lever"></div></div><div class="sw-body"><span class="sw-cat">Kalender</span><span class="sw-name">Saisonplan</span><span class="sw-meta">Monat 9/12</span></div></a>
+      <a class="sw" href="#"><div class="sw-toggle"><div class="lever"></div></div><div class="sw-body"><span class="sw-cat">Arcade</span><span class="sw-name">Spielhalle</span><span class="sw-meta">8 Titel</span></div></a>
+      <a class="sw" href="#"><div class="sw-toggle"><div class="lever"></div></div><div class="sw-body"><span class="sw-cat">Tracker</span><span class="sw-name">Kalorien</span><span class="sw-meta">geführt</span></div></a>
+      <a class="sw" href="#"><div class="sw-toggle"><div class="lever"></div></div><div class="sw-body"><span class="sw-cat">Körper</span><span class="sw-name">Messwerte</span><span class="sw-meta">3×/Monat</span></div></a>
+    </div>
+
+    <footer>
+      <span>Übungen · Profil · Funke</span>
+      <span>Richtung 6 / 6 — „Kommandozentrale"</span>
+    </footer>
+  </div>
+</div>

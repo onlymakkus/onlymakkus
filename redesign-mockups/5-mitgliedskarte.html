@@ -1,0 +1,158 @@
+<!doctype html>
+<title>Mitgliedskarte — Richtung 5</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Chivo:wght@400;500;700;900&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --room:#DAD5C8; --card:#F4F1E9; --card-edge:#CFC9BC;
+    --hologram:#8FBFD9; --hologram-2:#C9A6D9; --gold:#C79A2E;
+    --ink:#1A1A18; --ink-dim:#6B665A;
+    --ease-out: cubic-bezier(.23,1,.32,1);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --room:#15140F; --card:#232019; --card-edge:#3A362A;
+      --hologram:#7FB8DE; --hologram-2:#C9A0E0; --gold:#D9AE47;
+      --ink:#EFEAD9; --ink-dim:#A79E86;
+    }
+  }
+  :root[data-theme="dark"]{
+    --room:#15140F; --card:#232019; --card-edge:#3A362A;
+    --hologram:#7FB8DE; --hologram-2:#C9A0E0; --gold:#D9AE47;
+    --ink:#EFEAD9; --ink-dim:#A79E86;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--room);color:var(--ink);font-family:'IBM Plex Sans Condensed',system-ui,sans-serif}
+  .wrap{max-width:1000px;margin:0 auto;padding:30px 20px 80px}
+
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
+  .brand{font-family:'Chivo';font-weight:900;letter-spacing:.01em;font-size:1.05rem;text-transform:uppercase}
+  .acct{display:flex;align-items:center;gap:9px;font-family:'IBM Plex Mono';font-size:.72rem}
+  .acct .chip{display:flex;align-items:center;gap:7px;border:1px solid var(--card-edge);border-radius:999px;padding:4px 11px 4px 4px;background:var(--card)}
+  .acct .av{width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Chivo';font-weight:700;font-size:.68rem}
+
+  /* the ID card — pointer-tilt via spring-like transition */
+  .stage{display:flex;justify-content:center;padding:20px 0 10px;perspective:900px}
+  .idcard{
+    width:min(420px,100%); aspect-ratio:1.586/1; background:var(--card);
+    border-radius:16px; border:1px solid var(--card-edge);
+    box-shadow:0 18px 40px rgba(0,0,0,.18);
+    padding:20px 22px; position:relative; overflow:hidden;
+    transform-style:preserve-3d;
+    transition:transform 500ms cubic-bezier(.16,1.36,.34,1); /* spring-ish overshoot, settles like a spring */
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .idcard::after{ /* holographic foil strip */
+    content:''; position:absolute; top:0; right:26px; width:54px; height:100%;
+    background:linear-gradient(180deg,var(--hologram),var(--hologram-2),var(--gold),var(--hologram));
+    opacity:.55; mix-blend-mode:multiply; filter:blur(.3px);
+  }
+  :root[data-theme="dark"] .idcard::after,
+  :root:not([data-theme="light"]) .idcard::after{ mix-blend-mode:screen; opacity:.35 }
+
+  .id-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1}
+  .id-org{font-family:'IBM Plex Mono';font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim)}
+  .id-tier{font-family:'Chivo';font-weight:900;font-size:.72rem;background:var(--ink);color:var(--card);padding:4px 9px;border-radius:4px}
+  .id-mid{display:flex;align-items:center;gap:16px;position:relative;z-index:1}
+  .id-photo{width:66px;height:66px;border-radius:10px;background:var(--gold);flex:none;display:flex;align-items:center;justify-content:center;font-family:'Chivo';font-weight:900;font-size:1.6rem;color:#fff}
+  .id-name{font-family:'Chivo';font-weight:900;font-size:1.5rem;line-height:1.05}
+  .id-since{font-family:'IBM Plex Mono';font-size:.68rem;color:var(--ink-dim);margin-top:4px}
+  .id-bottom{display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:1}
+  .id-barcode{display:flex;gap:2px;align-items:flex-end;height:26px}
+  .id-barcode i{display:block;width:2px;background:var(--ink);opacity:.7}
+  .id-num{font-family:'IBM Plex Mono';font-size:.66rem;color:var(--ink-dim)}
+
+  .stage-hint{text-align:center;font-family:'IBM Plex Mono';font-size:.68rem;color:var(--ink-dim);margin-top:6px}
+
+  h2.section-title{font-family:'Chivo';font-weight:900;text-transform:uppercase;font-size:.86rem;letter-spacing:.02em;margin:38px 0 14px;color:var(--ink-dim)}
+
+  /* badge rack nav */
+  .rack{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+  .badge{
+    background:var(--card); border:1px solid var(--card-edge); border-radius:12px; padding:14px 16px;
+    text-decoration:none; color:var(--ink); display:flex; flex-direction:column; gap:6px;
+    transition:transform 150ms var(--ease-out), box-shadow 150ms var(--ease-out);
+  }
+  .badge .cat{font-family:'IBM Plex Mono';font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+  .badge .name{font-family:'Chivo';font-weight:700;font-size:1.05rem}
+  .badge .meta{font-family:'IBM Plex Mono';font-size:.66rem;color:var(--ink-dim)}
+  @media (hover:hover) and (pointer:fine){ .badge:hover{transform:translateY(-2px);box-shadow:0 10px 18px rgba(0,0,0,.1)} }
+  .badge:active{transform:scale(.97);transition-duration:100ms}
+  .badge:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+  footer{margin-top:52px;padding-top:14px;border-top:1px solid var(--card-edge);font-family:'IBM Plex Mono';font-size:.68rem;color:var(--ink-dim);display:flex;justify-content:space-between}
+
+  @media (prefers-reduced-motion: reduce){ .idcard{transition:none} }
+</style>
+
+<div class="wrap">
+  <div class="topbar">
+    <span class="brand">Onlymakkus</span>
+    <div class="acct"><div class="chip"><span class="av">R</span>Rico#0417 · Lv. 7</div></div>
+  </div>
+
+  <div class="stage">
+    <div class="idcard" id="idcard">
+      <div class="id-top">
+        <span class="id-org">Mitglied · Saison 2026</span>
+        <span class="id-tier">STUFE 7</span>
+      </div>
+      <div class="id-mid">
+        <div class="id-photo">R</div>
+        <div>
+          <div class="id-name">Rico<br>#0417</div>
+          <div class="id-since">Mitglied seit Jan. 2026</div>
+        </div>
+      </div>
+      <div class="id-bottom">
+        <div class="id-barcode" aria-hidden="true">
+          <i style="height:26px"></i><i style="height:14px"></i><i style="height:22px"></i><i style="height:10px"></i><i style="height:26px"></i><i style="height:18px"></i><i style="height:24px"></i><i style="height:12px"></i><i style="height:20px"></i><i style="height:26px"></i>
+        </div>
+        <span class="id-num">№ 0417-07</span>
+      </div>
+    </div>
+  </div>
+  <div class="stage-hint">Karte reagiert federnd auf die Maus — Hologrammstreifen als Echtheitsmerkmal</div>
+
+  <h2 class="section-title">Ausweistafel</h2>
+  <div class="rack">
+    <a class="badge" href="#"><span class="cat">Challenge</span><span class="name">Wandsitz '26</span><span class="meta">Platz 2 · 4:12</span></a>
+    <a class="badge" href="#"><span class="cat">Ranking</span><span class="name">Tabelle</span><span class="meta">5 Mitglieder</span></a>
+    <a class="badge" href="#"><span class="cat">Kalender</span><span class="name">Saisonplan</span><span class="meta">Monat 9/12</span></a>
+    <a class="badge" href="#"><span class="cat">Arcade</span><span class="name">Spielhalle</span><span class="meta">8 Titel</span></a>
+    <a class="badge" href="#"><span class="cat">Tracker</span><span class="name">Kalorien</span><span class="meta">1840/2500 kcal</span></a>
+    <a class="badge" href="#"><span class="cat">Körper</span><span class="name">Messwerte</span><span class="meta">3×/Monat</span></a>
+  </div>
+
+  <footer>
+    <span>Übungen · Profil · Funke</span>
+    <span>Richtung 5 / 6 — „Mitgliedskarte"</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var card = document.getElementById('idcard');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce) return;
+
+  // Spring-ish pointer tilt: decorative only, target updates on move,
+  // but the card's actual transform eases toward it (transition above) —
+  // never a 1:1 instant follow, so it reads as physical, not glued to the cursor.
+  var raf = null, tx = 0, ty = 0;
+  function apply(){
+    card.style.transform = 'rotateX('+ty+'deg) rotateY('+tx+'deg)';
+  }
+  document.querySelector('.stage').addEventListener('pointermove', function(e){
+    var r = card.getBoundingClientRect();
+    var px = (e.clientX - r.left) / r.width - 0.5;
+    var py = (e.clientY - r.top) / r.height - 0.5;
+    tx = px * 14; ty = -py * 14;
+    if(!raf){ raf = requestAnimationFrame(function(){ apply(); raf=null; }); }
+  });
+  document.querySelector('.stage').addEventListener('pointerleave', function(){
+    tx = 0; ty = 0; apply();
+  });
+})();
+</script>

@@ -1,0 +1,122 @@
+<!doctype html>
+<title>Anzeigetafel — Richtung 4</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --panel:#F1EDE2; --panel-2:#E7E1D0; --rivet:#B7AF9A;
+    --navy:#1C2B4A; --navy-2:#233657; --gold:#C9932E; --gold-2:#A9781F;
+    --ink:#181A22; --ink-dim:#5B5E6B;
+    --ease-out: cubic-bezier(.23,1,.32,1);
+    --ease-in-out: cubic-bezier(.77,0,.175,1);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --panel:#1B1D22; --panel-2:#23262D; --rivet:#3A3D46;
+      --navy:#7C93C4; --navy-2:#31456E; --gold:#E0AA48; --gold-2:#C9932E;
+      --ink:#EDECE6; --ink-dim:#9A9CA8;
+    }
+  }
+  :root[data-theme="dark"]{
+    --panel:#1B1D22; --panel-2:#23262D; --rivet:#3A3D46;
+    --navy:#7C93C4; --navy-2:#31456E; --gold:#E0AA48; --gold-2:#C9932E;
+    --ink:#EDECE6; --ink-dim:#9A9CA8;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--panel);color:var(--ink);font-family:'Archivo',system-ui,sans-serif}
+  .wrap{max-width:1040px;margin:0 auto;padding:26px 20px 80px}
+
+  /* bolted steel top bar */
+  .board{background:var(--navy);color:#EFEDE3;border-radius:10px;padding:16px 20px;position:relative;box-shadow:0 8px 20px rgba(0,0,0,.15)}
+  .board::before,.board::after{content:'';position:absolute;top:10px;width:9px;height:9px;border-radius:50%;background:var(--rivet);box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
+  .board::before{left:12px}.board::after{right:12px}
+  .bar-row{display:flex;justify-content:space-between;align-items:center}
+  .brand{font-family:'Archivo Black';font-size:1rem;letter-spacing:.02em;text-transform:uppercase}
+  .acct{display:flex;align-items:center;gap:9px;font-family:'Space Mono';font-size:.7rem}
+  .acct .chip{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.08);border-radius:999px;padding:4px 11px 4px 4px}
+  .acct .av{width:22px;height:22px;border-radius:50%;background:var(--gold);color:var(--navy);display:flex;align-items:center;justify-content:center;font-family:'Archivo Black';font-size:.68rem}
+  .acct .lv{background:var(--gold);color:var(--navy);border-radius:4px;padding:3px 7px;font-weight:700}
+
+  /* scoreboard hero: split-flap digits */
+  .hero{margin-top:22px;background:var(--navy);border-radius:10px;padding:26px 22px;position:relative;box-shadow:0 8px 20px rgba(0,0,0,.15)}
+  .hero::before,.hero::after{content:'';position:absolute;bottom:10px;width:9px;height:9px;border-radius:50%;background:var(--rivet)}
+  .hero::before{left:12px}.hero::after{right:12px}
+  .hero-label{font-family:'Space Mono';font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+  .flap-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+  .flap-unit{perspective:200px}
+  .flap{
+    width:56px;height:76px;background:#0F1420;border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Archivo Black';font-size:2.4rem;color:#EFEDE3;
+    transform-style:preserve-3d; transform-origin:center;
+    animation:flip 480ms var(--ease-in-out) both;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
+  }
+  .flap.small{width:auto;padding:0 12px;font-size:1.5rem;align-self:center;height:56px;color:var(--gold)}
+  @keyframes flip{
+    0%{transform:rotateX(50deg);opacity:.3}
+    60%{transform:rotateX(-8deg);opacity:1}
+    100%{transform:rotateX(0)}
+  }
+  .flap-unit:nth-child(1) .flap{animation-delay:0ms}
+  .flap-unit:nth-child(2) .flap{animation-delay:60ms}
+  .flap-unit:nth-child(3) .flap{animation-delay:120ms}
+  .flap-unit:nth-child(4) .flap{animation-delay:180ms}
+  .hero-sub{margin-top:14px;font-family:'Space Mono';font-size:.74rem;color:#B9BFD6}
+  @media (prefers-reduced-motion: reduce){ .flap{animation:none} }
+
+  /* nav as team-color side panels */
+  h2.section-title{font-family:'Archivo Black';text-transform:uppercase;font-size:.92rem;letter-spacing:.02em;margin:40px 0 14px;color:var(--ink-dim)}
+  .panels{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .panel-card{
+    background:var(--panel-2); border-radius:8px; padding:16px; position:relative;
+    text-decoration:none; color:var(--ink); border-left:6px solid var(--gold);
+    transition:transform 150ms var(--ease-out), box-shadow 150ms var(--ease-out);
+  }
+  .panel-card::before,.panel-card::after{content:'';position:absolute;top:8px;width:6px;height:6px;border-radius:50%;background:var(--rivet)}
+  .panel-card::before{left:8px}.panel-card::after{right:8px}
+  .panel-cat{font-family:'Space Mono';font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-2)}
+  .panel-name{font-family:'Archivo Black';font-size:1.25rem;margin-top:4px}
+  .panel-meta{font-family:'Space Mono';font-size:.68rem;color:var(--ink-dim);margin-top:8px}
+  @media (hover:hover) and (pointer:fine){
+    .panel-card:hover{transform:translateY(-3px);box-shadow:0 10px 18px rgba(0,0,0,.12)}
+  }
+  .panel-card:active{transform:scale(.98);transition-duration:100ms}
+  .panel-card:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+  footer{margin-top:56px;padding-top:14px;border-top:2px solid var(--rivet);font-family:'Space Mono';font-size:.68rem;color:var(--ink-dim);display:flex;justify-content:space-between}
+</style>
+
+<div class="wrap">
+  <div class="board bar-row">
+    <span class="brand">ONLYMAKKUS</span>
+    <div class="acct"><span class="lv">LV 7</span><div class="chip"><span class="av">R</span>Rico#0417</div></div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-label">Saison 2026 · Monat 9 — Wandsitz</div>
+    <div class="flap-row" aria-label="Führender Wert: 5 Minuten 03">
+      <div class="flap-unit"><div class="flap">5</div></div>
+      <div class="flap-unit"><div class="flap small">:</div></div>
+      <div class="flap-unit"><div class="flap">0</div></div>
+      <div class="flap-unit"><div class="flap">3</div></div>
+    </div>
+    <div class="hero-sub">Aktuell führend: Jana K. — du liegst 0:51 zurück, 27 Tage bis Saisonschluss.</div>
+  </div>
+
+  <h2 class="section-title">Spielfeld-Bereiche</h2>
+  <div class="panels">
+    <a class="panel-card" href="#"><span class="panel-cat">Ranking</span><div class="panel-name">Tabelle</div><div class="panel-meta">Platz 2 von 5</div></a>
+    <a class="panel-card" href="#"><span class="panel-cat">Kalender</span><div class="panel-name">Saisonplan</div><div class="panel-meta">Monat 9/12</div></a>
+    <a class="panel-card" href="#"><span class="panel-cat">Übungen</span><div class="panel-name">Katalog</div><div class="panel-meta">38 Einträge</div></a>
+    <a class="panel-card" href="#"><span class="panel-cat">Arcade</span><div class="panel-name">Spielhalle</div><div class="panel-meta">8 Titel</div></a>
+    <a class="panel-card" href="#"><span class="panel-cat">Tracker</span><div class="panel-name">Kalorien</div><div class="panel-meta">1840/2500 kcal</div></a>
+    <a class="panel-card" href="#"><span class="panel-cat">Körper</span><div class="panel-name">Messwerte</div><div class="panel-meta">3×/Monat</div></a>
+  </div>
+
+  <footer>
+    <span>Profil · Funke (Textadventure)</span>
+    <span>Richtung 4 / 6 — „Anzeigetafel"</span>
+  </footer>
+</div>
