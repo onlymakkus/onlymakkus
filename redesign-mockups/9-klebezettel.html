@@ -1,0 +1,123 @@
+<!doctype html>
+<title>Klebezettel — Richtung 9</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bungee&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --paper:#F1EEE2; --paper-2:#E7E2D0; --ink:#17150F;
+    --marker:#1E4FD6; --hi:#FFE43D; --tape:rgba(210,198,164,.6);
+    --ink-dim:#5A5546;
+    --ease-out: cubic-bezier(.23,1,.32,1);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#18170F; --paper-2:#211F15; --ink:#EFEAD8;
+      --marker:#7C9BFF; --hi:#C9A62A; --tape:rgba(90,84,62,.5);
+      --ink-dim:#A79E86;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#18170F; --paper-2:#211F15; --ink:#EFEAD8;
+    --marker:#7C9BFF; --hi:#C9A62A; --tape:rgba(90,84,62,.5);
+    --ink-dim:#A79E86;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);font-family:'Work Sans',system-ui,sans-serif;
+    background-image:radial-gradient(circle at 1px 1px, var(--paper-2) 1px, transparent 0);
+    background-size:20px 20px;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:26px 20px 80px}
+
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px}
+  .brand{font-family:'Bungee';font-size:1.1rem;color:var(--ink);transform:rotate(-2deg);display:inline-block}
+  .acct{font-family:'Space Mono';font-size:.72rem;display:flex;align-items:center;gap:8px}
+  .acct .pin{background:var(--paper-2);border:1px solid var(--ink-dim);border-radius:2px;padding:5px 10px;position:relative}
+  .acct .pin::before{content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;background:#B8442F;box-shadow:0 1px 2px rgba(0,0,0,.4)}
+
+  /* headline built from cut-out words at mixed rotation/size — ransom-note technique */
+  .hero{padding:30px 0 10px;position:relative}
+  .cut{
+    font-family:'Bungee'; display:inline-block; background:var(--paper-2); border:1px solid var(--ink);
+    padding:6px 14px; margin:4px 6px 4px 0; box-shadow:3px 3px 0 rgba(0,0,0,.12);
+  }
+  .cut.r1{transform:rotate(-3deg);font-size:clamp(1.6rem,5vw,3rem)}
+  .cut.r2{transform:rotate(2deg);font-size:clamp(1.4rem,4.4vw,2.5rem);background:var(--hi);color:#141208}
+  .cut.r3{transform:rotate(-1.5deg);font-size:clamp(1.6rem,5vw,3rem)}
+  .hero p{font-family:'Space Mono';font-size:.86rem;color:var(--ink-dim);max-width:50ch;margin:18px 4px 0;line-height:1.6}
+
+  /* marker-highlight reveal on the key stat */
+  .hl-stat{position:relative;display:inline-block;font-family:'Space Mono';font-weight:700;font-size:1.3rem;padding:0 4px}
+  .hl-stat::before{
+    content:''; position:absolute; left:-2px; right:-2px; top:8%; bottom:8%; background:var(--hi); z-index:-1;
+    clip-path:inset(0 100% 0 0); animation:mark 550ms 400ms var(--ease-out) forwards;
+  }
+  @keyframes mark{to{clip-path:inset(0 0 0 0)}}
+  @media (prefers-reduced-motion: reduce){ .hl-stat::before{animation:none;clip-path:inset(0 0 0 0)} }
+
+  /* corkboard grid of taped notes — deliberately uneven rotation, not a bento */
+  h2.section-title{font-family:'Bungee';font-size:.86rem;margin:40px 4px 16px;color:var(--ink-dim)}
+  .board{display:flex;flex-wrap:wrap;gap:18px 22px;padding:4px}
+  .note{
+    width:210px; background:var(--paper-2); border:1px solid var(--ink-dim); padding:14px 16px 16px;
+    text-decoration:none; color:var(--ink); position:relative; box-shadow:2px 3px 6px rgba(0,0,0,.1);
+    transition:transform 160ms var(--ease-out);
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .note::before{ /* tape strip */
+    content:''; position:absolute; top:-9px; left:50%; transform:translateX(-50%) rotate(-2deg);
+    width:52px; height:18px; background:var(--tape);
+  }
+  .note:nth-child(1){transform:rotate(-2deg)}
+  .note:nth-child(2){transform:rotate(1.5deg)}
+  .note:nth-child(3){transform:rotate(-1deg)}
+  .note:nth-child(4){transform:rotate(2deg)}
+  .note:nth-child(5){transform:rotate(-1.5deg)}
+  .note:nth-child(6){transform:rotate(1deg)}
+  .note:hover, .note:focus-visible{transform:rotate(0deg) translateY(-3px)}
+  .note:active{transform:scale(.97)}
+  .note:focus-visible{outline:3px solid var(--marker);outline-offset:2px}
+  .note .cat{font-family:'Space Mono';font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--marker)}
+  .note .nm{font-family:'Bungee';font-size:1.15rem;margin-top:6px;line-height:1.15}
+  .note .mt{font-family:'Space Mono';font-size:.68rem;color:var(--ink-dim);margin-top:8px}
+
+  /* hand-drawn arrow pointing at one note */
+  .arrow-note{position:relative}
+  .arrow-note svg{position:absolute;top:-38px;right:-30px;width:60px;height:44px;overflow:visible}
+  .arrow-note path{fill:none;stroke:var(--marker);stroke-width:2.4;stroke-linecap:round}
+  .arrow-note .lbl{position:absolute;top:-54px;right:-6px;font-family:'Space Mono';font-size:.6rem;color:var(--marker);white-space:nowrap;transform:rotate(-4deg)}
+
+  footer{margin-top:50px;padding-top:14px;border-top:1px dashed var(--ink-dim);font-family:'Space Mono';font-size:.66rem;color:var(--ink-dim);display:flex;justify-content:space-between}
+</style>
+
+<div class="wrap">
+  <div class="topbar">
+    <span class="brand">onlymakkus</span>
+    <div class="acct"><span class="pin">RICO#0417 · LV7</span></div>
+  </div>
+
+  <div class="hero">
+    <div><span class="cut r1">WANDSITZ.</span><span class="cut r2">KEIN AUFGEBEN.</span></div>
+    <p>Rückstand: <span class="hl-stat">0:51</span> auf Jana K. — 27 Tage bis die Karte diesen Monat zugeht.</p>
+  </div>
+
+  <h2 class="section-title">// PINWAND</h2>
+  <div class="board">
+    <a class="note arrow-note" href="#">
+      <svg viewBox="0 0 60 44"><path d="M4,40 C20,10 38,4 54,6 M54,6 L44,4 M54,6 L50,16"/></svg>
+      <span class="lbl">heute dran!</span>
+      <span class="cat">Challenge</span><span class="nm">Wandsitz '26</span><span class="mt">Platz 2 · 4:12</span>
+    </a>
+    <a class="note" href="#"><span class="cat">Ranking</span><span class="nm">Tabelle</span><span class="mt">5 Profile</span></a>
+    <a class="note" href="#"><span class="cat">Kalender</span><span class="nm">Saisonplan</span><span class="mt">Monat 9/12</span></a>
+    <a class="note" href="#"><span class="cat">Arcade</span><span class="nm">Spielhalle</span><span class="mt">8 Titel</span></a>
+    <a class="note" href="#"><span class="cat">Tracker</span><span class="nm">Kalorien</span><span class="mt">1840/2500 kcal</span></a>
+    <a class="note" href="#"><span class="cat">Körper</span><span class="nm">Messwerte</span><span class="mt">3×/Monat</span></a>
+  </div>
+
+  <footer>
+    <span>Übungen · Profil · Funke</span>
+    <span>Richtung 9 / 9 — „Klebezettel"</span>
+  </footer>
+</div>

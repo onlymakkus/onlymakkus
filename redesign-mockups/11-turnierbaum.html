@@ -1,0 +1,126 @@
+<!doctype html>
+<title>Turnierbaum — Richtung 11</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=League+Gothic&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --felt:#0E4A34; --felt-2:#0B3D2B; --chalk:#F4F1E6;
+    --line:#3D7A5C; --ink:#101512; --ink-dim:#5D6A5F;
+    --gold:#D7B25B;
+    --ease-out: cubic-bezier(.23,1,.32,1);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --felt:#081C15; --felt-2:#05130E; --chalk:#EDE7D6;
+      --line:#2E5F45; --ink:#EDE7D6; --ink-dim:#8FA398;
+      --gold:#E3C273;
+    }
+  }
+  :root[data-theme="dark"]{
+    --felt:#081C15; --felt-2:#05130E; --chalk:#EDE7D6;
+    --line:#2E5F45; --ink:#EDE7D6; --ink-dim:#8FA398;
+    --gold:#E3C273;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--felt-2);color:var(--chalk);font-family:'IBM Plex Sans',system-ui,sans-serif}
+  .wrap{max-width:1060px;margin:0 auto;padding:24px 20px 80px}
+
+  .table{background:var(--felt);border-radius:16px;padding:22px 22px 26px;box-shadow:inset 0 0 60px rgba(0,0,0,.35)}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--line)}
+  .brand{font-family:'League Gothic';font-size:1.7rem;letter-spacing:.02em;text-transform:uppercase}
+  .acct{font-family:'IBM Plex Mono';font-size:.7rem;display:flex;align-items:center;gap:8px}
+  .acct .chip{border:1px solid var(--line);padding:5px 11px;border-radius:999px}
+
+  .hero{padding:30px 0 26px}
+  .hero-kicker{font-family:'IBM Plex Mono';font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+  .hero h1{font-family:'League Gothic';font-weight:400;text-transform:uppercase;font-size:clamp(2.4rem,6.6vw,4.2rem);line-height:.92;margin:0 0 14px;letter-spacing:.01em}
+  .hero p{color:var(--chalk);opacity:.78;max-width:52ch;line-height:1.55;margin:0;font-size:.98rem}
+
+  /* bracket — the 5 profiles converging toward the season leader */
+  .bracket{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:0 18px;margin-top:10px}
+  .seeds{display:flex;flex-direction:column;gap:10px}
+  .seed{
+    background:var(--felt-2); border:1px solid var(--line); border-radius:6px; padding:9px 12px;
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+  }
+  .seed .nm{font-family:'IBM Plex Sans';font-weight:600;font-size:.86rem}
+  .seed .val{font-family:'IBM Plex Mono';font-size:.78rem;color:var(--gold)}
+  .seed.lead{border-color:var(--gold)}
+  .bracket-lines{width:60px;height:100%}
+  .bracket-lines svg{width:100%;height:100%}
+  .bracket-lines path{fill:none;stroke:var(--line);stroke-width:2}
+  .final{
+    background:var(--felt-2); border:2px solid var(--gold); border-radius:8px; padding:16px 18px;
+    display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center;
+  }
+  .final .cat{font-family:'IBM Plex Mono';font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+  .final .nm{font-family:'League Gothic';font-size:1.6rem;text-transform:uppercase}
+  .final .val{font-family:'IBM Plex Mono';font-size:.76rem;color:var(--chalk);opacity:.75}
+
+  h2.section-title{font-family:'League Gothic';text-transform:uppercase;font-size:1.15rem;letter-spacing:.02em;margin:38px 0 14px;color:var(--gold)}
+
+  /* nav as scoreboard rows, divider lines like court markings */
+  .rows{border-top:2px solid var(--line)}
+  .row{
+    display:grid; grid-template-columns:2em 1fr auto; align-items:center; gap:14px;
+    padding:14px 4px; border-bottom:1px solid var(--line); text-decoration:none; color:var(--chalk);
+    transition:background 140ms var(--ease-out);
+  }
+  .row .seedno{font-family:'IBM Plex Mono';font-size:.72rem;color:var(--gold)}
+  .row .nm{font-family:'League Gothic';font-size:1.3rem;text-transform:uppercase;letter-spacing:.01em}
+  .row .mt{font-family:'IBM Plex Mono';font-size:.7rem;color:var(--chalk);opacity:.6;text-align:right}
+  .row:hover, .row:focus-visible{background:rgba(215,178,91,.08)}
+  .row:active{background:rgba(215,178,91,.16)}
+  .row:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+
+  footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);font-family:'IBM Plex Mono';font-size:.66rem;color:var(--chalk);opacity:.55;display:flex;justify-content:space-between}
+</style>
+
+<div class="wrap">
+  <div class="table">
+    <div class="topbar">
+      <span class="brand">Onlymakkus</span>
+      <div class="acct"><div class="chip">RICO#0417 · LV7</div></div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-kicker">Saison 2026 · Monat 9 — Wandsitz</div>
+      <h1>Wer hält länger durch?</h1>
+      <p>0:51 Rückstand auf die Führende. 27 Tage bis die Tabelle diesen Monat schließt.</p>
+    </div>
+
+    <div class="bracket">
+      <div class="seeds">
+        <div class="seed lead"><span class="nm">1 · Jana K.</span><span class="val">5:03</span></div>
+        <div class="seed"><span class="nm">2 · Rico#0417</span><span class="val">4:12</span></div>
+        <div class="seed"><span class="nm">3 · Mara#2291</span><span class="val">3:48</span></div>
+      </div>
+      <div class="bracket-lines" aria-hidden="true">
+        <svg viewBox="0 0 60 140" preserveAspectRatio="none">
+          <path d="M0,16 H20 V60 H40 M0,70 H20 V60 M0,124 H20 V80 H40 M20,60 V80"/>
+        </svg>
+      </div>
+      <div class="final">
+        <span class="cat">Season-Leader</span>
+        <span class="nm">Jana K.</span>
+        <span class="val">Wandsitz · 5:03 · Rang 1 von 5</span>
+      </div>
+    </div>
+
+    <h2 class="section-title">Spielfeld</h2>
+    <div class="rows">
+      <a class="row" href="#"><span class="seedno">01</span><span class="nm">Ranking</span><span class="mt">5 Profile</span></a>
+      <a class="row" href="#"><span class="seedno">02</span><span class="nm">Kalender</span><span class="mt">Monat 9/12</span></a>
+      <a class="row" href="#"><span class="seedno">03</span><span class="nm">Übungen</span><span class="mt">38 Einträge</span></a>
+      <a class="row" href="#"><span class="seedno">04</span><span class="nm">Spielhalle</span><span class="mt">8 Titel</span></a>
+      <a class="row" href="#"><span class="seedno">05</span><span class="nm">Tracker</span><span class="mt">1840/2500 kcal</span></a>
+      <a class="row" href="#"><span class="seedno">06</span><span class="nm">Körper</span><span class="mt">3×/Monat</span></a>
+    </div>
+
+    <footer>
+      <span>Profil · Funke (Textadventure)</span>
+      <span>Richtung 11 / 11 — „Turnierbaum"</span>
+    </footer>
+  </div>
+</div>

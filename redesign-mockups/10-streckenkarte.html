@@ -1,0 +1,119 @@
+<!doctype html>
+<title>Streckenkarte — Richtung 10</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root{
+    --map:#EFE8D6; --map-2:#E4DABF; --contour:#C3B08A;
+    --forest:#3B5240; --water:#4C7A8C; --waypoint:#B8442F;
+    --ink:#241F18; --ink-dim:#6B6250;
+    --ease-out: cubic-bezier(.23,1,.32,1);
+    --ease-in-out: cubic-bezier(.77,0,.175,1);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --map:#1C1B14; --map-2:#24231A; --contour:#403C2C;
+      --forest:#6E9B7C; --water:#6FA6BC; --waypoint:#E0704F;
+      --ink:#EAE4D2; --ink-dim:#9C9480;
+    }
+  }
+  :root[data-theme="dark"]{
+    --map:#1C1B14; --map-2:#24231A; --contour:#403C2C;
+    --forest:#6E9B7C; --water:#6FA6BC; --waypoint:#E0704F;
+    --ink:#EAE4D2; --ink-dim:#9C9480;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--map);color:var(--ink);font-family:'Public Sans',system-ui,sans-serif;position:relative}
+  body::before{ /* contour lines */
+    content:''; position:fixed; inset:0; z-index:0; opacity:.5; pointer-events:none;
+    background-image:repeating-radial-gradient(circle at 15% 8%, transparent 0 34px, var(--contour) 34px 35px, transparent 35px 68px);
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:26px 20px 80px;position:relative;z-index:1}
+
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding-bottom:18px;border-bottom:1px solid var(--contour)}
+  .brand{font-family:'Fraunces';font-weight:700;font-size:1.2rem;letter-spacing:-.01em}
+  .acct{font-family:'JetBrains Mono';font-size:.7rem;display:flex;align-items:center;gap:8px}
+  .acct .chip{border:1px solid var(--contour);padding:5px 11px;border-radius:2px;background:var(--map-2)}
+
+  /* compass rose — signature decorative mark */
+  .compass{width:30px;height:30px;flex:none}
+  .compass svg{width:100%;height:100%}
+
+  .hero{padding:34px 0 8px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:flex-start}
+  .hero-text{max-width:44ch}
+  .hero-kicker{font-family:'JetBrains Mono';font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:10px}
+  .hero h1{font-family:'Fraunces';font-weight:600;font-size:clamp(2rem,5.2vw,3.2rem);line-height:1.04;margin:0 0 12px;text-wrap:balance}
+  .hero p{color:var(--ink-dim);line-height:1.6;font-size:.98rem;margin:0}
+
+  /* season route — elevation-style progress path */
+  .route-card{background:var(--map-2);border:1px solid var(--contour);border-radius:4px;padding:16px 18px;min-width:260px}
+  .route-label{font-family:'JetBrains Mono';font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:8px}
+  .route-svg{width:100%;height:64px;display:block}
+  .route-path{fill:none;stroke:var(--contour);stroke-width:2}
+  .route-done{fill:none;stroke:var(--forest);stroke-width:2.6;stroke-linecap:round;stroke-dasharray:260;stroke-dashoffset:260;animation:trail 1100ms 250ms var(--ease-in-out) forwards}
+  @keyframes trail{to{stroke-dashoffset:78}} /* stops at "you are here", not full length */
+  @media (prefers-reduced-motion: reduce){ .route-done{animation:none;stroke-dashoffset:78} }
+  .route-you{fill:var(--waypoint)}
+  .route-foot{display:flex;justify-content:space-between;font-family:'JetBrains Mono';font-size:.68rem;color:var(--ink-dim);margin-top:4px}
+
+  h2.section-title{font-family:'Fraunces';font-weight:600;font-size:1rem;margin:40px 0 16px;color:var(--ink)}
+
+  /* waypoints — dashed connecting line, not a card grid */
+  .trail{position:relative;padding-left:26px}
+  .trail::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:0;border-left:2px dashed var(--contour)}
+  .stop{position:relative;padding:16px 0 16px 20px;text-decoration:none;color:var(--ink);display:block;border-bottom:1px solid var(--map-2)}
+  .stop:last-child{border-bottom:none}
+  .stop::before{content:'';position:absolute;left:-26px;top:22px;width:11px;height:11px;border-radius:50%;background:var(--map);border:2px solid var(--forest)}
+  .stop-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px}
+  .stop .nm{font-family:'Fraunces';font-weight:600;font-size:1.2rem}
+  .stop .mt{font-family:'JetBrains Mono';font-size:.7rem;color:var(--ink-dim);white-space:nowrap}
+  .stop .desc{font-size:.86rem;color:var(--ink-dim);margin-top:3px}
+  .stop:hover .nm, .stop:focus-visible .nm{color:var(--forest)}
+  .stop:focus-visible{outline:2px solid var(--forest);outline-offset:4px}
+  .stop:active{opacity:.7}
+
+  footer{margin-top:50px;padding-top:14px;border-top:1px solid var(--contour);font-family:'JetBrains Mono';font-size:.68rem;color:var(--ink-dim);display:flex;justify-content:space-between}
+</style>
+
+<div class="wrap">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="compass" aria-hidden="true"><svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="none" stroke="currentColor" stroke-width="1"/><path d="M15,4 L18,15 L15,26 L12,15 Z" fill="var(--waypoint)"/><text x="15" y="3" font-size="4" text-anchor="middle" fill="currentColor">N</text></svg></span>
+      <span class="brand">onlymakkus</span>
+    </div>
+    <div class="acct"><div class="chip">RICO#0417 · LV7</div></div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-text">
+      <div class="hero-kicker">Saison 2026 — Etappe 9 von 12</div>
+      <h1>Die Strecke bis Dezember.</h1>
+      <p>Wandsitz ist der aktuelle Abschnitt. 27 Tage bis zum nächsten Wegpunkt, 0:51 hinter Jana K.</p>
+    </div>
+    <div class="route-card">
+      <div class="route-label">Streckenprofil · Saison</div>
+      <svg class="route-svg" viewBox="0 0 260 64" preserveAspectRatio="none">
+        <path class="route-path" d="M4,50 Q40,10 80,30 T160,20 T256,44"/>
+        <path class="route-done" d="M4,50 Q40,10 80,30 T160,20 T256,44"/>
+        <circle class="route-you" cx="112" cy="24" r="4"/>
+      </svg>
+      <div class="route-foot"><span>Jan</span><span>Monat 9 — du bist hier</span><span>Dez</span></div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Wegpunkte</h2>
+  <div class="trail">
+    <a class="stop" href="#"><div class="stop-row"><span class="nm">Ranking</span><span class="mt">5 Profile</span></div><div class="desc">Wer aktuell vorne liegt — Saison &amp; Monat.</div></a>
+    <a class="stop" href="#"><div class="stop-row"><span class="nm">Kalender</span><span class="mt">Monat 9/12</span></div><div class="desc">Die ganze Route, Dezember-Gipfel inklusive.</div></a>
+    <a class="stop" href="#"><div class="stop-row"><span class="nm">Übungen</span><span class="mt">38 Einträge</span></div><div class="desc">Jede Übung, jede Regel, ein Ort.</div></a>
+    <a class="stop" href="#"><div class="stop-row"><span class="nm">Spielhalle</span><span class="mt">8 Titel</span></div><div class="desc">Rastplatz — Snake, Tetris, Pinball &amp; Co.</div></a>
+    <a class="stop" href="#"><div class="stop-row"><span class="nm">Tracker</span><span class="mt">1840/2500 kcal</span></div><div class="desc">Proviant für heute.</div></a>
+    <a class="stop" href="#"><div class="stop-row"><span class="nm">Körper</span><span class="mt">3×/Monat</span></div><div class="desc">Vermessung unterwegs.</div></a>
+  </div>
+
+  <footer>
+    <span>Profil · Funke (Textadventure)</span>
+    <span>Richtung 10 / 10 — „Streckenkarte"</span>
+  </footer>
+</div>
