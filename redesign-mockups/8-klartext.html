@@ -1,0 +1,137 @@
+<!doctype html>
+<title>Klartext — Richtung 8</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#FAFAF7; --ink:#0C0C0C; --line:#0C0C0C;
+    --accent:#FF2E63; --accent-2:#FFE600;
+    --ink-dim:#0C0C0C; --op-dim:.58;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0C0C0C; --ink:#FAFAF7; --line:#FAFAF7;
+      --accent:#FF5C82; --accent-2:#FFEA4D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0C0C0C; --ink:#FAFAF7; --line:#FAFAF7;
+    --accent:#FF5C82; --accent-2:#FFEA4D;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'JetBrains Mono',ui-monospace,monospace}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 20px 70px}
+
+  /* raw marquee, no pill, no rounding */
+  .tick{background:var(--ink);color:var(--bg);overflow:hidden;white-space:nowrap;border-bottom:3px solid var(--ink)}
+  .tick-track{display:inline-flex;gap:34px;padding:8px 0;animation:tick 24s linear infinite;font-size:.72rem;letter-spacing:.02em}
+  @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media (prefers-reduced-motion: reduce){ .tick-track{animation-duration:100s} }
+  .tick-track b{color:var(--accent-2)}
+
+  /* header */
+  .head{display:flex;justify-content:space-between;align-items:flex-end;padding:22px 0 14px;border-bottom:3px solid var(--line)}
+  .word{font-family:'Instrument Serif';font-style:italic;font-size:1.6rem;line-height:1}
+  .tag{font-size:.7rem;letter-spacing:.03em}
+  .tag::before{content:'[ '}.tag::after{content:' ]'}
+
+  /* hero */
+  .hero{padding:44px 0 34px;border-bottom:3px solid var(--line);position:relative}
+  .hero-kicker{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;opacity:var(--op-dim);margin-bottom:14px}
+  .hero h1{
+    font-family:'Instrument Serif'; font-weight:400; font-style:italic;
+    font-size:clamp(2.6rem,7.4vw,5rem); line-height:.98; margin:0 0 20px; text-wrap:balance;
+    max-width:14ch;
+  }
+  .stat-line{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+  .stat-wrap{position:relative;display:inline-block}
+  .stat-num{font-family:'JetBrains Mono';font-weight:700;font-size:2.6rem;position:relative;z-index:1}
+  .stat-wrap svg{position:absolute;inset:-14px -18px;width:calc(100% + 36px);height:calc(100% + 28px);overflow:visible}
+  .stat-wrap path{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;
+    stroke-dasharray:340; stroke-dashoffset:340; animation:draw 900ms 300ms ease-out forwards;}
+  @media (prefers-reduced-motion: reduce){ .stat-wrap path{animation:none;stroke-dashoffset:0} }
+  @keyframes draw{to{stroke-dashoffset:0}}
+  .stat-label{font-size:.72rem;opacity:var(--op-dim)}
+  .hero-foot{margin-top:22px;font-size:.86rem;max-width:52ch;line-height:1.6}
+  .hero-foot b{background:var(--accent-2);color:var(--ink);padding:0 4px}
+  :root:not([data-theme="light"]) .hero-foot b{color:#0C0C0C}
+
+  /* numbered index nav — real order (site sections), hover-invert, hard offset shadow */
+  .index{border-bottom:3px solid var(--line)}
+  .irow{
+    display:grid; grid-template-columns:3.4em 1fr auto; align-items:center; gap:16px;
+    padding:16px 4px; border-top:1px solid var(--line); text-decoration:none; color:var(--ink);
+    transition:background 100ms linear, color 100ms linear;
+  }
+  .irow:first-child{border-top:none}
+  .irow .no{font-size:.82rem;opacity:var(--op-dim)}
+  .irow .nm{font-family:'Instrument Serif';font-style:italic;font-size:1.5rem}
+  .irow .mt{font-size:.72rem;opacity:var(--op-dim);text-align:right}
+  .irow:hover, .irow:focus-visible{background:var(--ink);color:var(--bg)}
+  .irow:hover .no, .irow:hover .mt, .irow:focus-visible .no, .irow:focus-visible .mt{opacity:.72}
+  .irow:focus-visible{outline:none}
+  .irow:active{background:var(--accent);color:var(--ink)}
+
+  /* offset hard-shadow tile for the one "loud" callout */
+  .callout{
+    margin:26px 0; padding:18px 20px; border:3px solid var(--line); background:var(--bg);
+    box-shadow:8px 8px 0 var(--accent-2); display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;
+  }
+  .callout .l{font-size:.82rem;line-height:1.5;max-width:44ch}
+  .callout .r{font-family:'Instrument Serif';font-style:italic;font-size:1.7rem;white-space:nowrap}
+
+  footer{padding-top:16px;font-size:.68rem;opacity:var(--op-dim);display:flex;justify-content:space-between}
+</style>
+
+<div class="tick">
+  <div class="tick-track">
+    <span>LIVE — Jana K. → <b>Wandsitz 5:03</b></span><span>·</span>
+    <span>Rico#0417 — Serie <b>14 Tage</b></span><span>·</span>
+    <span>Erfolg — <b>Season Gold '26</b></span><span>·</span>
+    <span>Dezember-Voting in <b>77 Tagen</b></span><span>·</span>
+    <span>LIVE — Jana K. → <b>Wandsitz 5:03</b></span><span>·</span>
+    <span>Rico#0417 — Serie <b>14 Tage</b></span><span>·</span>
+    <span>Erfolg — <b>Season Gold '26</b></span><span>·</span>
+    <span>Dezember-Voting in <b>77 Tagen</b></span><span>·</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="head">
+    <div class="word">onlymakkus</div>
+    <div class="tag">RICO#0417 · LV7</div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-kicker">Saison 2026 — Monat 09/12 — Wandsitz</div>
+    <h1>Du liegst zurück.</h1>
+    <div class="stat-line">
+      <div class="stat-wrap">
+        <span class="stat-num">0:51</span>
+        <svg viewBox="0 0 120 50" preserveAspectRatio="none"><path d="M8,38 C4,14 40,4 60,6 C92,9 116,16 112,34 C108,46 60,48 30,44 C14,42 6,40 8,38"/></svg>
+      </div>
+      <span class="stat-label">Rückstand auf Jana K. · 27 Tage bis Saisonschluss</span>
+    </div>
+    <p class="hero-foot">Kein Balken, keine Kurve — nur die Zahl, die zählt. Wer vorne liegt, sieht man <b>hier</b>, sonst nirgends.</p>
+  </div>
+
+  <div class="callout">
+    <span class="l">Heute schon geloggt: Kalorien, Wandsitz-Versuch, Körpermaß. Noch offen: Tagesziel Tracker.</span>
+    <span class="r">3 / 4 erledigt</span>
+  </div>
+
+  <div class="index">
+    <a class="irow" href="#"><span class="no">01</span><span class="nm">Ranking</span><span class="mt">5 Profile</span></a>
+    <a class="irow" href="#"><span class="no">02</span><span class="nm">Kalender</span><span class="mt">Monat 9/12</span></a>
+    <a class="irow" href="#"><span class="no">03</span><span class="nm">Übungen</span><span class="mt">38 Einträge</span></a>
+    <a class="irow" href="#"><span class="no">04</span><span class="nm">Spielhalle</span><span class="mt">8 Titel</span></a>
+    <a class="irow" href="#"><span class="no">05</span><span class="nm">Tracker</span><span class="mt">1840/2500 kcal</span></a>
+    <a class="irow" href="#"><span class="no">06</span><span class="nm">Körper</span><span class="mt">3×/Monat</span></a>
+  </div>
+
+  <footer>
+    <span>Funke (Textadventure) — eigener Terminal-Look bleibt</span>
+    <span>Richtung 8 / 8 — „Klartext"</span>
+  </footer>
+</div>
