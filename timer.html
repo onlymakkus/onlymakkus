@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Timer — onlymakkus</title>
+  <meta name="description" content="Trainings-Timer für Gym &amp; CrossFit: AMRAP, EMOM, Tabata, For Time, Custom-Intervalle und Stoppuhr.">
+  <meta name="theme-color" content="#0b0b09">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="OM Timer">
+  <link rel="manifest" href="timer.webmanifest">
+  <link rel="icon" href="icons/timer-favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="icons/timer-apple-touch-icon.png">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -907,6 +916,14 @@
   }
 
   renderTypeIndex();
+
+  // Nur diese Seite als Home-Screen-App installierbar/offline-fähig machen — der Scope ist
+  // explizit auf timer.html begrenzt, der Rest von onlymakkus bleibt unberührt.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('timer-sw.js', { scope: '/timer.html' }).catch(() => {});
+    });
+  }
 </script>
 
 <script>
