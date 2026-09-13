@@ -1,0 +1,132 @@
+<!doctype html>
+<title>Logbuch — Richtung 3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Courier+Prime:wght@400;700&display=swap');
+
+  :root{
+    --paper:#E7E2D3; --paper-2:#DED8C6; --rule:#B9AF97;
+    --ink:#2B2A25; --ink-dim:#726B58;
+    --red:#8C2F26; --blue:#2E4A5E; --tab:#6B5B3E;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#1E1C17; --paper-2:#262319; --rule:#443F30;
+      --ink:#E9E2CF; --ink-dim:#9C927A;
+      --red:#C1584B; --blue:#6E93AC; --tab:#B49A6C;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#1E1C17; --paper-2:#262319; --rule:#443F30;
+    --ink:#E9E2CF; --ink-dim:#9C927A;
+    --red:#C1584B; --blue:#6E93AC; --tab:#B49A6C;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:'Source Serif 4',Georgia,serif;
+    background-image:repeating-linear-gradient(180deg, transparent 0 31px, var(--rule) 31px 32px);
+    background-attachment:local;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:32px 26px 80px}
+
+  .head-row{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:10px;border-bottom:2px solid var(--ink);margin-bottom:6px}
+  .brand{font-family:'Special Elite';font-size:1.05rem;letter-spacing:.03em}
+  .acct{display:flex;align-items:center;gap:10px;font-family:'Courier Prime';font-size:.78rem}
+  .acct .init{width:24px;height:24px;border:1.5px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Special Elite';font-size:.66rem}
+  .acct .lvl{border-bottom:1px solid var(--ink)}
+
+  /* ledger index acting as nav */
+  .index-title{font-family:'Special Elite';font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin:26px 0 8px}
+  .index{display:grid;grid-template-columns:2.2em auto 1fr auto;column-gap:14px;row-gap:2px;font-family:'Courier Prime';font-size:.86rem}
+  .index a{grid-column:1/-1;display:grid;grid-template-columns:subgrid;color:var(--ink);text-decoration:none;padding:5px 0}
+  .index a:hover, .index a:focus-visible{background:var(--paper-2)}
+  .index .no{color:var(--ink-dim)}
+  .index .dots{overflow:hidden;white-space:nowrap;color:var(--rule);letter-spacing:2px}
+  .index .pg{color:var(--ink-dim)}
+
+  /* hero entry */
+  .entry{margin-top:34px;padding-top:8px}
+  .entry-meta{font-family:'Courier Prime';font-size:.76rem;color:var(--ink-dim);display:flex;gap:16px;margin-bottom:6px}
+  .entry-meta .stamp{border:1px solid var(--ink-dim);padding:1px 7px;border-radius:3px}
+  h1{font-family:'Special Elite';font-weight:400;font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.15;margin:0 0 10px;text-wrap:balance}
+  .entry p{font-size:1.02rem;line-height:1.7;max-width:64ch;color:var(--ink)}
+  .entry p.by-rico{color:var(--blue)}
+  .entry p.by-jana{color:var(--red)}
+  .sig{font-family:'Special Elite';font-size:.8rem;color:var(--ink-dim);margin-top:4px}
+
+  /* tally component — signature element */
+  .tally-block{display:flex;align-items:center;gap:18px;margin-top:22px}
+  .tally-groups{display:flex;gap:10px}
+  svg.tally{overflow:visible}
+  .tally-label{font-family:'Courier Prime';font-size:.78rem;color:var(--ink-dim)}
+
+  h2.section-title{font-family:'Special Elite';font-size:.9rem;margin:40px 0 14px;letter-spacing:.02em}
+
+  /* ledger rows */
+  .ledger{border-top:2px solid var(--ink)}
+  .lrow{display:grid;grid-template-columns:110px 1fr auto auto;gap:14px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--rule);font-family:'Courier Prime';font-size:.82rem}
+  .lrow .date{color:var(--ink-dim)}
+  .lrow .who{width:20px;height:20px;border-radius:50%;border:1px solid currentColor;display:inline-flex;align-items:center;justify-content:center;font-size:.62rem;margin-right:8px}
+  .lrow .who.rico{color:var(--blue)}
+  .lrow .who.jana{color:var(--red)}
+  .lrow .val{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+  .lrow .tag{color:var(--tab);text-align:right;font-size:.72rem}
+
+  footer{margin-top:56px;padding-top:14px;border-top:2px solid var(--ink);font-family:'Courier Prime';font-size:.74rem;color:var(--ink-dim);display:flex;justify-content:space-between}
+</style>
+
+<div class="wrap">
+  <div class="head-row">
+    <div class="brand">Logbuch — onlymakkus</div>
+    <div class="acct"><span class="init">R</span><span>Rico#0417</span><span class="lvl">Lv. 7</span></div>
+  </div>
+
+  <div class="index-title">Inhalt</div>
+  <div class="index">
+    <a href="#"><span class="no">01</span><span>Challenge — laufende Saison</span><span class="dots">····························</span><span class="pg">Ranking</span></a>
+    <a href="#"><span class="no">02</span><span>Kalender — Jahresplan &amp; Dezember-Boss</span><span class="dots">····························</span><span class="pg">Kalender</span></a>
+    <a href="#"><span class="no">03</span><span>Übungskatalog</span><span class="dots">····························</span><span class="pg">Übungen</span></a>
+    <a href="#"><span class="no">04</span><span>Spielhalle — 8 Arcade-Titel</span><span class="dots">····························</span><span class="pg">Spiele</span></a>
+    <a href="#"><span class="no">05</span><span>Ernährungstagebuch</span><span class="dots">····························</span><span class="pg">Tracker</span></a>
+    <a href="#"><span class="no">06</span><span>Körpermaße über Zeit</span><span class="dots">····························</span><span class="pg">Körper</span></a>
+  </div>
+
+  <div class="entry">
+    <div class="entry-meta"><span class="stamp">13. Sep 2026</span><span>Eintrag Nr. 214</span></div>
+    <h1>„Wandsitz-Woche" — Tag 14 der Serie.</h1>
+    <p class="by-rico">Heute 4:12 gehalten, neuer persönlicher Bestwert. Jana führt noch mit 5:03 — 27 Tage bleiben, bevor die Saison-Karte geschlossen wird.</p>
+    <div class="sig">— R. V.</div>
+
+    <div class="tally-block">
+      <div class="tally-groups" aria-hidden="true">
+        <svg class="tally" width="52" height="34" viewBox="0 0 52 34"><g stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none">
+          <line x1="4" y1="4" x2="4" y2="30"/><line x1="14" y1="4" x2="14" y2="30"/><line x1="24" y1="4" x2="24" y2="30"/><line x1="34" y1="4" x2="34" y2="30"/>
+          <line x1="1" y1="30" x2="37" y2="4"/>
+        </g></svg>
+        <svg class="tally" width="52" height="34" viewBox="0 0 52 34"><g stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none">
+          <line x1="4" y1="4" x2="4" y2="30"/><line x1="14" y1="4" x2="14" y2="30"/><line x1="24" y1="4" x2="24" y2="30"/><line x1="34" y1="4" x2="34" y2="30"/>
+          <line x1="1" y1="30" x2="37" y2="4"/>
+        </g></svg>
+        <svg class="tally" width="30" height="34" viewBox="0 0 30 34"><g stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none">
+          <line x1="4" y1="4" x2="4" y2="30"/><line x1="14" y1="4" x2="14" y2="30"/>
+        </g></svg>
+      </div>
+      <span class="tally-label">14 Tage in Folge geführt</span>
+    </div>
+  </div>
+
+  <h2 class="section-title">Jüngste Zeilen</h2>
+  <div class="ledger">
+    <div class="lrow"><span class="date">13.09.</span><span><span class="who rico">R</span>Wandsitz — neuer Bestwert</span><span class="val">4:12</span><span class="tag">Challenge</span></div>
+    <div class="lrow"><span class="date">13.09.</span><span><span class="who rico">R</span>Frühstück geloggt</span><span class="val">620 kcal</span><span class="tag">Tracker</span></div>
+    <div class="lrow"><span class="date">12.09.</span><span><span class="who jana">J</span>Wandsitz eingetragen</span><span class="val">5:03</span><span class="tag">Challenge</span></div>
+    <div class="lrow"><span class="date">11.09.</span><span><span class="who rico">R</span>Taille &amp; Gewicht erfasst</span><span class="val">−0,4 cm</span><span class="tag">Körper</span></div>
+    <div class="lrow"><span class="date">10.09.</span><span><span class="who jana">J</span>Dezember-Übung vorgeschlagen</span><span class="val">Abstimmung</span><span class="tag">Kalender</span></div>
+  </div>
+
+  <footer>
+    <span>Fünf Hefte, eine Truppe — geführt seit Januar 2026</span>
+    <span>Richtung 3 / 3 — „Logbuch"</span>
+  </footer>
+</div>

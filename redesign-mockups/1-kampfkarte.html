@@ -1,0 +1,196 @@
+<!doctype html>
+<title>Kampfkarte — Richtung 1</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --paper:#EDE7DC; --paper-2:#E3DBC9; --paper-3:#F5F1E7;
+    --ink:#1C1B17; --ink-dim:#6E675A; --rule:#C9BFA9;
+    --tape:#C13A2A; --tape-2:#A22E21; --stamp:#2E5C46;
+    --shadow: rgba(28,27,23,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#232019; --paper-2:#2C2820; --paper-3:#1A1814;
+      --ink:#F2EBDC; --ink-dim:#A79A82; --rule:#453F32;
+      --tape:#E2543E; --tape-2:#C0432F; --stamp:#5FAF88;
+      --shadow: rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#232019; --paper-2:#2C2820; --paper-3:#1A1814;
+    --ink:#F2EBDC; --ink-dim:#A79A82; --rule:#453F32;
+    --tape:#E2543E; --tape-2:#C0432F; --stamp:#5FAF88;
+    --shadow: rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Work Sans',system-ui,sans-serif;
+    background-image:
+      radial-gradient(circle at 1px 1px, var(--rule) 1px, transparent 0);
+    background-size: 22px 22px;
+    background-position: -6px -6px;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px}
+
+  /* ---- masthead ---- */
+  .masthead{display:flex;justify-content:space-between;align-items:center;padding-bottom:18px;border-bottom:3px solid var(--ink);margin-bottom:26px}
+  .brand{font-family:'Anton';font-size:1.6rem;letter-spacing:.02em;text-transform:uppercase}
+  .brand em{font-style:normal;color:var(--tape)}
+  .acct{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono';font-size:.72rem}
+  .acct-chip{display:flex;align-items:center;gap:8px;border:2px solid var(--ink);padding:5px 12px 5px 5px;border-radius:999px;background:var(--paper-3)}
+  .acct-av{width:26px;height:26px;border-radius:50%;background:var(--tape);color:var(--paper-3);display:flex;align-items:center;justify-content:center;font-family:'Anton';font-size:.85rem}
+  .acct-lvl{border:1px solid var(--ink);border-radius:999px;padding:2px 8px;color:var(--tape-2)}
+
+  /* ---- hero: fight poster ---- */
+  .hero{position:relative;padding:34px 0 26px;border-bottom:1px dashed var(--rule);margin-bottom:8px}
+  .eyebrow{font-family:'IBM Plex Mono';font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--tape-2);margin-bottom:10px}
+  .hero h1{
+    font-family:'Anton'; text-transform:uppercase; font-weight:400;
+    font-size:clamp(2.6rem,7.4vw,5rem); line-height:.92; letter-spacing:.005em;
+    margin:0 0 6px; text-wrap:balance;
+  }
+  .hero h1 span{color:var(--tape)}
+  .hero p{font-size:1rem;color:var(--ink-dim);max-width:52ch;line-height:1.55;margin:0 0 22px}
+
+  /* tale of the tape */
+  .totт{}
+  .tape-compare{
+    display:grid; grid-template-columns:1fr auto 1fr; gap:0;
+    border:2px solid var(--ink); background:var(--paper-3);
+  }
+  .tc-side{padding:16px 20px}
+  .tc-side.you{text-align:right}
+  .tc-name{font-family:'Anton';font-size:1.1rem;text-transform:uppercase;letter-spacing:.01em}
+  .tc-val{font-family:'IBM Plex Mono';font-size:1.9rem;font-variant-numeric:tabular-nums;margin-top:2px}
+  .tc-mid{width:1px;background:var(--rule);position:relative}
+  .tc-mid::after{content:'VS';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    font-family:'Anton';font-size:.8rem;background:var(--ink);color:var(--paper);padding:6px 8px;border-radius:2px;letter-spacing:.06em}
+  .tc-foot{grid-column:1/-1;border-top:1px solid var(--rule);padding:9px 20px;font-family:'IBM Plex Mono';font-size:.68rem;color:var(--ink-dim);display:flex;justify-content:space-between;letter-spacing:.03em;text-transform:uppercase}
+
+  /* ---- ticket nav grid ---- */
+  h2.section-title{font-family:'Anton';text-transform:uppercase;font-size:1.05rem;letter-spacing:.03em;margin:44px 0 16px;display:flex;align-items:center;gap:12px}
+  h2.section-title::after{content:'';flex:1;height:1px;background:var(--rule)}
+
+  .tickets{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+  .ticket{
+    position:relative; background:var(--paper-3); border:2px solid var(--ink);
+    padding:18px 18px 16px; display:flex; flex-direction:column; gap:8px;
+    text-decoration:none; color:var(--ink);
+  }
+  .ticket::before{ /* perforation notch */
+    content:''; position:absolute; left:-2px; top:50%; transform:translateY(-50%);
+    width:14px; height:14px; background:var(--paper); border-radius:50%; border:2px solid var(--ink); border-left:none;
+    margin-left:-9px;
+  }
+  .ticket::after{
+    content:''; position:absolute; right:-2px; top:50%; transform:translateY(-50%);
+    width:14px; height:14px; background:var(--paper); border-radius:50%; border:2px solid var(--ink); border-right:none;
+    margin-right:-9px;
+  }
+  .ticket-cat{font-family:'IBM Plex Mono';font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--tape-2)}
+  .ticket-name{font-family:'Anton';font-size:1.5rem;text-transform:uppercase;line-height:1}
+  .ticket-sub{font-size:.82rem;color:var(--ink-dim);line-height:1.4}
+  .ticket-foot{margin-top:auto;padding-top:10px;border-top:1px dashed var(--rule);font-family:'IBM Plex Mono';font-size:.68rem;display:flex;justify-content:space-between;color:var(--ink-dim)}
+  .ticket:hover{background:var(--paper-2)}
+  .ticket:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
+
+  /* ---- signature: ink stamp ---- */
+  .stampboard{display:flex;flex-wrap:wrap;gap:22px;align-items:center;margin-top:8px}
+  .stamp{
+    width:96px;height:96px;border-radius:50%;border:3px solid var(--stamp);color:var(--stamp);
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    font-family:'Anton';font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;line-height:1.15;
+    transform:rotate(-8deg); position:relative; flex:none;
+  }
+  .stamp::before{content:'';position:absolute;inset:6px;border:1px solid var(--stamp);border-radius:50%;opacity:.5}
+  .stamp.tape{border-color:var(--tape);color:var(--tape)}
+  .stamp.tape::before{border-color:var(--tape)}
+  .stamp-note{font-size:.86rem;color:var(--ink-dim);max-width:38ch;line-height:1.5}
+
+  footer{margin-top:60px;padding-top:16px;border-top:3px solid var(--ink);font-family:'IBM Plex Mono';font-size:.68rem;color:var(--ink-dim);display:flex;justify-content:space-between}
+</style>
+
+<div class="wrap">
+  <div class="masthead">
+    <div class="brand">ONLY<em>MAKKUS</em></div>
+    <div class="acct">
+      <span class="acct-lvl">LV 7</span>
+      <div class="acct-chip"><span class="acct-av">R</span> Rico#0417</div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="eyebrow">Saison 2026 · Monat 9 — Aktive Karte</div>
+    <h1>Wandsitz<br><span>bis zum Umfallen.</span></h1>
+    <p>Halten, zählen, keine Ausreden. Diesen Monat entscheidet die Zeit an der Wand über den Titel. Dein Gegner: der aktuelle Spitzenreiter.</p>
+
+    <div class="tape-compare">
+      <div class="tc-side">
+        <div class="tc-name">Du</div>
+        <div class="tc-val">4:12</div>
+      </div>
+      <div class="tc-mid"></div>
+      <div class="tc-side you">
+        <div class="tc-name">Jana K.</div>
+        <div class="tc-val">5:03</div>
+      </div>
+      <div class="tc-foot"><span>Rückstand: 0:51</span><span>Frist: 27 Tage</span></div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Karten diesen Monat</h2>
+  <div class="tickets">
+    <a class="ticket" href="#">
+      <span class="ticket-cat">Ranking</span>
+      <span class="ticket-name">Tabelle</span>
+      <span class="ticket-sub">Wer aktuell vorne liegt, Saison &amp; Monat.</span>
+      <span class="ticket-foot"><span>5 Kämpfer</span><span>→</span></span>
+    </a>
+    <a class="ticket" href="#">
+      <span class="ticket-cat">Kalender</span>
+      <span class="ticket-name">Spielplan</span>
+      <span class="ticket-sub">Jahresübersicht, Dezember-Boss inklusive.</span>
+      <span class="ticket-foot"><span>12 Monate</span><span>→</span></span>
+    </a>
+    <a class="ticket" href="#">
+      <span class="ticket-cat">Übungen</span>
+      <span class="ticket-name">Katalog</span>
+      <span class="ticket-sub">Jede Übung, jede Regel, ein Ort.</span>
+      <span class="ticket-foot"><span>38 Einträge</span><span>→</span></span>
+    </a>
+    <a class="ticket" href="#">
+      <span class="ticket-cat">Arcade</span>
+      <span class="ticket-name">Spiele</span>
+      <span class="ticket-sub">Snake, Tetris, Flappy, Pinball &amp; Co.</span>
+      <span class="ticket-foot"><span>8 Spiele</span><span>→</span></span>
+    </a>
+    <a class="ticket" href="#">
+      <span class="ticket-cat">Tracker</span>
+      <span class="ticket-name">Kalorien</span>
+      <span class="ticket-sub">Makros, Quick-Foods, Tagesbilanz.</span>
+      <span class="ticket-foot"><span>heute: 1840 kcal</span><span>→</span></span>
+    </a>
+    <a class="ticket" href="#">
+      <span class="ticket-cat">Körper</span>
+      <span class="ticket-name">Maße</span>
+      <span class="ticket-sub">Gewicht &amp; Umfänge über Zeit.</span>
+      <span class="ticket-foot"><span>3 Einträge/Mo.</span><span>→</span></span>
+    </a>
+  </div>
+
+  <h2 class="section-title">Frisch gestempelt</h2>
+  <div class="stampboard">
+    <div class="stamp">Neuer<br>PB</div>
+    <div class="stamp tape">14 Tage<br>Serie</div>
+    <div class="stamp">Saison<br>Gold '26</div>
+    <p class="stamp-note">Jeder Erfolg wird als Stempel auf dem Profil abgelegt — schräg, mit Tinte, wie auf einer echten Startkarte abgezeichnet.</p>
+  </div>
+
+  <footer>
+    <span>Challenge · Ranking · Kalender · Übungen · Spiele · Tracker · Körper · Profil</span>
+    <span>Richtung 1 / 3 — „Kampfkarte"</span>
+  </footer>
+</div>
