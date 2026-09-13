@@ -1,0 +1,163 @@
+<!doctype html>
+<title>Sendung — Richtung 7</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root{
+    --bg:#F5F3EE; --bg-grain-op:.05;
+    --surface:#FFFFFF; --surface-2:#EBE8E0; --line:#DCD8CC;
+    --ink:#0E0F13; --ink-dim:#5B584E;
+    --blue:#2451FF; --coral:#FF5470;
+    --ease-out: cubic-bezier(.23,1,.32,1);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0E0F13; --bg-grain-op:.08;
+      --surface:#17181F; --surface-2:#1E202A; --line:#2C2E3A;
+      --ink:#F2F1EC; --ink-dim:#9B99A8;
+      --blue:#5B7CFF; --coral:#FF7A93;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0E0F13; --bg-grain-op:.08;
+    --surface:#17181F; --surface-2:#1E202A; --line:#2C2E3A;
+    --ink:#F2F1EC; --ink-dim:#9B99A8;
+    --blue:#5B7CFF; --coral:#FF7A93;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif;
+    position:relative;
+  }
+  body::before{ /* grain texture, cheap, decorative */
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:1; opacity:var(--bg-grain-op); mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  :root:not([data-theme="light"]) body::before{ mix-blend-mode:screen }
+
+  .wrap{max-width:1100px;margin:0 auto;padding:0 20px 80px;position:relative;z-index:2}
+
+  /* ---- ticker ---- */
+  .ticker-bar{background:var(--ink);color:var(--bg);overflow:hidden;white-space:nowrap;position:relative}
+  .ticker-track{display:inline-flex;gap:40px;padding:9px 0;animation:tick 26s linear infinite}
+  @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media (prefers-reduced-motion: reduce){ .ticker-track{animation-duration:90s} }
+  .ticker-track span{font-family:'JetBrains Mono';font-size:.74rem;letter-spacing:.03em;display:inline-flex;align-items:center;gap:10px}
+  .ticker-track b{color:var(--coral)}
+  .dot-live{width:6px;height:6px;border-radius:50%;background:var(--coral);display:inline-block;box-shadow:0 0 0 0 var(--coral);animation:livepulse 1.8s ease-out infinite}
+  @keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(255,84,112,.6)}70%{box-shadow:0 0 0 7px rgba(255,84,112,0)}100%{box-shadow:0 0 0 0 rgba(255,84,112,0)}}
+  @media (prefers-reduced-motion: reduce){ .dot-live{animation:none} }
+
+  /* ---- topbar ---- */
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
+  .brand{font-family:'Unbounded';font-weight:900;font-size:1rem;letter-spacing:-.01em}
+  .brand .b{color:var(--blue)}.brand .c{color:var(--coral)}
+  .acct{display:flex;align-items:center;gap:10px}
+  .acct-chip{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 5px;font-family:'JetBrains Mono';font-size:.72rem}
+  .acct-av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--coral));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Unbounded';font-weight:800;font-size:.66rem}
+  .acct-lvl{font-family:'JetBrains Mono';font-size:.66rem;background:var(--surface-2);border-radius:999px;padding:3px 9px}
+
+  /* ---- hero: kinetic type + cursor spotlight ---- */
+  .hero{
+    position:relative; padding:38px 26px; border-radius:20px; margin:6px 0 22px; overflow:hidden;
+    background:var(--surface); border:1px solid var(--line);
+    --mx:50%; --my:30%;
+  }
+  .hero::before{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(420px circle at var(--mx) var(--my), color-mix(in srgb, var(--blue) 16%, transparent), transparent 65%);
+    transition:background .08s linear;
+  }
+  .hero-eyebrow{position:relative;font-family:'JetBrains Mono';font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .hero h1{
+    position:relative; font-family:'Unbounded'; font-weight:900; letter-spacing:-.02em;
+    font-size:clamp(2.4rem,6.6vw,4.4rem); line-height:.98; margin:0 0 14px; text-wrap:balance;
+  }
+  .hero h1 .hl{color:var(--blue)}
+  .hero h1 .hl2{color:var(--coral)}
+  .hero p{position:relative;max-width:52ch;color:var(--ink-dim);font-size:1.02rem;line-height:1.55;margin:0}
+
+  /* ---- bento grid ---- */
+  .bento{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:8px}
+  .cell{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px;
+    text-decoration:none; color:var(--ink); display:flex; flex-direction:column; justify-content:space-between; gap:14px;
+    transition:transform 160ms var(--ease-out), border-color 160ms var(--ease-out);
+  }
+  .cell:active{transform:scale(.97);transition-duration:100ms}
+  .cell:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+  @media (hover:hover) and (pointer:fine){ .cell:hover{transform:translateY(-3px);border-color:var(--blue)} }
+  .c-span2{grid-column:span 2}.c-span3{grid-column:span 3}.c-span4{grid-column:span 4}
+  .c-row2{grid-row:span 2}
+  .cell .cat{font-family:'JetBrains Mono';font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim)}
+  .cell .name{font-family:'Unbounded';font-weight:800;font-size:1.3rem;letter-spacing:-.01em}
+  .cell .big{font-family:'Unbounded';font-weight:900;font-size:2.6rem;letter-spacing:-.02em;line-height:1}
+  .cell .meta{font-family:'JetBrains Mono';font-size:.72rem;color:var(--ink-dim)}
+  .cell.accent{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .cell.accent .cat,.cell.accent .meta{color:rgba(255,255,255,.75)}
+  .cell.accent2{background:var(--coral);color:#fff;border-color:var(--coral)}
+  .cell.accent2 .cat,.cell.accent2 .meta{color:rgba(255,255,255,.8)}
+  @media (max-width:720px){ .bento{grid-template-columns:repeat(2,1fr)} .c-span2,.c-span3,.c-span4{grid-column:span 2} }
+
+  footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);font-family:'JetBrains Mono';font-size:.68rem;color:var(--ink-dim);display:flex;justify-content:space-between}
+</style>
+
+<div class="ticker-bar">
+  <div class="ticker-track" id="tickTrack">
+    <span><span class="dot-live"></span>LIVE — Jana K. hat <b>Wandsitz 5:03</b> gesetzt</span>
+    <span>Rico#0417 · Serie <b>14 Tage</b></span>
+    <span>Neuer Erfolg — <b>Season Gold '26</b> freigeschaltet</span>
+    <span>Dezember-Voting öffnet in <b>77 Tagen</b></span>
+    <span>Mara#2291 · neuer Highscore in <b>Blockblast</b></span>
+    <span><span class="dot-live"></span>LIVE — Jana K. hat <b>Wandsitz 5:03</b> gesetzt</span>
+    <span>Rico#0417 · Serie <b>14 Tage</b></span>
+    <span>Neuer Erfolg — <b>Season Gold '26</b> freigeschaltet</span>
+    <span>Dezember-Voting öffnet in <b>77 Tagen</b></span>
+    <span>Mara#2291 · neuer Highscore in <b>Blockblast</b></span>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">ONLY<span class="b">MAK</span><span class="c">KUS</span></div>
+    <div class="acct"><span class="acct-lvl">LV 7</span><div class="acct-chip"><span class="acct-av">R</span>Rico#0417</div></div>
+  </div>
+
+  <div class="hero" id="hero">
+    <div class="hero-eyebrow"><span class="dot-live"></span>Saison 2026 · Monat 9 von 12</div>
+    <h1>Wandsitz.<br><span class="hl">Kein</span> <span class="hl2">Aufgeben.</span></h1>
+    <p>Du liegst 0:51 hinter Jana zurück. 27 Tage bleiben, bevor die Karte diesen Monat schließt.</p>
+  </div>
+
+  <div class="bento">
+    <a class="cell c-span2 c-row2 accent" href="#">
+      <span class="cat">Challenge</span>
+      <div><div class="big">#2</div><span class="meta">Rang · 0:51 Rückstand</span></div>
+    </a>
+    <a class="cell c-span2" href="#"><span class="cat">Ranking</span><span class="name">Tabelle</span><span class="meta">5 Profile live</span></a>
+    <a class="cell c-span2" href="#"><span class="cat">Kalender</span><span class="name">Saisonplan</span><span class="meta">Monat 9/12</span></a>
+    <a class="cell c-span3" href="#"><span class="cat">Arcade</span><span class="name">Spielhalle</span><span class="meta">8 Titel · Highscores global</span></a>
+    <a class="cell c-span3 accent2" href="#"><span class="cat">Tracker</span><span class="name">Kalorien heute</span><span class="meta">1840 / 2500 kcal</span></a>
+    <a class="cell c-span2" href="#"><span class="cat">Übungen</span><span class="name">Katalog</span><span class="meta">38 Einträge</span></a>
+    <a class="cell c-span2" href="#"><span class="cat">Körper</span><span class="name">Messwerte</span><span class="meta">3×/Monat</span></a>
+    <a class="cell c-span2" href="#"><span class="cat">Profil</span><span class="name">Erfolge</span><span class="meta">21 Codes</span></a>
+  </div>
+
+  <footer>
+    <span>Funke (Textadventure) — eigener Terminal-Look bleibt bewusst erhalten</span>
+    <span>Richtung 7 / 7 — „Sendung"</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var hero = document.getElementById('hero');
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  hero.addEventListener('pointermove', function(e){
+    var r = hero.getBoundingClientRect();
+    hero.style.setProperty('--mx', ((e.clientX-r.left)/r.width*100)+'%');
+    hero.style.setProperty('--my', ((e.clientY-r.top)/r.height*100)+'%');
+  });
+})();
+</script>
