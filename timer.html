@@ -924,12 +924,11 @@
 
   // Nur diese Seite als Home-Screen-App installierbar/offline-fähig machen — der Scope ist
   // explizit auf timer.html begrenzt, der Rest von onlymakkus bleibt unberührt.
-  // TEMP-DEV-DISABLE: vor dem Deploy wieder aktivieren.
-  // if ('serviceWorker' in navigator) {
-  //   window.addEventListener('load', () => {
-  //     navigator.serviceWorker.register('timer-sw.js', { scope: '/timer.html' }).catch(() => {});
-  //   });
-  // }
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('timer-sw.js', { scope: '/timer.html' }).catch(() => {});
+    });
+  }
 </script>
 
 <script>
