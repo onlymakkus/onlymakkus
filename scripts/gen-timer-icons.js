@@ -6,10 +6,10 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
-const BG = [11, 11, 9];         // --ink
-const ACCENT = [255, 78, 30];   // --blaze
-const ACCENT_DIM = [201, 61, 10]; // --blaze2-ish, deeper
-const FG = [242, 237, 228];     // --paper
+const BG = [18, 18, 20];        // --bg (Split-Second)
+const ACCENT = [255, 69, 58];   // --accent
+const ACCENT_DIM = [208, 31, 24]; // --accent-text (light-mode), used here as a deeper shade
+const FG = [242, 240, 236];     // --ink (Split-Second's dark-mode text/paper equivalent)
 
 function crc32(buf) {
   let table = crc32.table;
@@ -132,7 +132,7 @@ function buildIcon(size, { padding = 0.09 } = {}) {
   return encodePNG(size, size, c.buf);
 }
 
-const outDir = path.join(__dirname, 'icons');
+const outDir = path.join(__dirname, '..', 'icons');
 fs.mkdirSync(outDir, { recursive: true });
 const specs = [
   ['timer-icon-192.png', 192, 0.09],
