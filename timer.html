@@ -74,8 +74,11 @@
 
     /* ---------- CONFIG ---------- */
     #timerConfig[hidden],#timerHome[hidden]{display:none}
-    .cfg-back{background:none;border:none;color:var(--chalk);font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;padding:0 0 22px;display:inline-flex;align-items:center;gap:8px}
-    .cfg-back:hover{color:var(--blaze)}
+    #timerConfig{scroll-margin-top:80px}
+    .cfg-back{background:transparent;border:1px solid var(--line);color:var(--body-text);font-family:'DM Mono',monospace;font-size:.64rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:10px 16px 10px 12px;margin-bottom:28px;display:inline-flex;align-items:center;gap:10px;transition:border-color .15s,color .15s,background .15s}
+    .cfg-back .arr{font-family:'Bebas Neue';font-size:1.2rem;line-height:1;transition:transform .15s}
+    .cfg-back:hover{border-color:var(--blaze);color:var(--blaze);background:var(--field)}
+    .cfg-back:hover .arr{transform:translateX(-4px)}
     .cfg-title{font-family:'Bebas Neue';font-size:2.8rem;line-height:.95;letter-spacing:.02em;margin-bottom:6px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
     .cfg-hint{font-size:.68rem;color:var(--chalk);line-height:1.8;margin-bottom:30px;max-width:60ch}
 
@@ -266,7 +269,7 @@
     </section>
 
     <section id="timerConfig" hidden>
-      <button class="cfg-back" id="cfgBack" type="button">← Anderen Timer wählen</button>
+      <button class="cfg-back" id="cfgBack" type="button"><span class="arr">←</span> Anderen Timer wählen</button>
       <h2 class="cfg-title" id="cfgTitle">—</h2>
       <p class="cfg-hint" id="cfgHint"></p>
       <div id="cfgFields"></div>
