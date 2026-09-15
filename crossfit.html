@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CrossFit — onlymakkus</title>
+  <title>Fitness — onlymakkus</title>
   <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -218,7 +218,7 @@
 <div class="timing-track"><div class="timing-line" id="timingLine"></div></div>
 <div class="page-content" id="pageContent">
   <nav>
-    <a class="nav-logo" href="index.html">← <b>OM</b> / crossfit</a>
+    <a class="nav-logo" href="index.html">← <b>OM</b> / fitness</a>
     <div class="nav-right">
       <div class="acct" id="acct">
         <a class="acct-login" id="acctLogin" href="profile.html" hidden>Anmelden</a>
@@ -254,7 +254,7 @@
       <span>Saison <b>2026</b></span>
     </div>
     <div class="tag-strip reveal">
-      <span>Side Plank</span>
+      <span id="tagExercise">Diesen Monat</span>
       <span>Punkte sammeln</span>
       <span>Kein Aufhören</span>
       <span>Dezember Boss</span>
@@ -263,7 +263,7 @@
     <section class="hero">
       <div class="hero-left">
         <p class="hero-kicker">// schmerz ist optional. aufhören auch.</p>
-        <h1 class="hero-title">Cross<span class="cut">Fit.</span></h1>
+        <h1 class="hero-title">Kraft<span class="cut">probe.</span></h1>
         <p class="hero-sub">Challenges, Ranking, Saisonplan — alles an einem Ort. Für die Gruppe, die sich freiwillig quält.</p>
         <div class="hero-quip">
           <span class="qi" id="motoIcon">💀</span>
@@ -290,7 +290,7 @@
           <div class="board-empty">Lädt Rangliste…</div>
         </div>
         <a href="challenge.html" class="board-cta">
-          <span>Zeit eintragen</span>
+          <span>Score eintragen</span>
           <span class="arr">→</span>
         </a>
       </div>
@@ -311,7 +311,7 @@
         <span class="idx-num">01 / 04</span>
         <div class="idx-main">
           <div class="idx-title">Aktiver Monat <span class="idx-note">// live tracker</span></div>
-          <p class="idx-desc">Zeit eintragen, Leaderboard, Tipps für Anfänger bis Profi. Hier passiert die eigentliche Action.</p>
+          <p class="idx-desc">Score eintragen, Leaderboard, Tipps für Anfänger bis Profi. Hier passiert die eigentliche Action.</p>
           <div class="idx-tags"><span class="tag">live tracker</span><span class="tag">pin geschützt</span></div>
         </div>
         <span class="idx-arrow">→</span>
@@ -384,6 +384,7 @@
         document.getElementById('ms-count').textContent='—';
         document.getElementById('ms-leader').textContent='—';
         if(msList)msList.innerHTML='<div class="board-empty">'+(rows&&rows[0]&&rows[0].is_december_vote?'Voting läuft — noch keine Rangliste.':'Diesen Monat läuft keine Challenge.')+'</div>';
+        renderQuote(null);
         return;
       }
       const ex=rows[0].exercises;
@@ -391,6 +392,9 @@
       const unit=ex.default_unit||'';
       const challengeId=slugify(ex.name);
       document.getElementById('ms-challenge').textContent=ex.name;
+      const tagEx=document.getElementById('tagExercise');
+      if(tagEx)tagEx.textContent=ex.name;
+      renderQuote({name:ex.name,goal,unit});
       const data=await sbFetch(`/rest/v1/challenge_entries?challenge=eq.${challengeId}&select=*`);
       document.getElementById('ms-count').textContent=data?data.length:0;
       if(data&&data.length){
@@ -421,6 +425,7 @@
       document.getElementById('ms-count').textContent='—';
       const msList=document.getElementById('ms-list');
       if(msList)msList.innerHTML='<div class="board-empty">Rangliste konnte nicht geladen werden.</div>';
+      renderQuote(null);
     }
   }
   loadMiniStatus();
@@ -537,23 +542,35 @@
   }
   loadVote();
 
-  const QUOTES=[
+  // Allgemeine Sprüche — funktionieren unabhängig davon, welche Übung gerade läuft.
+  const GENERIC_QUOTES=[
     {icon:'💀',text:'<strong>Heute ist ein guter Tag</strong> um Schmerzen zu ignorieren.'},
     {icon:'🔥',text:'Du hast keine Ausreden. Nur <strong>schlechte Entscheidungen.</strong>'},
     {icon:'😤',text:'Dein Körper sagt Nein. <strong>Dein Kopf auch.</strong> Mach es trotzdem.'},
-    {icon:'🏆',text:'Niemand hat je einen <strong>Side Plank bereut.</strong> Lüge. Aber trotzdem.'},
     {icon:'💪',text:'<strong>Schmerz ist temporär.</strong> Peinlichkeit im Gruppenranking ist für immer.'},
-    {icon:'😅',text:'Irgendwo macht gerade jemand <strong>keine Burpees.</strong> Sei nicht diese Person.'},
     {icon:'🧠',text:'Der Unterschied zwischen dir und dem Erstplatzierten? <strong>Minuten.</strong> Manchmal viele.'},
     {icon:'⚡',text:'<strong>Du kannst aufhören.</strong> Die anderen werden es aber sehen.'},
-    {icon:'🎯',text:'60 Minuten Side Plank klingen nach viel. <strong>Weil es viel ist.</strong>'},
     {icon:'😂',text:'Wer hat sich das eigentlich ausgedacht? <strong>Egal. Weitermachen.</strong>'},
     {icon:'🦾',text:'Dein Körper kann mehr als dein Gehirn <strong>erlauben will.</strong>'},
     {icon:'📊',text:'Das Ranking lügt nicht. <strong>Aber es urteilt.</strong>'},
   ];
-  const q=QUOTES[Math.floor(Math.random()*QUOTES.length)];
-  document.getElementById('motoQuote').innerHTML=q.text;
-  document.getElementById('motoIcon').textContent=q.icon;
+  // Brauchen den Namen der aktuellen Übung — nur wählbar, wenn diesen Monat eine Challenge läuft.
+  // {ex} = Übungsname, {goal}/{unit} = Monatsziel. Bewusst ohne Artikel formuliert, damit es bei
+  // jedem Übungsnamen grammatikalisch passt (Singular/Plural/Genus ist aus der DB nicht bekannt).
+  const EXERCISE_QUOTES=[
+    {icon:'🏆',text:'Niemand hat <strong>{ex} je bereut.</strong> Lüge. Aber trotzdem.'},
+    {icon:'😅',text:'Irgendwo hat heute schon jemand {ex} gemacht. <strong>Du bist noch dran.</strong>'},
+    {icon:'🎯',text:'{goal} {unit} {ex} klingen nach viel. <strong>Weil es viel ist.</strong>'},
+  ];
+  function renderQuote(current){
+    const pool=current?GENERIC_QUOTES.concat(EXERCISE_QUOTES):GENERIC_QUOTES;
+    const q=pool[Math.floor(Math.random()*pool.length)];
+    const text=current
+      ? q.text.replace(/\{ex\}/g,current.name).replace(/\{goal\}/g,current.goal).replace(/\{unit\}/g,current.unit||'')
+      : q.text;
+    document.getElementById('motoQuote').innerHTML=text;
+    document.getElementById('motoIcon').textContent=q.icon;
+  }
 </script>
 <script>
 (function(){
