@@ -1,209 +1,140 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wochenplan Board</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<title>Wochenplan — onlymakkus</title>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#14151A;
-    --panel:#1D1F26;
-    --panel-2:#242730;
-    --line:#33363F;
-    --chalk:#EDEEF0;
-    --muted:#8B909C;
-    --hard:#FF5A36;
-    --hard-dim:#5A2C22;
-    --ga:#2FD3C0;
-    --ga-dim:#1C3F3B;
-    --rest:#5B6472;
-    --rest-dim:#2A2D34;
-    --warn:#FFC145;
-    --err:#FF3B5C;
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  :root, [data-theme="dark"]{
+    --bg:#121214;--ink:#f2f0ec;--accent:#ff453a;--accent-text:#ff453a;--muted:#c4c2bc;--faint:#8f8d8a;--line:#2a2a2e;
+    --ok:#22c55e;--warn:#facc15;--err:#ff453a;--ga:#3fb8c9;--rest:#6b6860;
+    --ease:cubic-bezier(.4,0,.2,1);--ease-out:cubic-bezier(.23,1,.32,1);
+    color-scheme:dark;
   }
-  *{box-sizing:border-box;}
+  [data-theme="light"]{
+    --bg:#f7f5f0;--ink:#14141a;--accent:#e8231b;--accent-text:#d01f18;--muted:#4a4a52;--faint:#6b6860;--line:#d8d5cc;
+    --ok:#16a34a;--warn:#b45309;--err:#d01f18;--ga:#0e7f91;--rest:#8a8078;
+    color-scheme:light;
+  }
+
   body{
-    margin:0;
-    background:
-      radial-gradient(1200px 600px at 10% -10%, #1B1D24 0%, transparent 60%),
-      var(--bg);
-    color:var(--chalk);
-    font-family:'Inter',system-ui,sans-serif;
-    padding:32px 20px 60px;
-    min-height:100vh;
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Work Sans',sans-serif;-webkit-font-smoothing:antialiased;
+    min-height:100vh;transition:background .3s var(--ease),color .3s var(--ease);
   }
-  .wrap{max-width:980px;margin:0 auto;}
-  header{margin-bottom:28px;}
-  .eyebrow{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px;
-    letter-spacing:.18em;
-    text-transform:uppercase;
-    color:var(--ga);
-    margin-bottom:6px;
-  }
-  h1{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:clamp(36px,6vw,54px);
-    letter-spacing:.02em;
-    margin:0 0 6px;
-    line-height:.95;
-  }
-  .sub{color:var(--muted);font-size:14.5px;max-width:560px;line-height:1.5;}
+  a{color:inherit}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-  .panel{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:22px 22px 24px;
-    margin-bottom:22px;
-  }
-  .panel h2{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:20px;
-    letter-spacing:.04em;
-    margin:0 0 4px;
-    color:var(--chalk);
-  }
-  .panel .hint{color:var(--muted);font-size:13px;margin-bottom:16px;}
+  /* ---------- NAV ---------- */
+  nav{position:sticky;top:0;z-index:100;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav-logo{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+  .nav-logo b{font-family:'Big Shoulders Display';font-weight:700;font-size:1.05rem;letter-spacing:.02em;color:var(--ink)}
+  .nav-logo:hover{color:var(--ink)}
+  .nav-right{display:flex;align-items:center;gap:14px}
+  .nav-link{font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+  .nav-link:hover{color:var(--accent-text)}
+  .theme-toggle{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);background:transparent;border:1px solid var(--line);padding:7px 11px;cursor:pointer;transition:border-color .18s var(--ease),color .18s var(--ease)}
+  .theme-toggle:hover{border-color:var(--accent);color:var(--accent-text)}
 
-  .row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;}
-  .field{display:flex;flex-direction:column;gap:8px;}
-  .field label{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600;}
+  /* ---------- LAYOUT ---------- */
+  main{max-width:980px;margin:0 auto;padding:48px 24px 80px}
+  .sheet-top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:32px;font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+  .sheet-top b{color:var(--accent-text);font-weight:500}
+  .page-title{font-family:'Big Shoulders Display';font-weight:800;font-size:clamp(2.6rem,8vw,5rem);line-height:.88;letter-spacing:-.005em;text-transform:uppercase;margin-bottom:10px}
+  .page-title em{font-style:normal;color:var(--accent)}
+  .page-sub{font-size:.92rem;color:var(--muted);margin-bottom:40px;max-width:64ch;line-height:1.7}
 
-  .chips{display:flex;gap:8px;flex-wrap:wrap;}
+  /* ---------- PANEL / FORM ---------- */
+  .panel{border:1px solid var(--line);padding:24px 24px 26px;margin-bottom:22px}
+  .panel h2{font-family:'Big Shoulders Display';font-weight:700;font-size:1.5rem;letter-spacing:.02em;text-transform:uppercase;margin:0 0 4px;color:var(--ink)}
+  .panel .hint{font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.04em;color:var(--faint);margin-bottom:22px}
+
+  .row{display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start}
+  .field{display:flex;flex-direction:column;gap:9px}
+  .field label{font-family:'IBM Plex Mono',monospace;font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;color:var(--faint)}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
   .chip{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:13px;
-    padding:9px 13px;
-    border-radius:8px;
-    border:1px solid var(--line);
-    background:var(--panel-2);
-    color:var(--muted);
-    cursor:pointer;
-    user-select:none;
-    transition:.15s ease;
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.04em;
+    padding:9px 13px;border:1px solid var(--line);background:transparent;color:var(--muted);
+    cursor:pointer;user-select:none;transition:border-color .15s var(--ease),color .15s var(--ease),background .15s var(--ease);
   }
-  .chip.active{
-    background:var(--hard-dim);
-    border-color:var(--hard);
-    color:#FFD8CC;
-  }
-  .chip:hover{border-color:#4a4e5a;}
+  .chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chip:hover:not(.active){border-color:var(--accent)}
 
   select{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:13px;
-    background:var(--panel-2);
-    color:var(--chalk);
-    border:1px solid var(--line);
-    border-radius:8px;
-    padding:9px 10px;
-    min-width:150px;
+    font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.02em;
+    background:var(--bg);color:var(--ink);border:1px solid var(--line);
+    padding:9px 10px;min-width:150px;transition:border-color .18s var(--ease);
   }
+  select:hover,select:focus{border-color:var(--accent)}
 
   .genbtn{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:17px;
-    letter-spacing:.05em;
-    background:var(--ga);
-    color:#0B1F1D;
-    border:none;
-    border-radius:9px;
-    padding:12px 22px;
-    cursor:pointer;
-    align-self:flex-end;
-    transition:.15s ease;
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
+    background:var(--accent);color:#fff;border:none;padding:13px 22px;cursor:pointer;
+    align-self:flex-end;transition:background .18s var(--ease),transform .12s var(--ease-out);
   }
-  .genbtn:hover{filter:brightness(1.08);}
-  .genbtn:active{transform:translateY(1px);}
+  .genbtn:hover{background:var(--accent-text)}
+  .genbtn:active{transform:scale(.97)}
 
-  .board{
-    display:grid;
-    grid-template-columns:repeat(7,1fr);
-    gap:10px;
-    margin-bottom:22px;
-  }
-  @media (max-width:760px){
-    .board{grid-template-columns:1fr;}
-  }
-  .daycard{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:14px 12px 16px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    position:relative;
-    overflow:hidden;
-  }
-  .daycard .dayname{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:22px;
-    letter-spacing:.03em;
-  }
-  .eveningtag{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:10px;
-    letter-spacing:.05em;
-    color:var(--warn);
-    text-transform:uppercase;
-  }
-  .daycard select{width:100%;min-width:0;}
-  .loadbar{
-    height:6px;
-    border-radius:4px;
-    background:var(--panel-2);
-    overflow:hidden;
-  }
-  .loadbar span{display:block;height:100%;border-radius:4px;transition:.2s ease;}
-  .load-class span,.load-arne span{background:var(--hard);width:100%;}
-  .load-ga span{background:var(--ga);width:55%;}
-  .load-rest span{background:var(--rest);width:15%;}
+  /* ---------- BOARD / DAYCARDS ---------- */
+  .board{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:22px}
+  @media(max-width:760px){.board{grid-template-columns:1fr}}
+  .daycard{background:var(--bg);padding:16px 14px 18px;display:flex;flex-direction:column;gap:12px}
+  .daycard .dayname{font-family:'Big Shoulders Display';font-weight:700;font-size:1.5rem;letter-spacing:.01em;line-height:1}
+  .eveningtag{font-family:'IBM Plex Mono',monospace;font-size:.56rem;letter-spacing:.06em;text-transform:uppercase;color:var(--warn)}
+  .daylabel{font-family:'IBM Plex Mono',monospace;font-size:.56rem;color:var(--faint)}
+  .daycard select{width:100%;min-width:0}
+  .loadbar{height:4px;background:var(--line);overflow:hidden}
+  .loadbar span{display:block;height:100%;transition:.2s var(--ease)}
+  .load-class span,.load-arne span{background:var(--accent);width:100%}
+  .load-ga span{background:var(--ga);width:55%}
+  .load-rest span{background:var(--rest);width:15%}
 
-  .daylabel{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
-    color:var(--muted);
-  }
+  /* ---------- SUMMARY ---------- */
+  .summary{display:flex;flex-direction:column;gap:2px}
+  .sumline{display:flex;align-items:center;gap:10px;font-size:.82rem;line-height:1.6;padding:12px 16px;border:1px solid var(--line);border-top:none}
+  .sumline:first-child{border-top:1px solid var(--line)}
+  .sumline.ok{box-shadow:inset 3px 0 0 var(--ok)}
+  .sumline.warn{box-shadow:inset 3px 0 0 var(--warn)}
+  .sumline.err{box-shadow:inset 3px 0 0 var(--err)}
+  .dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .dot.ok{background:var(--ok)}
+  .dot.warn{background:var(--warn)}
+  .dot.err{background:var(--err)}
 
-  .summary{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-  .sumline{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-size:13.5px;
-    padding:9px 12px;
-    border-radius:8px;
-    background:var(--panel-2);
-    border:1px solid var(--line);
-  }
-  .sumline.ok{border-color:#264a3f;}
-  .sumline.warn{border-color:var(--warn);color:#FFE1A6;}
-  .sumline.err{border-color:var(--err);color:#FFC0CD;}
-  .dot{width:8px;height:8px;border-radius:50%;flex:none;}
-  .dot.ok{background:#3DDC84;}
-  .dot.warn{background:var(--warn);}
-  .dot.err{background:var(--err);}
+  /* ---------- FOOTER ---------- */
+  footer{max-width:980px;margin:0 auto;padding:28px 24px;border-top:1px solid var(--line);display:flex;justify-content:center;gap:26px;font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--faint);letter-spacing:.12em;text-transform:uppercase;flex-wrap:wrap}
+  footer a{color:var(--faint);text-decoration:none}
+  footer a:hover{color:var(--accent-text)}
+  .hint-foot{font-family:'IBM Plex Mono',monospace;font-size:.62rem;color:var(--faint);margin-top:20px;text-align:center;letter-spacing:.02em}
 
-  footer{color:var(--muted);font-size:12px;margin-top:26px;text-align:center;}
+  @media(max-width:560px){
+    nav{padding:12px 18px}
+    main{padding:36px 18px 60px}
+    .panel{padding:20px 18px 22px}
+    .row{gap:18px}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-
-  <header>
-    <div class="eyebrow">Trainingswoche · Board</div>
-    <h1>Wochenplan</h1>
-    <p class="sub">Trag deine Abenddienste ein und wie viele Classes/Arne-Tage du diese Woche willst. Ich schlage dir eine sinnvolle Verteilung vor — jeden Tag kannst du danach per Dropdown selbst anpassen.</p>
-  </header>
+<nav>
+  <a class="nav-logo" href="index.html">← <b>OM</b> / wochenplan</a>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle" title="Design wechseln">Light</button>
+  </div>
+</nav>
+<main>
+  <div class="sheet-top">
+    <span>Trainingswoche · Board</span>
+    <span>Sieben <b>Tage</b></span>
+  </div>
+  <h1 class="page-title">Wochen<em>plan.</em></h1>
+  <p class="page-sub">Trag deine Abenddienste ein und wie viele Classes/Arne-Tage du diese Woche willst. Ich schlage dir eine sinnvolle Verteilung vor — jeden Tag kannst du danach per Dropdown selbst anpassen.</p>
 
   <section class="panel">
     <h2>Diese Woche</h2>
@@ -261,8 +192,15 @@
     <div class="summary" id="summary"></div>
   </section>
 
-  <footer>Dienstag &amp; Donnerstag 18 Uhr = feste Class-Slots · GA zählt bei Arne als aktiver Rest</footer>
-</div>
+  <p class="hint-foot">Dienstag &amp; Donnerstag 18 Uhr = feste Class-Slots · GA zählt bei Arne als aktiver Rest</p>
+</main>
+
+<footer>
+  <span>© 2026 onlymakkus.de</span>
+  <a href="impressum.html">Impressum</a>
+  <a href="datenschutz.html">Datenschutz</a>
+  <span>made with pain &amp; supabase</span>
+</footer>
 
 <script>
 const DAY_NAMES = ['Mo','Di','Mi','Do','Fr','Sa','So'];
@@ -485,6 +423,20 @@ document.getElementById('arneDays').onchange = generate;
 
 buildEveningChips();
 generate();
+</script>
+<script>
+  const THEME_KEY='om_cf_theme';
+  const html=document.documentElement;
+  const themeToggle=document.getElementById('themeToggle');
+  function applyTheme(t){
+    html.setAttribute('data-theme',t);
+    themeToggle.textContent=t==='dark'?'Light':'Dark';
+    localStorage.setItem(THEME_KEY,t);
+  }
+  applyTheme(localStorage.getItem(THEME_KEY)||'dark');
+  themeToggle.addEventListener('click',()=>{
+    applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark');
+  });
 </script>
 </body>
 </html>

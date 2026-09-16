@@ -1,13 +1,13 @@
 {
   "name": "onlymakkus Trainings-Timer",
   "short_name": "OM Timer",
-  "description": "AMRAP, EMOM, Tabata, For Time, Custom-Intervalle und Stoppuhr für CrossFit-Training.",
+  "description": "AMRAP, EMOM, Tabata, For Time, Custom-Intervalle und Stoppuhr für dein Training.",
   "start_url": "/timer.html",
   "scope": "/timer.html",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0b0b09",
-  "theme_color": "#0b0b09",
+  "background_color": "#121214",
+  "theme_color": "#121214",
   "lang": "de",
   "icons": [
     { "src": "icons/timer-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

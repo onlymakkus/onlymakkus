@@ -5,228 +5,260 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>onlymakkus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --ink:#0b0b09;--paper:#f2ede4;--blaze:#ff4e1a;--blaze2:#ff6b3d;--chalk:#8f8a7d;
-      --field:#16150f;--field2:#1d1c15;--line:#2b2920;
+      --bg:#f7f5f0;--ink:#14141a;--accent:#e8231b;--accent-text:#d01f18;--muted:#4a4a52;--faint:#6b6860;--line:#d8d5cc;
+      --ease-out:cubic-bezier(.23,1,.32,1);--ease:cubic-bezier(.4,0,.2,1);
+      color-scheme:light;
+    }
+    :root[data-theme="dark"]{
+      --bg:#121214;--ink:#f2f0ec;--accent:#ff453a;--accent-text:#ff453a;--muted:#c4c2bc;--faint:#8f8d8a;--line:#2a2a2e;
+      color-scheme:dark;
     }
     html{scroll-behavior:smooth}
-    body{background:var(--ink);color:var(--paper);font-family:'DM Mono',monospace;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-    ::selection{background:var(--blaze);color:var(--ink)}
+    body{background:var(--bg);color:var(--ink);font-family:'Work Sans',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;padding-top:3px;transition:background .3s var(--ease),color .3s var(--ease)}
+    ::selection{background:var(--accent);color:#fff}
     a{color:inherit;text-decoration:none}
-    :focus-visible{outline:2px solid var(--blaze);outline-offset:3px}
+    :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
+    /* ---------- TIMING LINE (scroll progress, signature device) ---------- */
+    .timing-track{position:fixed;top:0;left:0;right:0;height:3px;background:var(--line);z-index:1000;overflow:hidden;transition:background .3s var(--ease)}
+    .timing-line{width:100%;height:100%;background:var(--accent);transform:scaleX(0);transform-origin:left;will-change:transform}
+
     /* ---------- NAV ---------- */
-    nav{position:sticky;top:0;z-index:100;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;background:color-mix(in srgb,var(--ink) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-    .nav-logo{font-family:'Bebas Neue';font-size:1.3rem;letter-spacing:.08em;color:var(--blaze)}
+    nav{position:sticky;top:3px;z-index:100;padding:14px 28px;display:flex;flex-wrap:wrap;row-gap:12px;justify-content:space-between;align-items:center;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);transition:background .3s var(--ease),border-color .3s var(--ease)}
+    .nav-logo{font-family:'Big Shoulders Display';font-weight:700;font-size:1.3rem;letter-spacing:.02em;color:var(--ink)}
+    .nav-logo span{color:var(--accent)}
+    .nav-right{display:flex;align-items:center;gap:26px}
     .nav-links{display:flex;gap:22px}
-    .nav-link{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--chalk);transition:color .2s}
-    .nav-link:hover{color:var(--paper)}
-    @media(max-width:560px){.nav-links{gap:14px}.nav-link{font-size:.55rem;letter-spacing:.12em}}
+    .nav-link{position:relative;display:inline-flex;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:9px 0 8px}
+    .nav-link::after{content:'';position:absolute;left:0;right:0;bottom:5px;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .2s var(--ease-out)}
+    .nav-link:hover{color:var(--ink)}
+    .nav-link:hover::after{transform:scaleX(1)}
+    .theme-toggle{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);background:transparent;border:1px solid var(--line);padding:7px 12px;cursor:pointer;transition:border-color .18s var(--ease),color .18s var(--ease),transform .12s var(--ease-out)}
+    .theme-toggle:hover{border-color:var(--accent);color:var(--accent-text)}
+    .theme-toggle:active{transform:scale(.96)}
+    @media(max-width:640px){
+      nav{padding:14px 18px}
+      .nav-right{width:100%;justify-content:space-between}
+      .nav-links{gap:14px}
+      .nav-link{font-size:.56rem;letter-spacing:.1em}
+    }
+
+    main{display:block}
 
     /* ---------- HERO ---------- */
-    .hero{min-height:88vh;display:flex;flex-direction:column;justify-content:center;padding:80px 28px 40px;max-width:1120px;margin:0 auto;position:relative}
-    .hero-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding-bottom:12px;border-bottom:2px solid var(--paper);margin-bottom:40px}
-    .hero-meta{font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:var(--chalk)}
-    .hero-meta b{color:var(--blaze);font-weight:500}
-    .hero-tag{font-size:.64rem;letter-spacing:.3em;text-transform:uppercase;color:var(--blaze);margin-bottom:22px;opacity:0;animation:fadeUp .6s ease forwards .15s}
-    .hero-title{font-family:'Bebas Neue';font-size:clamp(4.5rem,17vw,15rem);line-height:.82;letter-spacing:-.01em;opacity:0;animation:fadeUp .8s ease forwards .3s}
-    .hero-title span{color:var(--blaze)}
-    .hero-sub{margin-top:26px;font-size:.78rem;color:var(--chalk);max-width:44ch;line-height:1.9;opacity:0;animation:fadeUp .8s ease forwards .55s}
-    .hero-ticker{margin-top:40px;display:flex;align-items:center;gap:14px;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk);opacity:0;animation:fadeUp .8s ease forwards .8s}
-    .hero-live-dot{width:7px;height:7px;border-radius:50%;background:var(--blaze);flex-shrink:0;animation:livepulse 2.4s infinite}
-    @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.35}}
-    .hero-ticker b{color:var(--paper);font-weight:500}
+    .hero{max-width:1040px;margin:0 auto;padding:64px 28px 56px}
+    .hero-top{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:40px;font-family:'IBM Plex Mono',monospace;font-size:.64rem;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+    .hero-top b{color:var(--accent-text);font-weight:500}
+    .hero-title{font-family:'Big Shoulders Display';font-weight:800;font-size:clamp(3.4rem,13vw,9rem);line-height:.86;letter-spacing:-.01em;text-transform:uppercase}
+    .hero-title em{font-style:normal;color:var(--accent)}
+    .hero-sub{margin-top:24px;font-size:1rem;color:var(--muted);max-width:46ch;line-height:1.75}
 
-    /* ---------- MARQUEE ---------- */
-    .marquee-wrap{overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:13px 0;background:var(--field)}
-    .marquee-track{display:flex;gap:52px;animation:marquee 24s linear infinite;white-space:nowrap;width:max-content}
-    .marquee-item{font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--chalk);flex-shrink:0}
-    .marquee-item .dot{color:var(--blaze);margin-right:11px}
+    /* live stats as a stopwatch-style readout */
+    .stat-clock{margin-top:44px;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:22px 0}
+    .stat-clock .seg{display:flex;flex-direction:column;padding-right:28px;margin-right:28px;border-right:1px solid var(--line)}
+    .stat-clock .seg:last-child{border-right:none;padding-right:0;margin-right:0}
+    .stat-clock .val{font-family:'Big Shoulders Display';font-weight:700;font-size:clamp(2.2rem,6vw,3.6rem);line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+    .stat-clock .lbl{margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
 
-    /* ---------- SECTION FRAME ---------- */
-    .section{padding:72px 28px;max-width:1120px;margin:0 auto}
-    .section-label{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--chalk);display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:0}
-    .section-label b{color:var(--paper);font-weight:500}
+    /* ---------- TAG STRIP (static, replaces auto-scroll marquee) ---------- */
+    .tag-strip{max-width:1040px;margin:0 auto;padding:0 28px 64px;display:flex;flex-wrap:wrap;gap:0;border-top:1px solid var(--line)}
+    .tag-strip span{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);padding:16px 20px 0 0;margin-right:20px;border-right:1px solid var(--line)}
+    .tag-strip span:last-child{border-right:none}
+
+    /* ---------- SECTION LABEL ---------- */
+    .section-wrap{max-width:1040px;margin:0 auto;padding:0 28px 80px}
+    .section-label{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.24em;text-transform:uppercase;color:var(--faint);display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:0}
+    .section-label b{color:var(--ink);font-weight:500}
     .section-label::after{content:'';flex:1;height:1px;background:var(--line)}
 
-    /* ---------- NAVIGATION INDEX (die Hauptsache) ---------- */
-    .nav-index{border:1px solid var(--line);border-top:none}
-    .nav-row{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:24px;padding:30px 26px;color:var(--paper);border-top:1px solid var(--line);transition:background .18s}
-    .nav-row:first-child{border-top:none}
-    .nav-row:hover{background:var(--field)}
-    .nav-row-tag{font-family:'DM Mono',monospace;font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk);width:88px;flex-shrink:0}
-    .nav-row-main{min-width:0}
-    .nav-row-title{font-family:'Bebas Neue';font-size:2.4rem;line-height:.9;letter-spacing:.03em}
-    .nav-row-desc{font-size:.68rem;line-height:1.75;color:var(--chalk);margin-top:8px;max-width:52ch}
-    .nav-row-stat{text-align:right;flex-shrink:0}
-    .nav-row-stat-val{font-family:'Bebas Neue';font-size:1.9rem;line-height:1;color:var(--blaze)}
-    .nav-row-stat-lbl{font-size:.5rem;letter-spacing:.12em;text-transform:uppercase;color:var(--chalk);margin-top:3px}
-    .nav-row-arrow{font-family:'Bebas Neue';font-size:2rem;color:var(--line);transition:color .18s,transform .18s;align-self:center}
-    .nav-row:hover .nav-row-arrow{color:var(--blaze);transform:translateX(5px)}
+    /* ---------- BEREICHE (nav index, real 01/04..04/04 numbering) ---------- */
+    .idx{border:1px solid var(--line);border-top:none}
+    .idx-row{position:relative;display:grid;grid-template-columns:64px 1fr auto auto;align-items:center;gap:24px;padding:28px 24px;border-top:1px solid var(--line);transition:background .18s var(--ease)}
+    .idx-row:first-child{border-top:none}
+    .idx-row:hover{background:color-mix(in srgb,var(--accent) 5%,transparent)}
+    .idx-row:active{transform:scale(.995)}
+    .idx-num{font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.04em;color:var(--faint);font-variant-numeric:tabular-nums}
+    .idx-main{min-width:0}
+    .idx-title{position:relative;display:inline-block;font-family:'Big Shoulders Display';font-weight:700;font-size:clamp(1.6rem,4vw,2.3rem);letter-spacing:.01em;text-transform:uppercase;line-height:1}
+    .idx-title::after{content:'';position:absolute;left:0;right:0;bottom:-4px;height:2px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .22s var(--ease-out)}
+    .idx-row:hover .idx-title::after{transform:scaleX(1)}
+    .idx-desc{margin-top:8px;font-size:.76rem;line-height:1.7;color:var(--muted);max-width:50ch}
+    .idx-stat{text-align:right}
+    .idx-stat-val{font-family:'Big Shoulders Display';font-weight:700;font-size:1.7rem;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+    .idx-stat-lbl{margin-top:3px;font-family:'IBM Plex Mono',monospace;font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+    .idx-arrow{font-family:'Big Shoulders Display';font-size:1.6rem;color:var(--line);transition:color .18s var(--ease),transform .18s var(--ease-out)}
+    .idx-row:hover .idx-arrow{color:var(--accent);transform:translateX(4px)}
     @media(max-width:720px){
-      .nav-row{grid-template-columns:1fr auto;gap:8px 16px}
-      .nav-row-tag{width:auto;grid-column:1;order:1}
-      .nav-row-main{grid-column:1;order:3}
-      .nav-row-stat{grid-column:2;grid-row:1;order:2}
-      .nav-row-arrow{display:none}
+      .idx-row{grid-template-columns:32px 1fr auto;gap:8px 16px}
+      .idx-stat{grid-column:3;grid-row:1}
+      .idx-arrow{display:none}
     }
 
-    /* ---------- ABOUT (kompakt) ---------- */
-    .about{max-width:1120px;margin:0 auto;padding:0 28px 72px}
-    .about-inner{border-left:2px solid var(--blaze);padding:8px 0 8px 22px;display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
-    .about-item-t{font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--paper);margin-bottom:8px;font-weight:500}
-    .about-item-d{font-size:.66rem;line-height:1.7;color:var(--chalk)}
-    @media(max-width:640px){.about-inner{grid-template-columns:1fr;gap:20px}}
+    /* ---------- PRINCIPLES (about, hairline grid) ---------- */
+    .principles{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:0}
+    .principle{background:var(--bg);padding:26px 24px;transition:background .18s var(--ease)}
+    .principle:hover{background:color-mix(in srgb,var(--accent) 5%,var(--bg))}
+    .principle-t{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-text);margin-bottom:10px}
+    .principle-d{font-size:.82rem;line-height:1.7;color:var(--muted)}
+    @media(max-width:720px){.principles{grid-template-columns:1fr}}
 
     /* ---------- STATEMENT ---------- */
-    .statement{padding:80px 28px;text-align:center;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--field)}
-    .statement-text{font-family:'Bebas Neue';font-size:clamp(1.8rem,5vw,3.6rem);line-height:1.15;max-width:900px;margin:0 auto;letter-spacing:.01em}
-    .statement-text em{color:var(--blaze);font-style:normal}
+    .statement-wrap{max-width:1040px;margin:0 auto;padding:0 28px 88px}
+    .statement{border-top:1px solid var(--line);padding-top:36px}
+    .statement-text{font-family:'Big Shoulders Display';font-weight:700;font-size:clamp(1.9rem,5vw,3.4rem);line-height:1.1;letter-spacing:.005em;max-width:22ch}
+    .statement-text em{font-style:normal;color:var(--accent)}
 
     /* ---------- FOOTER ---------- */
-    footer{padding:36px 28px;border-top:1px solid var(--line);display:flex;justify-content:center;gap:26px;align-items:center;font-size:.58rem;color:var(--chalk);letter-spacing:.14em;text-transform:uppercase;flex-wrap:wrap}
-    footer a{color:var(--chalk)}
-    footer a:hover{color:var(--blaze)}
+    footer{max-width:1040px;margin:0 auto;padding:28px;border-top:1px solid var(--line);display:flex;justify-content:center;gap:26px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--faint);letter-spacing:.12em;text-transform:uppercase;flex-wrap:wrap;transition:border-color .3s var(--ease)}
+    footer a{position:relative;color:var(--faint);transition:color .15s var(--ease);padding:4px 0;display:inline-block}
+    footer a::after{content:'';position:absolute;left:0;right:0;bottom:2px;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .18s var(--ease-out)}
+    footer a:hover{color:var(--accent-text)}
+    footer a:hover::after{transform:scaleX(1)}
 
     @media(max-width:600px){
-      nav{padding:12px 18px}
-      .hero{padding:60px 18px 36px;min-height:80vh}
-      .section,.about{padding-left:18px;padding-right:18px}
-      .statement{padding:60px 20px}
-      footer{flex-direction:column;gap:12px}
+      .hero{padding:48px 18px 40px}
+      .tag-strip,.section-wrap,.statement-wrap{padding-left:18px;padding-right:18px}
     }
 
-    @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+    /* ---------- SCROLL REVEAL ---------- */
+    .reveal{opacity:0;transform:translateY(16px);transition:opacity .5s var(--ease-out),transform .5s var(--ease-out)}
+    .reveal.in{opacity:1;transform:translateY(0)}
 
     /* ---------- EASTER EGG ---------- */
-    .egg-overlay{position:fixed;inset:0;z-index:99999;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;opacity:0;pointer-events:none;transition:opacity .4s;padding:24px}
+    .egg-overlay{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;opacity:0;pointer-events:none;transition:opacity .3s var(--ease),background .3s var(--ease);padding:24px}
     .egg-overlay.show{opacity:1;pointer-events:all}
-    .egg-title{font-family:'Bebas Neue';font-size:clamp(3rem,10vw,7rem);color:var(--blaze);text-align:center;line-height:.95}
-    .egg-sub{font-size:.8rem;color:var(--chalk);text-align:center;line-height:1.9;max-width:440px}
-    .egg-close{padding:12px 26px;background:var(--blaze);color:var(--ink);border:none;font-family:'DM Mono';font-size:.68rem;font-weight:500;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;margin-top:8px}
-    .egg-konami{font-size:.6rem;letter-spacing:.2em;color:var(--line);text-transform:uppercase}
+    .egg-title{font-family:'Big Shoulders Display';font-weight:800;font-size:clamp(2.6rem,9vw,6rem);color:var(--accent);text-align:center;line-height:.95;text-transform:uppercase}
+    .egg-sub{font-size:.85rem;color:var(--muted);text-align:center;line-height:1.9;max-width:440px}
+    .egg-close{padding:13px 26px;background:var(--accent);color:#fff;border:none;font-family:'IBM Plex Mono',monospace;font-size:.66rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:transform .14s var(--ease-out),opacity .14s var(--ease-out)}
+    .egg-close:hover{opacity:.88}
+    .egg-close:active{transform:scale(.96)}
+    .egg-konami{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.18em;color:var(--faint);text-transform:uppercase}
   </style>
 </head>
 <body>
+
+<div class="timing-track"><div class="timing-line" id="timingLine"></div></div>
 
 <!-- EASTER EGG -->
 <div class="egg-overlay" id="eggOverlay">
   <div class="egg-konami">↑ ↑ ↓ ↓ ← → ← → B A</div>
   <div class="egg-title">DU HAST<br>ZU VIEL<br>ZEIT 🤝</div>
   <p class="egg-sub">Ernsthaft. Wer gibt einen Konami-Code auf einer Website über einen Mann namens Markus ein?<br><br>Respekt. Absoluter Respekt.</p>
-  <p class="egg-sub" style="font-size:.7rem;color:var(--blaze);">🏆 Achievement unlocked: "Zu viel Freizeit"</p>
+  <p class="egg-sub" style="font-size:.7rem;color:var(--accent);">🏆 Achievement unlocked: "Zu viel Freizeit"</p>
   <button class="egg-close" id="eggClose">Okay ich geh jetzt →</button>
 </div>
 
 <nav>
-  <a class="nav-logo" href="index.html">OM</a>
-  <div class="nav-links">
-    <a class="nav-link" href="crossfit.html">CrossFit</a>
-    <a class="nav-link" href="gaming.html">Gaming</a>
-    <a class="nav-link" href="health.html">Health</a>
-    <a class="nav-link" href="profile.html">Profil</a>
+  <a class="nav-logo" href="index.html">ONLY<span>MAKKUS</span></a>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a class="nav-link" href="crossfit.html">Fitness</a>
+      <a class="nav-link" href="gaming.html">Gaming</a>
+      <a class="nav-link" href="health.html">Health</a>
+      <a class="nav-link" href="profile.html">Profil</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button" title="Design wechseln" aria-pressed="false">Dark</button>
   </div>
 </nav>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-head">
-    <span class="hero-meta">onlymakkus.de</span>
-    <span class="hero-meta">Est. <b>irgendwann</b></span>
-  </div>
-  <p class="hero-tag">// das original seit irgendwann</p>
-  <h1 class="hero-title">ONLY<br><span>Makkus</span></h1>
-  <p class="hero-sub">Kein Influencer. Kein Coach. Kein Guru. Nur Markus — und das reicht vollkommen.</p>
-  <div class="hero-ticker">
-    <span class="hero-live-dot"></span>
-    <span><b id="liveProfiles">—</b> Profile · <b id="liveGames">—</b> Gaming-Runden · <b id="liveChallenge">—</b> Challenge-Einträge</span>
-  </div>
-</section>
-
-<!-- MARQUEE -->
-<div class="marquee-wrap">
-  <div class="marquee-track">
-    <span class="marquee-item"><span class="dot">●</span>humor ohne agenda</span>
-    <span class="marquee-item"><span class="dot">●</span>crossfit mit schmerzen</span>
-    <span class="marquee-item"><span class="dot">●</span>side planks für immer</span>
-    <span class="marquee-item"><span class="dot">●</span>onlymakkus.de</span>
-    <span class="marquee-item"><span class="dot">●</span>humor ohne agenda</span>
-    <span class="marquee-item"><span class="dot">●</span>crossfit mit schmerzen</span>
-    <span class="marquee-item"><span class="dot">●</span>side planks für immer</span>
-    <span class="marquee-item"><span class="dot">●</span>onlymakkus.de</span>
-  </div>
-</div>
-
-<!-- NAVIGATION (die Hauptsache) -->
-<div class="section">
-  <p class="section-label"><b>Bereiche</b> — wohin willst du</p>
-  <div class="nav-index">
-    <a href="crossfit.html" class="nav-row">
-      <span class="nav-row-tag">CrossFit</span>
-      <div class="nav-row-main">
-        <div class="nav-row-title">CROSSFIT</div>
-        <p class="nav-row-desc">Challenge-Tracker, Jahresplan, Saison-Ranking und die Dezember-Bosschallenge.</p>
-      </div>
-      <div class="nav-row-stat"><div class="nav-row-stat-val" id="navChallenge">—</div><div class="nav-row-stat-lbl">Einträge</div></div>
-      <span class="nav-row-arrow">→</span>
-    </a>
-    <a href="gaming.html" class="nav-row">
-      <span class="nav-row-tag">Gaming</span>
-      <div class="nav-row-main">
-        <div class="nav-row-title">GAMING AREA</div>
-        <p class="nav-row-desc">Snake, Wordle, Block Blast, Flappy Makkus, Tetris und ein episches Text-Adventure.</p>
-      </div>
-      <div class="nav-row-stat"><div class="nav-row-stat-val" id="navGames">—</div><div class="nav-row-stat-lbl">Runden</div></div>
-      <span class="nav-row-arrow">→</span>
-    </a>
-    <a href="health.html" class="nav-row">
-      <span class="nav-row-tag">Health</span>
-      <div class="nav-row-main">
-        <div class="nav-row-title">HEALTH</div>
-        <p class="nav-row-desc">Kalorien tracken, Gewicht und Körperumfänge über die Zeit festhalten.</p>
-      </div>
-      <div class="nav-row-stat"></div>
-      <span class="nav-row-arrow">→</span>
-    </a>
-    <a href="profile.html" class="nav-row">
-      <span class="nav-row-tag">Profil</span>
-      <div class="nav-row-main">
-        <div class="nav-row-title">PROFIL</div>
-        <p class="nav-row-desc">Ein Login für alles — CrossFit, Gaming und Health. Registrieren oder einloggen.</p>
-      </div>
-      <div class="nav-row-stat"><div class="nav-row-stat-val" id="navProfiles">—</div><div class="nav-row-stat-lbl">Profile</div></div>
-      <span class="nav-row-arrow">→</span>
-    </a>
-  </div>
-</div>
-
-<!-- ABOUT (kompakt) -->
-<div class="about">
-  <div class="about-inner">
-    <div class="about-item">
-      <div class="about-item-t">Ehrliche Meinungen</div>
-      <p class="about-item-d">Keine Sponsoren, keine PR, kein Bullshit. Nur das, was tatsächlich gedacht wird.</p>
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-top reveal" data-hero data-order="0">
+      <span>onlymakkus.de</span>
+      <span>Est. <b>irgendwann</b></span>
     </div>
-    <div class="about-item">
-      <div class="about-item-t">Alles an einem Ort</div>
-      <p class="about-item-d">Challenges, Ranking, Tracking, fünf Spiele und ein Text-Adventure — mit einem Profil.</p>
+    <h1 class="hero-title reveal" data-hero data-order="1">Nur<br><em>Makkus.</em></h1>
+    <p class="hero-sub reveal" data-hero data-order="2">Kein Influencer. Kein Coach. Kein Guru. Nur Markus — und das reicht vollkommen.</p>
+
+    <div class="stat-clock reveal" data-hero data-order="3">
+      <div class="seg"><span class="val" id="liveProfiles">—</span><span class="lbl">Profile</span></div>
+      <div class="seg"><span class="val" id="liveGames">—</span><span class="lbl">Gaming-Runden</span></div>
+      <div class="seg"><span class="val" id="liveChallenge">—</span><span class="lbl">Challenge-Einträge</span></div>
     </div>
-    <div class="about-item">
-      <div class="about-item-t">Fragwürdige Ideen</div>
-      <p class="about-item-d">60 Minuten Side Plank? Manche Ideen klingen nachts besser als morgens.</p>
+  </section>
+
+  <div class="tag-strip reveal">
+    <span>Humor ohne Agenda</span>
+    <span>Kraftprobe mit Schmerzen</span>
+    <span>Challenges für immer</span>
+    <span>onlymakkus.de</span>
+  </div>
+
+  <!-- BEREICHE -->
+  <div class="section-wrap">
+    <p class="section-label"><b>Bereiche</b> — wohin willst du</p>
+    <div class="idx reveal">
+      <a href="crossfit.html" class="idx-row">
+        <span class="idx-num">01 / 04</span>
+        <div class="idx-main">
+          <div class="idx-title">Fitness</div>
+          <p class="idx-desc">Challenge-Tracker, Jahresplan, Saison-Ranking und die Dezember-Bosschallenge.</p>
+        </div>
+        <div class="idx-stat"><div class="idx-stat-val" id="navChallenge">—</div><div class="idx-stat-lbl">Einträge</div></div>
+        <span class="idx-arrow">→</span>
+      </a>
+      <a href="gaming.html" class="idx-row">
+        <span class="idx-num">02 / 04</span>
+        <div class="idx-main">
+          <div class="idx-title">Gaming Area</div>
+          <p class="idx-desc">Snake, Wordle, Block Blast, Flappy Makkus, Tetris und ein episches Text-Adventure.</p>
+        </div>
+        <div class="idx-stat"><div class="idx-stat-val" id="navGames">—</div><div class="idx-stat-lbl">Runden</div></div>
+        <span class="idx-arrow">→</span>
+      </a>
+      <a href="health.html" class="idx-row">
+        <span class="idx-num">03 / 04</span>
+        <div class="idx-main">
+          <div class="idx-title">Health</div>
+          <p class="idx-desc">Kalorien tracken, Gewicht und Körperumfänge über die Zeit festhalten.</p>
+        </div>
+        <div class="idx-stat"></div>
+        <span class="idx-arrow">→</span>
+      </a>
+      <a href="profile.html" class="idx-row">
+        <span class="idx-num">04 / 04</span>
+        <div class="idx-main">
+          <div class="idx-title">Profil</div>
+          <p class="idx-desc">Ein Login für alles — Fitness, Gaming und Health. Registrieren oder einloggen.</p>
+        </div>
+        <div class="idx-stat"><div class="idx-stat-val" id="navProfiles">—</div><div class="idx-stat-lbl">Profile</div></div>
+        <span class="idx-arrow">→</span>
+      </a>
     </div>
   </div>
-</div>
 
-<!-- STATEMENT -->
-<div class="statement">
-  <p class="statement-text">Das Internet braucht mehr <em>Ehrlichkeit</em> und weniger perfekte Feeds. Das hier ist beides nicht — aber zumindest <em>echt.</em></p>
-</div>
+  <!-- PRINZIPIEN -->
+  <div class="section-wrap">
+    <p class="section-label"><b>Prinzipien</b> — drei Stück</p>
+    <div class="principles reveal">
+      <div class="principle">
+        <div class="principle-t">Ehrliche Meinungen</div>
+        <p class="principle-d">Keine Sponsoren, keine PR, kein Bullshit. Nur das, was tatsächlich gedacht wird.</p>
+      </div>
+      <div class="principle">
+        <div class="principle-t">Alles an einem Ort</div>
+        <p class="principle-d">Challenges, Ranking, Tracking, fünf Spiele und ein Text-Adventure — mit einem Profil.</p>
+      </div>
+      <div class="principle">
+        <div class="principle-t">Fragwürdige Ideen</div>
+        <p class="principle-d">Ein Monat, eine Übung? Manche Ideen klingen nachts besser als morgens.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATEMENT -->
+  <div class="statement-wrap">
+    <div class="statement reveal">
+      <p class="statement-text">Das Internet braucht mehr <em>Ehrlichkeit</em> und weniger perfekte Feeds. Das hier ist beides nicht — aber zumindest <em>echt.</em></p>
+    </div>
+  </div>
+</main>
 
 <footer>
   <span>© 2026 onlymakkus.de</span>
@@ -278,6 +310,128 @@
   document.getElementById('eggClose').addEventListener('click', () => {
     document.getElementById('eggOverlay').classList.remove('show');
   });
+</script>
+<script>
+  // ── THEME TOGGLE (new — persists via the same key the rest of the site uses) ──
+  (function(){
+    var THEME_KEY = 'om_cf_theme';
+    var html = document.documentElement;
+    var toggle = document.getElementById('themeToggle');
+    function applyTheme(t){
+      if(t === 'dark') html.setAttribute('data-theme', 'dark');
+      else html.removeAttribute('data-theme');
+      toggle.textContent = t === 'dark' ? 'Light' : 'Dark';
+      toggle.setAttribute('aria-pressed', String(t === 'dark'));
+      localStorage.setItem(THEME_KEY, t);
+    }
+    applyTheme(localStorage.getItem(THEME_KEY) || 'light');
+    toggle.addEventListener('click', function(){
+      var current = html.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+  })();
+
+  // ── SCROLL-BOUND TIMING LINE (whole-page progress) ──
+  (function(){
+    var line = document.getElementById('timingLine');
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var ticking = false;
+    function update(){
+      ticking = false;
+      if(reduceMotion){ line.style.transform = 'scaleX(1)'; return; }
+      var total = document.documentElement.scrollHeight - window.innerHeight;
+      var pct = total > 0 ? Math.min(1, Math.max(0, window.scrollY / total)) : 0;
+      line.style.transform = 'scaleX(' + pct + ')';
+    }
+    window.addEventListener('scroll', function(){
+      if(!ticking){ requestAnimationFrame(update); ticking = true; }
+    }, {passive:true});
+    window.addEventListener('resize', update);
+    update();
+  })();
+
+  // ── SCROLL REVEAL (stagger) — below-fold sections only, hero handled separately ──
+  (function(){
+    var els = document.querySelectorAll('.reveal:not([data-hero])');
+    if(!('IntersectionObserver' in window)){
+      els.forEach(function(el){ el.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry, i){
+        if(entry.isIntersecting){
+          setTimeout(function(){ entry.target.classList.add('in'); }, i * 60);
+          io.unobserve(entry.target);
+        }
+      });
+    }, {threshold:.15});
+    els.forEach(function(el){ io.observe(el); });
+  })();
+
+  // ── HERO LOAD-IN (orchestrated entrance, always in view so no observer needed) ──
+  (function(){
+    var els = document.querySelectorAll('[data-hero]');
+    els.forEach(function(el){
+      var order = parseInt(el.dataset.order, 10) || 0;
+      setTimeout(function(){ el.classList.add('in'); }, 120 + order * 90);
+    });
+  })();
+
+  // ── LIVE STAT COUNT-UP — observes the protected script's own output from outside,
+  //    never modifies it. Watches for the placeholder "—" turning into a real number. ──
+  (function(){
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function countUp(el, target){
+      if(reduceMotion || !('requestAnimationFrame' in window)){ el.textContent = target; return; }
+      var start = null, dur = 900;
+      function frame(ts){
+        if(!start) start = ts;
+        var p = Math.min(1, (ts - start) / dur);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(eased * target);
+        if(p < 1) requestAnimationFrame(frame);
+        else el.textContent = String(target);
+      }
+      requestAnimationFrame(frame);
+    }
+    ['liveProfiles','liveGames','liveChallenge','navChallenge','navGames','navProfiles'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(!el || !('MutationObserver' in window)) return;
+      var done = false;
+      var mo = new MutationObserver(function(){
+        if(done) return;
+        var num = parseInt(el.textContent.trim(), 10);
+        if(!isNaN(num)){
+          done = true;
+          mo.disconnect();
+          countUp(el, num);
+        }
+      });
+      mo.observe(el, {childList:true, characterData:true, subtree:true});
+    });
+  })();
+
+  // ── MAGNETIC ARROW — decorative cursor response, pointer devices only ──
+  if(window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+     !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+
+    document.querySelectorAll('.idx-row').forEach(function(row){
+      var arrow = row.querySelector('.idx-arrow');
+      if(!arrow) return;
+      row.addEventListener('mousemove', function(e){
+        var r = arrow.getBoundingClientRect();
+        var dx = (e.clientX - (r.left + r.width / 2)) * .12;
+        var dy = (e.clientY - (r.top + r.height / 2)) * .12;
+        // Auf breiten Zeilen darf der Effekt nicht ausufern (sonst wandert der Pfeil über
+        // den Stat-Wert links davon, wenn man z.B. über den Titel hovert) — deckeln.
+        var clamp = function(v, max){ return Math.max(-max, Math.min(max, v)); };
+        dx = clamp(dx, 14);
+        dy = clamp(dy, 10);
+        arrow.style.transform = 'translate(' + (4 + dx) + 'px,' + dy + 'px)';
+      });
+      row.addEventListener('mouseleave', function(){ arrow.style.transform = ''; });
+    });
+  }
 </script>
 </body>
 </html>
