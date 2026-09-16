@@ -191,8 +191,11 @@ function start(){
 }
 
 function flap(){
-  if(!running){start();return}
+  // Reihenfolge wichtig: "over" zuerst prüfen — sonst reißt ein zu schneller
+  // Leertasten-Druck direkt nach Game Over (running ist da schon false) das
+  // Overlay per start() weg, bevor der Highscore gespeichert werden konnte.
   if(over)return;
+  if(!running){start();return}
   bird.vy=FLAP;
 }
 
@@ -273,7 +276,12 @@ function end(){
   document.getElementById('go').classList.add('show');
 }
 
-document.addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();flap()}});
+document.addEventListener('keydown',e=>{
+  if(e.key!==' ')return;
+  const t=e.target;
+  if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'))return; // Leerzeichen im Namensfeld nicht als Sprung/Restart werten
+  e.preventDefault();flap();
+});
 canvas.addEventListener('mousedown',flap);
 canvas.addEventListener('touchstart',e=>{e.preventDefault();flap()},{passive:false});
 document.getElementById('btn-start').addEventListener('click',start);
