@@ -422,6 +422,11 @@
         var r = arrow.getBoundingClientRect();
         var dx = (e.clientX - (r.left + r.width / 2)) * .12;
         var dy = (e.clientY - (r.top + r.height / 2)) * .12;
+        // Auf breiten Zeilen darf der Effekt nicht ausufern (sonst wandert der Pfeil über
+        // den Stat-Wert links davon, wenn man z.B. über den Titel hovert) — deckeln.
+        var clamp = function(v, max){ return Math.max(-max, Math.min(max, v)); };
+        dx = clamp(dx, 14);
+        dy = clamp(dy, 10);
         arrow.style.transform = 'translate(' + (4 + dx) + 'px,' + dy + 'px)';
       });
       row.addEventListener('mouseleave', function(){ arrow.style.transform = ''; });

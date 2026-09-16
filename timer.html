@@ -623,6 +623,24 @@
         return phases;
       }
     },
+    mirror:{
+      id:'mirror',tag:'MIRROR',label:'Mirror Rest',
+      hint:'Du arbeitest, tippst „Fertig" — die Pause dauert exakt so lange wie deine Runde.',
+      tags:['Reaktiv','Rest = Work'],
+      defaultConfig:{rounds:5,prep:10},
+      fields:[
+        {key:'rounds',label:'Runden',unit:'',min:1,max:30,step:1,presets:[3,5,8,10]},
+        {key:'prep',label:'Vorbereitung',unit:'s',min:0,max:30,step:5,presets:[0,5,10,15]},
+      ],
+      buildSchedule(cfg){
+        const phases=[];const prep=prepPhase(cfg.prep);if(prep)phases.push(prep);
+        for(let r=1;r<=cfg.rounds;r++){
+          phases.push({kind:'work',label:`WORK ${r}/${cfg.rounds}`,duration:null,round:r,totalRounds:cfg.rounds});
+          phases.push({kind:'rest',label:`REST ${r}/${cfg.rounds}`,duration:null,round:r,totalRounds:cfg.rounds});
+        }
+        return phases;
+      }
+    },
     custom:{
       id:'custom',tag:'CUSTOM',label:'Custom Intervall-Timer',
       hint:'Eigene Abfolge von Phasen mit eigener Dauer, beliebig oft wiederholt.',
@@ -647,7 +665,7 @@
       buildSchedule(){return[{kind:'stopwatch',label:'STOPWATCH',duration:null,round:1,totalRounds:1}];}
     }
   };
-  const TIMER_ORDER=['amrap','emom','tabata','fortime','custom','stopwatch'];
+  const TIMER_ORDER=['amrap','emom','tabata','fortime','mirror','custom','stopwatch'];
 
   /* ---------- UI-Controller ---------- */
   const timerHome=document.getElementById('timerHome');
@@ -806,7 +824,7 @@
   }
   function setRunState(state){
     runState=state;
-    const showAction=currentTypeId==='fortime'||currentTypeId==='stopwatch';
+    const showAction=currentTypeId==='fortime'||currentTypeId==='stopwatch'||currentTypeId==='mirror';
     runStartBtn.hidden=!(state==='idle'||state==='done');
     runStartBtn.textContent=state==='done'?'Nochmal':'Start';
     runPauseBtn.hidden=state!=='running';
@@ -849,7 +867,19 @@
     laps.unshift({n:laps.length+1,total:st.elapsedInPhase,split:st.elapsedInPhase-prevTotal});
     renderLaps(); playLap();
   }
-  function doFinish(){ if(currentTypeId!=='fortime'||runState!=='running')return; engine.finish(); }
+  function doFinish(){
+    if(runState!=='running')return;
+    if(currentTypeId==='fortime'){ engine.finish(); return; }
+    if(currentTypeId==='mirror'){
+      const st=engine.getState();
+      if(st.done||st.phase.kind!=='work')return;
+      // Rundenzeit einfrieren und identisch als Rest-Dauer übernehmen — die Engine erkennt
+      // den Phasenwechsel beim nächsten Tick von selbst (kein Extra-Signal nötig).
+      const t=Math.max(1000,Math.round(st.elapsedInPhase));
+      engine.phases[st.index].duration=t;
+      if(engine.phases[st.index+1])engine.phases[st.index+1].duration=t;
+    }
+  }
 
   runStartBtn.addEventListener('click',()=>{ runState==='done'?doRestart():doGo(); });
   runPauseBtn.addEventListener('click',doPause);
@@ -894,12 +924,15 @@
     runPhaseLabel.textContent=state.phase.label;
     if(state.phase.totalRounds>1){runRound.hidden=false;runRound.textContent=`Runde ${state.phase.round}/${state.phase.totalRounds}`;}
     else runRound.hidden=true;
-    const isCountUp=state.phase.kind==='stopwatch'||state.phase.kind==='fortime';
+    const isOpenWork=state.phase.kind==='work'&&state.phase.duration==null;
+    const isCountUp=state.phase.kind==='stopwatch'||state.phase.kind==='fortime'||isOpenWork;
     runTime.textContent=isCountUp?formatClockPrecise(state.elapsedInPhase):formatClock(state.remainingInPhase);
     if(state.phase.kind==='prep')runSub.textContent="Gleich geht's los…";
     else if(state.phase.kind==='fortime')runSub.textContent=state.phase.duration!=null?`Cap ${formatClock(state.phase.duration)} · noch ${formatClock(state.remainingInPhase)}`:'Kein Zeitlimit';
     else if(state.phase.kind==='stopwatch')runSub.textContent='';
+    else if(isOpenWork)runSub.textContent='Tippe „Fertig" — die Pause dauert genauso lange';
     else runSub.textContent=`Gesamt ${formatClock(state.totalElapsed)}`;
+    if(currentTypeId==='mirror'&&runState==='running')runActionBtn.hidden=state.phase.kind!=='work';
     if(state.next){
       const nd=state.next.duration!=null?`${state.next.label} · ${formatClock(state.next.duration)}`:state.next.label;
       runNext.innerHTML=`Nächste: <b>${nd}</b>`;
