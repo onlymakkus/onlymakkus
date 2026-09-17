@@ -344,7 +344,7 @@ document.getElementById('go-save').addEventListener('click',async()=>{
 });
 document.getElementById('go-skip').addEventListener('click',()=>{document.getElementById('go').classList.remove('show');init()});
 function anim(){draw();requestAnimationFrame(anim)}
-anim();init();
+init();anim();
 </script>
   <script>
 (function(){
