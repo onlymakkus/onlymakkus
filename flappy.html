@@ -270,6 +270,7 @@ function init(){
 function start(){
   if(running)return;
   init();running=true;gameStartTime=Date.now();
+  bird.vy=FLAP;
   loop=requestAnimationFrame(update);
 }
 
