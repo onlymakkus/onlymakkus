@@ -256,12 +256,12 @@ const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
 const W=canvas.width,H=canvas.height;
 const GRAV=0.45,FLAP=-8,PIPE_W=60,GAP=150,PIPE_SPEED=2.6,PIPE_INTERVAL=110;
 
-let bird,pipes,score,hi=parseInt(localStorage.getItem('fb_hi')||'0'),running,frame,over,gameStartTime=0;
+let bird,pipes,score,hi=parseInt(localStorage.getItem('fb_hi')||'0'),running,frame,over,gameStartTime=0,lastT=0,nextPipe=PIPE_INTERVAL;
 document.getElementById('hi').textContent=hi;
 
 function init(){
   bird={x:80,y:H/2,vy:0,r:14};
-  pipes=[];score=0;running=false;over=false;frame=0;
+  pipes=[];score=0;running=false;over=false;frame=0;lastT=0;nextPipe=PIPE_INTERVAL;
   document.getElementById('score').textContent=0;
   document.getElementById('go').classList.remove('show');
   draw();
@@ -284,17 +284,22 @@ function flap(){
 }
 
 let loop;
-function update(){
+function update(t){
   if(!running)return;
-  frame++;
-  bird.vy+=GRAV;
-  bird.y+=bird.vy;
+  // Physik-Konstanten sind auf 60 fps getunt; dt skaliert auf echte Zeit,
+  // damit das Spiel bei 30 fps (Stromsparmodus) nicht in Zeitlupe läuft.
+  const dt=lastT?Math.min((t-lastT)/(1000/60),3):1;
+  lastT=t;
+  frame+=dt;
+  bird.vy+=GRAV*dt;
+  bird.y+=bird.vy*dt;
 
-  if(frame%PIPE_INTERVAL===0){
+  if(frame>=nextPipe){
+    nextPipe+=PIPE_INTERVAL;
     const gapY=60+Math.random()*(H-GAP-120);
     pipes.push({x:W,gapY,passed:false});
   }
-  pipes.forEach(p=>p.x-=PIPE_SPEED);
+  pipes.forEach(p=>p.x-=PIPE_SPEED*dt);
   pipes=pipes.filter(p=>p.x>-PIPE_W);
 
   pipes.forEach(p=>{
