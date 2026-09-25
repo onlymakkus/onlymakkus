@@ -68,6 +68,15 @@
       border-top:1px solid var(--line);border-left:none;border-right:none;border-bottom:none;position:relative;
       transition:background .18s var(--ease);cursor:pointer;text-align:left;font-family:inherit}
     .index-row:first-child{border-top:none}
+    .saved-wrap{margin-bottom:44px}
+    .saved-row{display:grid;grid-template-columns:1fr auto;border-top:1px solid var(--line)}
+    .saved-row:first-child{border-top:none}
+    .saved-row .index-row{border-top:none}
+    .saved-del{width:58px;border:none;border-left:1px solid var(--line);background:transparent;color:var(--faint);font-size:1rem;cursor:pointer;transition:color .15s var(--ease),background .15s var(--ease)}
+    .saved-del:hover{color:var(--accent-text);background:color-mix(in srgb,var(--accent) 5%,transparent)}
+    .btn-save{width:100%;padding:15px;margin-top:10px;border:1px solid var(--line);background:transparent;color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:.7rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:border-color .15s var(--ease),color .15s var(--ease)}
+    .btn-save:hover{border-color:var(--accent);color:var(--accent-text)}
+    .btn-save[hidden]{display:none}
     .index-row:hover{background:color-mix(in srgb,var(--accent) 5%,transparent)}
     .index-main{min-width:0}
     .index-title{position:relative;display:inline-flex;align-items:baseline;gap:12px;flex-wrap:wrap;font-family:'Big Shoulders Display';font-weight:700;font-size:clamp(1.6rem,4vw,2.3rem);letter-spacing:.01em;text-transform:uppercase;line-height:1}
@@ -168,7 +177,8 @@
     .phase-work .run-phase-label{color:var(--r-work)}
     .phase-rest .run-phase-label{color:var(--r-rest)}
     .phase-neutral .run-phase-label{color:var(--r-accent)}
-    .run-round{display:flex;align-items:baseline;gap:.3em;font-family:'Big Shoulders Display';font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+    .run-round .rr-sep{width:.7em}
+    .run-round{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:.3em;font-family:'Big Shoulders Display';font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
     .run-round[hidden]{display:none}
     .run-round .rr-label{font-family:'IBM Plex Mono',monospace;font-size:clamp(.85rem,2.8vw,1.3rem);font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--r-muted);margin-right:.35em}
     .run-round b{font-size:clamp(3rem,13vw,6.5rem);font-weight:800;color:var(--r-fg)}
@@ -279,10 +289,14 @@
       <span class="sheet-meta">Bereich <b>Fitness</b></span>
     </div>
     <h1 class="page-title">Trainings<span>timer</span></h1>
-    <p class="page-sub">AMRAP, EMOM, Tabata, For Time, Custom-Intervalle und Stoppuhr — läuft direkt hier im Browser, ohne Anmeldung, komplett offline nach dem ersten Laden. Zuletzt genutzte Einstellungen merkt sich der Timer pro Typ.</p>
+    <p class="page-sub">AMRAP, EMOM, Tabata, For Time, Mirror Rest, Custom-Intervalle und Stoppuhr — läuft direkt hier im Browser, ohne Anmeldung, komplett offline nach dem ersten Laden. Zuletzt genutzte Einstellungen merkt sich der Timer pro Typ, eigene Custom-Workouts speicherst du unter einem Namen.</p>
 
     <section id="timerHome">
-      <p class="section-label"><b>Typ wählen</b> — sechs Timer</p>
+      <div class="saved-wrap" id="savedWrap" hidden>
+        <p class="section-label"><b>Meine Workouts</b> — auf diesem Gerät gespeichert</p>
+        <div class="index" id="savedIndex"></div>
+      </div>
+      <p class="section-label"><b>Typ wählen</b> — sieben Timer</p>
       <div class="index" id="typeIndex"></div>
     </section>
 
@@ -292,6 +306,7 @@
       <p class="cfg-hint" id="cfgHint"></p>
       <div id="cfgFields"></div>
       <button class="btn-start" id="btnStart">Start</button>
+      <button class="btn-save" id="btnSave" type="button" hidden>Als Workout speichern</button>
     </section>
   </main>
 
@@ -561,6 +576,15 @@
   }
   function saveConfig(typeId,config){ try{localStorage.setItem(STORE_PREFIX+typeId,JSON.stringify(config));}catch(e){} }
 
+  /* ---------- Gespeicherte Custom-Workouts (nur lokal auf dem Gerät) ---------- */
+  const WORKOUTS_KEY=STORE_PREFIX+'workouts';
+  function loadWorkouts(){
+    try{const a=JSON.parse(localStorage.getItem(WORKOUTS_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}
+  }
+  function storeWorkouts(list){
+    try{localStorage.setItem(WORKOUTS_KEY,JSON.stringify(list));return true;}catch(e){return false;}
+  }
+
   /* ---------- Timer-Typen: Defaults, Konfig-Felder, Schedule-Aufbau ---------- */
   function prepPhase(seconds){
     if(!seconds||seconds<=0)return null;
@@ -658,15 +682,23 @@
     custom:{
       id:'custom',tag:'CUSTOM',label:'Custom Intervall-Timer',
       hint:'Eigene Abfolge von Phasen mit eigener Dauer, beliebig oft wiederholt.',
-      tags:['Freie Sequenz','X Runden'],
-      defaultConfig:{rounds:5,prep:10,phases:[{name:'Work',kind:'work',seconds:40},{name:'Rest',kind:'rest',seconds:20}]},
+      tags:['Freie Sequenz','X Runden','Sets'],
+      defaultConfig:{rounds:5,sets:1,setRest:120,prep:10,phases:[{name:'Work',kind:'work',seconds:40},{name:'Rest',kind:'rest',seconds:20}]},
       buildSchedule(cfg){
         const phases=[];const prep=prepPhase(cfg.prep);if(prep)phases.push(prep);
         const list=cfg.phases&&cfg.phases.length?cfg.phases:[{name:'Phase',kind:'other',seconds:30}];
-        for(let r=1;r<=cfg.rounds;r++){
-          list.forEach(p=>{
-            phases.push({kind:p.kind==='rest'?'rest':p.kind==='work'?'work':'amrap',label:(p.name||'Phase').toUpperCase(),duration:Math.max(1,p.seconds)*1000,round:r,totalRounds:cfg.rounds});
-          });
+        const sets=Math.max(1,cfg.sets||1),setRest=Math.max(0,cfg.setRest||0);
+        const trailingRest=list.length>1&&list[list.length-1].kind==='rest';
+        for(let s=1;s<=sets;s++){
+          const lastSet=s===sets;
+          for(let r=1;r<=cfg.rounds;r++){
+            list.forEach((p,pi)=>{
+              // Pause am Set-Ende entfällt: ersetzt durch Satzpause bzw. am Workout-Ende überflüssig
+              if(trailingRest&&r===cfg.rounds&&pi===list.length-1&&(lastSet||setRest>0))return;
+              phases.push({kind:p.kind==='rest'?'rest':p.kind==='work'?'work':'amrap',label:(p.name||'Phase').toUpperCase(),duration:Math.max(1,p.seconds)*1000,round:r,totalRounds:cfg.rounds,set:s,totalSets:sets});
+            });
+          }
+          if(!lastSet&&setRest>0)phases.push({kind:'rest',label:'SATZPAUSE',duration:setRest*1000,round:cfg.rounds,totalRounds:cfg.rounds,set:s,totalSets:sets});
         }
         return phases;
       }
@@ -690,6 +722,9 @@
   const cfgHint=document.getElementById('cfgHint');
   const cfgFields=document.getElementById('cfgFields');
   const btnStart=document.getElementById('btnStart');
+  const btnSave=document.getElementById('btnSave');
+  const savedWrap=document.getElementById('savedWrap');
+  const savedIndex=document.getElementById('savedIndex');
 
   const runEl=document.getElementById('run');
   const runBack=document.getElementById('runBack');
@@ -707,7 +742,43 @@
   const runActionBtn=document.getElementById('runActionBtn');
   const runResetBtn=document.getElementById('runResetBtn');
 
-  let currentTypeId=null,currentConfig=null,engine=null,runState='idle',laps=[];
+  let currentTypeId=null,currentConfig=null,engine=null,runState='idle',laps=[],currentWorkoutName=null;
+
+  function workoutDuration(cfg){
+    return TIMER_TYPES.custom.buildSchedule({...cfg,prep:0}).reduce((a,p)=>a+(p.duration||0),0);
+  }
+  function renderSavedWorkouts(){
+    const list=loadWorkouts();
+    savedWrap.hidden=!list.length;
+    savedIndex.innerHTML='';
+    list.forEach(w=>{
+      const cfg={...TIMER_TYPES.custom.defaultConfig,...w.config};
+      const seq=cfg.phases.map(p=>`${p.name||'Phase'} ${formatClock(p.seconds*1000)}`).join(' → ');
+      const tags=[];
+      if(cfg.sets>1)tags.push(`${cfg.sets} Sets`);
+      tags.push(`${cfg.rounds} ${cfg.rounds===1?'Runde':'Runden'}`);
+      if(cfg.sets>1&&cfg.setRest>0)tags.push(`Satzpause ${formatClock(cfg.setRest*1000)}`);
+      tags.push(`Dauer ${formatClock(workoutDuration(cfg))}`);
+      const row=document.createElement('div');row.className='saved-row';
+      row.innerHTML=`
+        <button type="button" class="index-row">
+          <div class="index-main">
+            <div class="index-title">${escapeAttr(w.name)}</div>
+            <p class="index-desc">${escapeAttr(seq)}</p>
+            <div class="index-tags">${tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+          </div>
+          <span class="index-arrow">→</span>
+        </button>
+        <button type="button" class="saved-del" aria-label="Workout löschen" title="Löschen">✕</button>`;
+      row.querySelector('.index-row').addEventListener('click',()=>openConfig('custom',w));
+      row.querySelector('.saved-del').addEventListener('click',()=>{
+        if(!confirm(`Workout „${w.name}“ löschen?`))return;
+        storeWorkouts(loadWorkouts().filter(x=>x.id!==w.id));
+        renderSavedWorkouts();
+      });
+      savedIndex.appendChild(row);
+    });
+  }
 
   function renderTypeIndex(){
     typeIndex.innerHTML='';
@@ -727,17 +798,42 @@
     });
   }
 
-  function openConfig(typeId){
+  function openConfig(typeId,workout){
     currentTypeId=typeId;
     const type=TIMER_TYPES[typeId];
-    currentConfig=loadConfig(typeId,type.defaultConfig);
+    currentConfig=workout
+      ?{...JSON.parse(JSON.stringify(type.defaultConfig)),...JSON.parse(JSON.stringify(workout.config))}
+      :loadConfig(typeId,type.defaultConfig);
+    currentWorkoutName=workout?workout.name:null;
     cfgTitle.innerHTML=`${type.tag}<span class="index-note">// ${type.label}</span>`;
-    cfgHint.textContent=type.hint;
+    cfgHint.textContent=workout?`Gespeichertes Workout: ${workout.name}`:type.hint;
+    btnSave.hidden=typeId!=='custom';
+    btnSave.textContent='Als Workout speichern';
     renderConfigFields();
     timerHome.hidden=true;timerConfig.hidden=false;
     timerConfig.scrollIntoView({behavior:'smooth',block:'start'});
   }
-  cfgBack.addEventListener('click',()=>{timerConfig.hidden=true;timerHome.hidden=false;});
+  cfgBack.addEventListener('click',()=>{timerConfig.hidden=true;timerHome.hidden=false;renderSavedWorkouts();});
+
+  btnSave.addEventListener('click',()=>{
+    const name=(prompt('Name für das Workout:',currentWorkoutName||'')||'').trim().slice(0,40);
+    if(!name)return;
+    const list=loadWorkouts();
+    const cfg=JSON.parse(JSON.stringify(currentConfig));
+    const existing=list.find(w=>w.name.toLowerCase()===name.toLowerCase());
+    if(existing){
+      if(existing.name!==currentWorkoutName&&!confirm(`„${existing.name}“ gibt es schon. Überschreiben?`))return;
+      Object.assign(existing,{name,config:cfg,savedAt:Date.now()});
+    }else{
+      list.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,config:cfg,savedAt:Date.now()});
+    }
+    if(!storeWorkouts(list)){alert('Speichern hat nicht geklappt — der Gerätespeicher ist voll oder blockiert.');return;}
+    currentWorkoutName=name;
+    cfgHint.textContent=`Gespeichertes Workout: ${name}`;
+    renderSavedWorkouts();
+    btnSave.textContent='✓ Gespeichert';
+    setTimeout(()=>{btnSave.textContent='Als Workout speichern';},1600);
+  });
 
   function renderConfigFields(){ currentTypeId==='custom'?renderCustomEditor():renderStandardFields(); }
 
@@ -851,10 +947,14 @@
     cfgFields.appendChild(addBtn);
 
     const extraWrap=document.createElement('div');cfgFields.appendChild(extraWrap);
-    renderFieldsInto(extraWrap,[
-      {key:'rounds',label:'Runden (ganze Sequenz)',unit:'',min:1,max:50,step:1,presets:[3,5,8,10]},
-      {key:'prep',label:'Vorbereitung',unit:'s',min:0,max:30,step:5,presets:[0,5,10,15]},
-    ],renderCustomEditor);
+    const multiSet=(cfg.sets||1)>1;
+    const extra=[
+      {key:'rounds',label:multiSet?'Runden pro Set':'Runden (ganze Sequenz)',unit:'',min:1,max:50,step:1,presets:[3,5,8,10]},
+      {key:'sets',label:'Sets',unit:'',min:1,max:10,step:1,presets:[1,2,3,4]},
+    ];
+    if(multiSet)extra.push({key:'setRest',label:'Satzpause',unit:'s',min:0,max:900,step:15,presets:[60,120,180,300]});
+    extra.push({key:'prep',label:'Vorbereitung',unit:'s',min:0,max:30,step:5,presets:[0,5,10,15]});
+    renderFieldsInto(extraWrap,extra,renderCustomEditor);
   }
 
   btnStart.addEventListener('click',()=>{
@@ -968,7 +1068,13 @@
     if(state.done){renderDoneUI(state);return;}
     setPhaseClass(state.phase.kind);
     runPhaseLabel.textContent=state.phase.label;
-    if(state.phase.totalRounds>1){runRound.hidden=false;runRound.innerHTML=`<span class="rr-label">Runde</span><b>${state.phase.round}</b><span class="rr-total">/${state.phase.totalRounds}</span>`;}
+    const totalSets=state.phase.totalSets||1,totalRounds=state.phase.totalRounds;
+    if(totalRounds>1||totalSets>1){
+      let h='';
+      if(totalSets>1)h+=`<span class="rr-label">Set</span><b>${state.phase.set}</b><span class="rr-total">/${totalSets}</span>`;
+      if(totalRounds>1)h+=`${totalSets>1?'<span class="rr-sep"></span>':''}<span class="rr-label">Runde</span><b>${state.phase.round}</b><span class="rr-total">/${totalRounds}</span>`;
+      runRound.hidden=false;runRound.innerHTML=h;
+    }
     else runRound.hidden=true;
     const isOpenWork=state.phase.kind==='work'&&state.phase.duration==null;
     const isCountUp=state.phase.kind==='stopwatch'||state.phase.kind==='fortime'||isOpenWork;
@@ -1000,6 +1106,7 @@
   }
 
   renderTypeIndex();
+  renderSavedWorkouts();
 
   // Nur diese Seite als Home-Screen-App installierbar/offline-fähig machen — der Scope ist
   // explizit auf timer.html begrenzt, der Rest von onlymakkus bleibt unberührt.
