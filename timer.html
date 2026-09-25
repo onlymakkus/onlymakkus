@@ -28,7 +28,8 @@
       --green:#1f9d57;--blue:#1c6fd6;
     }
 
-    html{scroll-behavior:smooth}
+    html{scroll-behavior:smooth;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+    button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
     body{background:var(--bg);color:var(--ink);font-family:'Work Sans',sans-serif;overflow-x:hidden;transition:background .3s var(--ease),color .3s var(--ease);-webkit-font-smoothing:antialiased;min-height:100vh}
     ::selection{background:var(--accent);color:#fff}
     a{color:inherit;text-decoration:none}
@@ -92,7 +93,10 @@
     .stepper{display:flex;align-items:center;gap:12px}
     .stepper-btn{width:46px;height:46px;border-radius:0;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:1.4rem;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:border-color .15s var(--ease),background .15s var(--ease)}
     .stepper-btn:hover{border-color:var(--accent)}
-    .stepper-display{flex:1;text-align:center;font-family:'Big Shoulders Display';font-weight:700;font-size:1.9rem;letter-spacing:0;background:transparent;border:1px solid var(--line);padding:10px 4px}
+    .stepper-display{flex:1;display:flex;align-items:baseline;justify-content:center;text-align:center;font-family:'Big Shoulders Display';font-weight:700;font-size:1.9rem;letter-spacing:0;background:transparent;border:1px solid var(--line);padding:10px 4px;cursor:text;transition:border-color .15s var(--ease)}
+    .stepper-display:focus-within,.seq-duration-display:focus-within{border-color:var(--accent)}
+    .num-input{font:inherit;color:inherit;background:transparent;border:0;outline:0;padding:0;margin:0;text-align:center;width:2ch;min-width:1ch;caret-color:var(--accent);-moz-appearance:textfield}
+    .num-input::placeholder{color:var(--faint)}
     .stepper-display .unit{font-family:'IBM Plex Mono',monospace;font-size:.8rem;color:var(--faint);margin-left:6px}
     .presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .preset-chip{border:1px solid var(--line);background:transparent;color:var(--faint);border-radius:999px;padding:6px 13px;font-size:.66rem;font-family:'IBM Plex Mono',monospace;font-weight:500;cursor:pointer;transition:.15s var(--ease)}
@@ -119,7 +123,8 @@
     .seq-small-btn{width:36px;height:36px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .15s var(--ease)}
     .seq-small-btn:hover{border-color:var(--accent)}
     .seq-small-btn.danger{color:var(--accent-text)}
-    .seq-duration-display{flex:1;text-align:center;font-family:'Big Shoulders Display';font-weight:700;font-size:1.2rem;background:transparent;border:1px solid var(--line);padding:7px 4px}
+    .seq-duration-display{flex:1;display:flex;justify-content:center;text-align:center;font-family:'Big Shoulders Display';font-weight:700;font-size:1.2rem;background:transparent;border:1px solid var(--line);padding:7px 4px;cursor:text;transition:border-color .15s var(--ease)}
+    .seq-duration-display .num-input{width:100%;font-size:max(16px,1.2rem)}
     .add-phase-btn{width:100%;padding:14px;border:1px dashed var(--line);background:transparent;color:var(--accent-text);font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:border-color .15s var(--ease)}
     .add-phase-btn:hover{border-color:var(--accent)}
 
@@ -727,6 +732,26 @@
 
   function renderConfigFields(){ currentTypeId==='custom'?renderCustomEditor():renderStandardFields(); }
 
+  function bindNumInput(inp,commit,autoWidth=true){
+    const fit=()=>{if(autoWidth)inp.style.width=Math.max(1,inp.value.length)+'ch';};
+    let committed=false;
+    const done=()=>{if(committed)return;committed=true;commit(inp.value.trim());};
+    fit();
+    inp.addEventListener('focus',()=>{committed=false;inp.select();});
+    inp.addEventListener('input',fit);
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();inp.blur();}else if(e.key==='Escape'){committed=true;inp.blur();commit(null);}});
+    inp.addEventListener('blur',done);
+  }
+  // "130" → 1:30, "45" → 0:45, "2:15" → 2:15 (Handy-Zahlenfeld hat keinen Doppelpunkt)
+  function parseClockInput(s){
+    if(!s)return null;
+    let m,sec;
+    if(s.includes(':')){const [a,b]=s.split(':');m=parseInt(a||'0',10);sec=parseInt(b||'0',10);}
+    else{if(!/^\d+$/.test(s))return null;const n=parseInt(s,10);m=Math.floor(n/100);sec=n%100;}
+    if(isNaN(m)||isNaN(sec))return null;
+    return m*60+sec;
+  }
+
   function renderFieldsInto(container,fields,rerender){
     container.innerHTML='';
     fields.forEach(f=>{
@@ -742,7 +767,7 @@
           <span class="field-label">${f.label}</span>
           <div class="stepper">
             <button type="button" class="stepper-btn" data-dir="-1">−</button>
-            <div class="stepper-display">${val}<span class="unit">${f.unit||''}</span></div>
+            <label class="stepper-display"><input class="num-input" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" aria-label="${f.label}" value="${val}"><span class="unit">${f.unit||''}</span></label>
             <button type="button" class="stepper-btn" data-dir="1">+</button>
           </div>
           <div class="presets">${(f.presets||[]).map(p=>`<button type="button" class="preset-chip ${p===val?'active':''}" data-val="${p}">${p}${f.unit||''}</button>`).join('')}</div>`;
@@ -753,6 +778,11 @@
             nv=Math.min(f.max,Math.max(f.min,nv));
             currentConfig[f.key]=nv;rerender();
           });
+        });
+        bindNumInput(wrap.querySelector('.num-input'),raw=>{
+          const n=raw==null?NaN:parseInt(raw.replace(/\D/g,''),10);
+          if(!isNaN(n))currentConfig[f.key]=Math.min(f.max,Math.max(f.min,n));
+          rerender();
         });
         wrap.querySelectorAll('.preset-chip').forEach(chip=>{
           chip.addEventListener('click',()=>{currentConfig[f.key]=parseFloat(chip.dataset.val);rerender();});
@@ -784,7 +814,7 @@
           <button type="button" class="seq-small-btn" data-act="up" ${i===0?'disabled':''}>↑</button>
           <button type="button" class="seq-small-btn" data-act="down" ${i===cfg.phases.length-1?'disabled':''}>↓</button>
           <button type="button" class="seq-small-btn" data-act="dec">−</button>
-          <div class="seq-duration-display">${formatClock(p.seconds*1000)}</div>
+          <label class="seq-duration-display"><input class="num-input" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" aria-label="Dauer (mmss)" value="${formatClock(p.seconds*1000)}"></label>
           <button type="button" class="seq-small-btn" data-act="inc">+</button>
           <button type="button" class="seq-small-btn danger" data-act="del" ${cfg.phases.length<=1?'disabled':''}>✕</button>
         </div>`;
@@ -796,6 +826,12 @@
       act('[data-act="dec"]').addEventListener('click',()=>{p.seconds=Math.max(5,p.seconds-5);renderCustomEditor();});
       act('[data-act="inc"]').addEventListener('click',()=>{p.seconds=Math.min(1800,p.seconds+5);renderCustomEditor();});
       act('[data-act="del"]').addEventListener('click',()=>{if(cfg.phases.length>1){cfg.phases.splice(i,1);renderCustomEditor();}});
+      const durInp=item.querySelector('.seq-duration-display .num-input');
+      bindNumInput(durInp,raw=>{
+        const s=parseClockInput(raw);
+        if(s!=null)p.seconds=Math.min(1800,Math.max(5,s));
+        renderCustomEditor();
+      },false);
       seqWrap.appendChild(item);
     });
     cfgFields.appendChild(seqWrap);
