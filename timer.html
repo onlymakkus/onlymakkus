@@ -168,8 +168,13 @@
     .phase-work .run-phase-label{color:var(--r-work)}
     .phase-rest .run-phase-label{color:var(--r-rest)}
     .phase-neutral .run-phase-label{color:var(--r-accent)}
-    .run-round-badge{font-size:.72rem;font-weight:600;color:var(--r-muted);letter-spacing:.04em;background:var(--r-field);border:1px solid var(--r-line);border-radius:999px;padding:4px 14px}
-    .run-round-badge[hidden]{display:none}
+    .run-round{display:flex;align-items:baseline;gap:.3em;font-family:'Big Shoulders Display';font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+    .run-round[hidden]{display:none}
+    .run-round .rr-label{font-family:'IBM Plex Mono',monospace;font-size:clamp(.85rem,2.8vw,1.3rem);font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--r-muted);margin-right:.35em}
+    .run-round b{font-size:clamp(3rem,13vw,6.5rem);font-weight:800;color:var(--r-fg)}
+    .run-round .rr-total{font-size:clamp(1.8rem,7vw,3.4rem);color:var(--r-muted)}
+    .phase-work .run-round b{color:var(--r-work)}
+    .phase-rest .run-round b{color:var(--r-rest)}
 
     .run-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:0;padding:0 12px}
     .run-time{font-family:'Big Shoulders Display';font-size:clamp(5rem,26vw,18rem);line-height:1;letter-spacing:.01em;font-variant-numeric:tabular-nums;text-align:center;transition:color .15s}
@@ -204,6 +209,9 @@
     @media(min-width:1100px){
       .run-time{font-size:clamp(11rem,26vw,27rem)}
       .run-phase-label{font-size:clamp(2rem,3.4vw,3.2rem)}
+      .run-round b{font-size:clamp(6rem,8vw,10rem)}
+      .run-round .rr-total{font-size:clamp(3rem,4vw,5rem)}
+      .run-round .rr-label{font-size:1.6rem}
       .run-sub{font-size:1.6rem}
     }
 
@@ -299,13 +307,13 @@
   <div class="run-top">
     <button class="run-icon-btn" id="runBack" aria-label="Zurück" title="Zurück">←</button>
     <div class="run-mid">
-      <span class="run-round-badge" id="runRound" hidden></span>
       <div class="run-phase-label" id="runPhaseLabel">BEREIT</div>
     </div>
     <button class="run-icon-btn" id="runFullscreen" aria-label="Vollbild" title="Vollbild">⛶</button>
   </div>
 
   <div class="run-center">
+    <div class="run-round" id="runRound" hidden></div>
     <div class="run-time" id="runTime">00:00</div>
     <div class="run-sub" id="runSub"></div>
     <div class="run-next" id="runNext"></div>
@@ -494,6 +502,7 @@
   function playTick(){tone(1000,90,{type:'square',volume:.28})}
   function playWorkStart(){tone(1046,110,{type:'square',volume:.4});tone(1568,140,{type:'square',volume:.4,startOffset:.12})}
   function playRestStart(){tone(523,220,{type:'sine',volume:.32})}
+  function playRestWarning(){tone(784,120,{type:'square',volume:.34});tone(784,120,{type:'square',volume:.34,startOffset:.18})}
   function playComplete(){tone(880,160,{type:'sawtooth',volume:.32});tone(880,160,{type:'sawtooth',volume:.32,startOffset:.22});tone(660,420,{type:'sawtooth',volume:.34,startOffset:.44})}
   function playConfirm(){tone(880,90,{type:'sine',volume:.3});tone(1318,140,{type:'sine',volume:.3,startOffset:.09})}
   function playLap(){tone(1200,60,{type:'sine',volume:.22})}
@@ -945,6 +954,7 @@
     if(remainingSec==null)return;
     const isPrep=phase.kind==='prep';
     if((isPrep||remainingSec<=3)&&remainingSec>=1)playTick();
+    if(phase.kind==='rest'&&remainingSec===10&&phase.duration>10500)playRestWarning();
     if(remainingSec<=3&&remainingSec>=1)runEl.classList.add('warn'); else runEl.classList.remove('warn');
   }
   function handleComplete(data){
@@ -958,7 +968,7 @@
     if(state.done){renderDoneUI(state);return;}
     setPhaseClass(state.phase.kind);
     runPhaseLabel.textContent=state.phase.label;
-    if(state.phase.totalRounds>1){runRound.hidden=false;runRound.textContent=`Runde ${state.phase.round}/${state.phase.totalRounds}`;}
+    if(state.phase.totalRounds>1){runRound.hidden=false;runRound.innerHTML=`<span class="rr-label">Runde</span><b>${state.phase.round}</b><span class="rr-total">/${state.phase.totalRounds}</span>`;}
     else runRound.hidden=true;
     const isOpenWork=state.phase.kind==='work'&&state.phase.duration==null;
     const isCountUp=state.phase.kind==='stopwatch'||state.phase.kind==='fortime'||isOpenWork;

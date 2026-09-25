@@ -1,7 +1,7 @@
 // Service Worker NUR für timer.html — registriert mit scope:'/timer.html', greift also für
 // keine andere onlymakkus-Seite. Cached die Timer-Seite + ihr Manifest/Icons, damit sie in
 // der Halle auch mit schlechtem/keinem Empfang neu öffnet, nachdem sie einmal geladen wurde.
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const CACHE_NAME = `om-timer-${CACHE_VERSION}`;
 
 const ASSETS = [
